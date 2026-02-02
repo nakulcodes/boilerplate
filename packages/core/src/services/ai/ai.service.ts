@@ -17,20 +17,36 @@ export abstract class AiService {
   abstract generateText(options: GenerateTextOptions): Promise<GenerateTextResponse>;
 }
 
+export class NoOpAiService implements AiService {
+  async generateText(_options: GenerateTextOptions): Promise<GenerateTextResponse> {
+    return {
+      content: 'AI features are disabled. Please configure AI_PROVIDER and the corresponding API key (OPENAI_API_KEY or GEMINI_API_KEY) in your environment variables.',
+      success: false,
+    };
+  }
+}
+
 export class OpenAiService implements AiService {
-  private client: OpenAI;
+  private client: OpenAI | null = null;
   private model: string;
+  private apiKey: string | undefined;
 
   constructor() {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      throw new Error('OPENAI_API_KEY is not defined in environment variables');
+    this.apiKey = process.env.OPENAI_API_KEY;
+    if (this.apiKey) {
+      this.client = new OpenAI({ apiKey: this.apiKey });
     }
-    this.client = new OpenAI({ apiKey });
     this.model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
   }
 
   async generateText(options: GenerateTextOptions): Promise<GenerateTextResponse> {
+    if (!this.client) {
+      return {
+        content: 'OpenAI is not configured. Please set OPENAI_API_KEY in your environment variables.',
+        success: false,
+      };
+    }
+
     try {
       const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
 
@@ -70,19 +86,26 @@ export class OpenAiService implements AiService {
 }
 
 export class GeminiAiService implements AiService {
-  private client: GoogleGenAI;
+  private client: GoogleGenAI | null = null;
   private model: string;
+  private apiKey: string | undefined;
 
   constructor() {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error('GEMINI_API_KEY is not defined in environment variables');
+    this.apiKey = process.env.GEMINI_API_KEY;
+    if (this.apiKey) {
+      this.client = new GoogleGenAI({ apiKey: this.apiKey });
     }
-    this.client = new GoogleGenAI({ apiKey });
     this.model = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
   }
 
   async generateText(options: GenerateTextOptions): Promise<GenerateTextResponse> {
+    if (!this.client) {
+      return {
+        content: 'Gemini is not configured. Please set GEMINI_API_KEY in your environment variables.',
+        success: false,
+      };
+    }
+
     try {
       const result = await this.client.models.generateContent({
         model: this.model,

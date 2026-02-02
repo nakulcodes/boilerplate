@@ -11,4 +11,8 @@ export class OrganizationRepository extends Repository<OrganizationEntity> {
   ) {
     super(repository.target, repository.manager, repository.queryRunner);
   }
+
+  async findById(id: string): Promise<OrganizationEntity | null> {
+    return this.findOne({ where: { id } });
+  }
 }
