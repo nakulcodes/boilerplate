@@ -77,10 +77,6 @@ function RolesContent() {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-32" />
-          <Skeleton className="h-9 w-28" />
-        </div>
         {Array.from({ length: 3 }).map((_, i) => (
           <Skeleton key={i} className="h-16 w-full" />
         ))}
@@ -92,13 +88,13 @@ function RolesContent() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Roles</h1>
+          <h2 className="text-lg font-medium">Roles</h2>
           <p className="text-sm text-muted-foreground">
             Manage roles and their permissions
           </p>
         </div>
         {hasPermission(PERMISSIONS_ENUM.ROLE_CREATE) && (
-          <Link href="/dashboard/roles/new">
+          <Link href="/dashboard/settings/roles/new">
             <Button>Create Role</Button>
           </Link>
         )}
@@ -153,7 +149,9 @@ function RolesContent() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem asChild>
-                            <Link href={`/dashboard/roles/${role.id}/edit`}>
+                            <Link
+                              href={`/dashboard/settings/roles/${role.id}/edit`}
+                            >
                               Edit
                             </Link>
                           </DropdownMenuItem>
@@ -198,7 +196,7 @@ function RolesContent() {
   );
 }
 
-export default function RolesPage() {
+export default function SettingsRolesPage() {
   return (
     <PermissionGuard
       permissions={PERMISSIONS_ENUM.ROLE_LIST_READ}

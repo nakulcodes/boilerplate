@@ -37,7 +37,7 @@ function CreateRoleContent() {
         body: JSON.stringify(formData),
       });
       toast.success('Role created');
-      router.push('/dashboard/roles');
+      router.push('/dashboard/settings/roles');
     } catch (err: any) {
       toast.error(err.message || 'Failed to create role');
     }
@@ -46,13 +46,13 @@ function CreateRoleContent() {
   return (
     <div className="max-w-4xl space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/dashboard/roles">
+        <Link href="/dashboard/settings/roles">
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
             <ArrowLeftIcon className="h-4 w-4" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Create Role</h1>
+          <h2 className="text-lg font-medium">Create Role</h2>
           <p className="text-sm text-muted-foreground">
             Define a new role with specific permissions
           </p>
@@ -101,7 +101,7 @@ function CreateRoleContent() {
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Creating...' : 'Create Role'}
           </Button>
-          <Link href="/dashboard/roles">
+          <Link href="/dashboard/settings/roles">
             <Button type="button" variant="outline" disabled={isSubmitting}>
               Cancel
             </Button>

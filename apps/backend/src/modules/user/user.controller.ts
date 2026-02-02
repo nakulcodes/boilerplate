@@ -168,6 +168,7 @@ export class UserController {
         organizationId: user.organizationId,
         firstName: dto.firstName,
         lastName: dto.lastName,
+        roleId: dto.roleId,
       }),
     );
   }

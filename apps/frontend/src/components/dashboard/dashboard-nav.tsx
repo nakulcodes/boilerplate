@@ -3,26 +3,17 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { usePermissions } from '@/hooks/use-permissions';
-import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
-import {
-  HomeIcon,
-  Cog6ToothIcon,
-  UserIcon,
-  ShieldCheckIcon,
-} from '@heroicons/react/24/solid';
-import { Permission } from '@/types/permissions.type';
+import { HomeIcon, Cog6ToothIcon } from '@heroicons/react/24/solid';
 
 interface Route {
   href: string;
   label: string;
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-  permission?: Permission;
+  activeMatch?: (pathname: string) => boolean;
 }
 
 export function DashboardNav() {
   const pathname = usePathname();
-  const { hasPermission } = usePermissions();
 
   const routes: Route[] = [
     {
@@ -31,27 +22,12 @@ export function DashboardNav() {
       icon: HomeIcon,
     },
     {
-      href: '/dashboard/users',
-      label: 'Users',
-      icon: UserIcon,
-      permission: PERMISSIONS_ENUM.USER_LIST_READ,
-    },
-    {
-      href: '/dashboard/roles',
-      label: 'Roles',
-      icon: ShieldCheckIcon,
-      permission: PERMISSIONS_ENUM.ROLE_LIST_READ,
-    },
-    {
       href: '/dashboard/settings',
       label: 'Settings',
       icon: Cog6ToothIcon,
+      activeMatch: (p) => p.startsWith('/dashboard/settings'),
     },
   ];
-
-  const visibleRoutes = routes.filter(
-    (route) => !route.permission || hasPermission(route.permission),
-  );
 
   return (
     <nav className="border-r border-border dark:border-border bg-gray-50/40 dark:bg-dark-background lg:w-72">
@@ -65,12 +41,10 @@ export function DashboardNav() {
           </p>
         </div>
         <div className="space-y-2">
-          {visibleRoutes.map((route) => {
-            const isActive =
-              route.href === '/dashboard'
-                ? pathname === '/dashboard'
-                : pathname === route.href ||
-                  pathname.startsWith(route.href + '/');
+          {routes.map((route) => {
+            const isActive = route.activeMatch
+              ? route.activeMatch(pathname)
+              : pathname === route.href;
 
             return (
               <Link

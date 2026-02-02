@@ -28,8 +28,12 @@ export class AuthService {
     return bcrypt.compare(password, hashedPassword);
   }
 
-  generateAccessToken(user: UserEntity, permissions: string[] = []): string {
-    const payload = {
+  generateAccessToken(
+    user: UserEntity,
+    permissions: string[] = [],
+    impersonatedBy?: string,
+  ): string {
+    const payload: Record<string, unknown> = {
       userId: user.id,
       email: user.email,
       organizationId: user.organizationId,
@@ -37,6 +41,10 @@ export class AuthService {
       firstName: user.firstName ?? '',
       lastName: user.lastName ?? '',
     };
+
+    if (impersonatedBy) {
+      payload.impersonatedBy = impersonatedBy;
+    }
 
     const accessSecret = this.configService.get<string>('JWT_ACCESS_SECRET');
     const expiresIn = this.configService.get('JWT_ACCESS_EXPIRES_IN') ?? '1h';

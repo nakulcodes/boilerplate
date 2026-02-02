@@ -5,7 +5,11 @@ import { fetchApi } from '@/utils/api-client';
 import { API_ROUTES } from '@/config/api-routes';
 import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
 import { usePermissions } from '@/hooks/use-permissions';
+import { useSession } from '@/contexts/session-context';
+import { useImpersonation } from '@/hooks/use-impersonation';
 import { PermissionGuard } from '@/components/auth/permission-guard';
+import { InviteUserDialog } from '@/components/users/invite-user-dialog';
+import { EditUserDialog } from '@/components/users/edit-user-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { InitialsAvatar } from '@/components/ui/initials-avatar';
@@ -60,7 +64,11 @@ const statusVariant: Record<
 function UsersContent() {
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<UserListItem | null>(null);
   const { hasPermission } = usePermissions();
+  const { user: currentUser } = useSession();
+  const { startImpersonation } = useImpersonation();
 
   const loadUsers = useCallback(async () => {
     try {
@@ -82,9 +90,7 @@ function UsersContent() {
 
   const handleBlock = async (userId: string) => {
     try {
-      await fetchApi(API_ROUTES.USERS.BLOCK(userId), {
-        method: 'POST',
-      });
+      await fetchApi(API_ROUTES.USERS.BLOCK(userId), { method: 'POST' });
       toast.success('User blocked');
       loadUsers();
     } catch (err: any) {
@@ -94,9 +100,7 @@ function UsersContent() {
 
   const handleUnblock = async (userId: string) => {
     try {
-      await fetchApi(API_ROUTES.USERS.UNBLOCK(userId), {
-        method: 'POST',
-      });
+      await fetchApi(API_ROUTES.USERS.UNBLOCK(userId), { method: 'POST' });
       toast.success('User unblocked');
       loadUsers();
     } catch (err: any) {
@@ -123,12 +127,15 @@ function UsersContent() {
     return user.email;
   };
 
+  const hasActions = (user: UserListItem) =>
+    hasPermission(PERMISSIONS_ENUM.USER_UPDATE_STATUS) ||
+    hasPermission(PERMISSIONS_ENUM.USER_CREATE) ||
+    hasPermission(PERMISSIONS_ENUM.USER_UPDATE) ||
+    hasPermission(PERMISSIONS_ENUM.USER_IMPERSONATE);
+
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-32" />
-        </div>
         {Array.from({ length: 5 }).map((_, i) => (
           <Skeleton key={i} className="h-16 w-full" />
         ))}
@@ -140,11 +147,14 @@ function UsersContent() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Users</h1>
+          <h2 className="text-lg font-medium">Team Members</h2>
           <p className="text-sm text-muted-foreground">
             Manage team members and their roles
           </p>
         </div>
+        {hasPermission(PERMISSIONS_ENUM.USER_CREATE) && (
+          <Button onClick={() => setInviteOpen(true)}>Invite User</Button>
+        )}
       </div>
 
       <div className="rounded-lg border">
@@ -197,8 +207,7 @@ function UsersContent() {
                     </span>
                   </TableCell>
                   <TableCell>
-                    {(hasPermission(PERMISSIONS_ENUM.USER_UPDATE_STATUS) ||
-                      hasPermission(PERMISSIONS_ENUM.USER_CREATE)) && (
+                    {hasActions(user) && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
@@ -210,12 +219,30 @@ function UsersContent() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          {hasPermission(PERMISSIONS_ENUM.USER_UPDATE) && (
+                            <DropdownMenuItem
+                              onClick={() => setEditTarget(user)}
+                            >
+                              Edit
+                            </DropdownMenuItem>
+                          )}
                           {user.status === 'invited' &&
                             hasPermission(PERMISSIONS_ENUM.USER_CREATE) && (
                               <DropdownMenuItem
                                 onClick={() => handleResendInvite(user.id)}
                               >
                                 Resend Invite
+                              </DropdownMenuItem>
+                            )}
+                          {user.status === 'active' &&
+                            user.id !== currentUser?.userId &&
+                            hasPermission(
+                              PERMISSIONS_ENUM.USER_IMPERSONATE,
+                            ) && (
+                              <DropdownMenuItem
+                                onClick={() => startImpersonation(user.id)}
+                              >
+                                Impersonate
                               </DropdownMenuItem>
                             )}
                           {user.status === 'active' &&
@@ -249,11 +276,24 @@ function UsersContent() {
           </TableBody>
         </Table>
       </div>
+
+      <InviteUserDialog
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+        onSuccess={loadUsers}
+      />
+
+      <EditUserDialog
+        open={!!editTarget}
+        onOpenChange={(open) => !open && setEditTarget(null)}
+        onSuccess={loadUsers}
+        user={editTarget}
+      />
     </div>
   );
 }
 
-export default function UsersPage() {
+export default function SettingsUsersPage() {
   return (
     <PermissionGuard
       permissions={PERMISSIONS_ENUM.USER_LIST_READ}

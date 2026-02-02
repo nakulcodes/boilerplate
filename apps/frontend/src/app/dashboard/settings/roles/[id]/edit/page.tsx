@@ -44,7 +44,7 @@ function EditRoleContent() {
       reset({ name: data.name, permissions: [...data.permissions] });
     } catch (err: any) {
       toast.error(err.message || 'Failed to load role');
-      router.push('/dashboard/roles');
+      router.push('/dashboard/settings/roles');
     } finally {
       setIsLoading(false);
     }
@@ -61,7 +61,7 @@ function EditRoleContent() {
         body: JSON.stringify(formData),
       });
       toast.success('Role updated');
-      router.push('/dashboard/roles');
+      router.push('/dashboard/settings/roles');
     } catch (err: any) {
       toast.error(err.message || 'Failed to update role');
     }
@@ -84,13 +84,13 @@ function EditRoleContent() {
   return (
     <div className="max-w-4xl space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/dashboard/roles">
+        <Link href="/dashboard/settings/roles">
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
             <ArrowLeftIcon className="h-4 w-4" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Edit Role</h1>
+          <h2 className="text-lg font-medium">Edit Role</h2>
           <p className="text-sm text-muted-foreground">
             Update role name and permissions
           </p>
@@ -139,7 +139,7 @@ function EditRoleContent() {
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Saving...' : 'Update Role'}
           </Button>
-          <Link href="/dashboard/roles">
+          <Link href="/dashboard/settings/roles">
             <Button type="button" variant="outline" disabled={isSubmitting}>
               Cancel
             </Button>

@@ -16,6 +16,7 @@ import { PasswordReset } from './usecases/password-reset/password-reset.usecase'
 import { UpdatePassword } from './usecases/update-password/update-password.usecase';
 import { RefreshToken } from './usecases/refresh-token/refresh-token.usecase';
 import { Logout } from './usecases/logout/logout.usecase';
+import { Impersonate } from './usecases/impersonate/impersonate.usecase';
 
 const USE_CASES = [
   Login,
@@ -25,6 +26,7 @@ const USE_CASES = [
   UpdatePassword,
   RefreshToken,
   Logout,
+  Impersonate,
 ];
 
 @Module({
