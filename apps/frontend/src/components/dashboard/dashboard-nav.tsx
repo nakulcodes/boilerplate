@@ -23,6 +23,7 @@ interface Route {
 export function DashboardNav() {
   const pathname = usePathname();
   const { hasPermission } = usePermissions();
+  const isDevBypass = process.env.NEXT_PUBLIC_DEV_BYPASS_PERMISSIONS === 'true';
 
   const routes: Route[] = [
     {
@@ -49,9 +50,9 @@ export function DashboardNav() {
     },
   ];
 
-  const visibleRoutes = routes.filter(
-    (route) => !route.permission || hasPermission(route.permission)
-  );
+  const visibleRoutes = isDevBypass
+    ? routes
+    : routes.filter((route) => !route.permission || hasPermission(route.permission));
 
   return (
     <nav className="border-r border-border dark:border-border bg-gray-50/40 dark:bg-dark-background lg:w-72">

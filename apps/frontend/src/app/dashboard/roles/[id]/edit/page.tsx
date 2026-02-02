@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { fetchApi } from "@/utils/api-client";
-import { buildApiUrl, API_ROUTES } from "@/config/api-routes";
+import { API_ROUTES } from "@/config/api-routes";
 import { PERMISSIONS_ENUM } from "@/constants/permissions.constants";
 import { PermissionGuard } from "@/components/auth/permission-guard";
 import { PermissionPicker } from "@/components/roles/permission-picker";
@@ -31,7 +31,7 @@ function EditRoleContent() {
   const loadRole = useCallback(async () => {
     try {
       const data = await fetchApi<Role>(
-        buildApiUrl(API_ROUTES.ROLES.GET(roleId))
+        API_ROUTES.ROLES.GET(roleId)
       );
       setRole(data);
       setName(data.name);
@@ -54,7 +54,7 @@ function EditRoleContent() {
 
     setIsSaving(true);
     try {
-      await fetchApi(buildApiUrl(API_ROUTES.ROLES.UPDATE(roleId)), {
+      await fetchApi(API_ROUTES.ROLES.UPDATE(roleId), {
         method: "PUT",
         body: JSON.stringify({ name, permissions }),
       });

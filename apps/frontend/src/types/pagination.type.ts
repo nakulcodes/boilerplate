@@ -1,9 +1,9 @@
 export interface PaginatedResponse<T> {
-  success: boolean;
   data: T[];
-  pagination: {
-    total: number;
-    page: number;
-    lastPage: number;
-  };
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
 } 
