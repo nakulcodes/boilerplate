@@ -40,7 +40,7 @@ export function DocumentationIgnore() {
  * @returns {Decorator} The decorator to be used on the method.
  */
 
-export function SdkIgnorePath(methodName: string) {
+export function SdkIgnorePath(_methodName: string) {
   return applyDecorators(ApiExtension('x-speakeasy-ignore', 'true'));
 }
 

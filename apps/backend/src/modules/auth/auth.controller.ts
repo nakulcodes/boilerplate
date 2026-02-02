@@ -15,7 +15,6 @@ import { RequireAuthentication } from '../shared/decorators/require-authenticati
 import { UserSession } from '../shared/decorators/user-session.decorator';
 import type { UserSessionData } from '../shared/decorators/user-session.decorator';
 
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RefreshJwtGuard } from './guards/refresh-jwt.guard';
 import { LoginBodyDto } from './dtos/login.dto';
 import { RegisterBodyDto } from './dtos/register.dto';
@@ -29,7 +28,10 @@ import {
   RefreshTokenResponseDto,
 } from './dtos/refresh-token.dto';
 import { LogoutBodyDto, LogoutResponseDto } from './dtos/logout.dto';
-import { LoginResponseDto, RegisterResponseDto } from './dtos/auth-response.dto';
+import {
+  LoginResponseDto,
+  RegisterResponseDto,
+} from './dtos/auth-response.dto';
 import { LoginCommand } from './usecases/login/login.command';
 import { UserRegisterCommand } from './usecases/register/user-register.command';
 import { UserRegister } from './usecases/register/user-register.usecase';

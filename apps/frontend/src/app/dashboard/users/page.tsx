@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
-import { fetchApi } from "@/utils/api-client";
-import { API_ROUTES } from "@/config/api-routes";
-import { PERMISSIONS_ENUM } from "@/constants/permissions.constants";
-import { usePermissions } from "@/hooks/use-permissions";
-import { PermissionGuard } from "@/components/auth/permission-guard";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { InitialsAvatar } from "@/components/ui/initials-avatar";
+import { useState, useEffect, useCallback } from 'react';
+import { fetchApi } from '@/utils/api-client';
+import { buildApiUrl, API_ROUTES } from '@/config/api-routes';
+import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
+import { usePermissions } from '@/hooks/use-permissions';
+import { PermissionGuard } from '@/components/auth/permission-guard';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { InitialsAvatar } from '@/components/ui/initials-avatar';
 import {
   Table,
   TableBody,
@@ -16,17 +16,16 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "@/lib/toast";
-import { EllipsisVerticalIcon } from "@heroicons/react/24/solid";
-import { PaginatedResponse } from "@/types/pagination.type";
+} from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/lib/toast';
+import { EllipsisVerticalIcon } from '@heroicons/react/24/solid';
 
 interface UserListItem {
   id: string;
@@ -40,14 +39,22 @@ interface UserListItem {
   role: { id: string; name: string } | null;
   createdAt: string;
   invitedBy: string | null;
-  inviter: { id: string; firstName: string | null; lastName: string | null; email: string } | null;
+  inviter: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+  } | null;
 }
 
-const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  active: "default",
-  invited: "secondary",
-  blocked: "destructive",
-  inactive: "outline",
+const statusVariant: Record<
+  string,
+  'default' | 'secondary' | 'destructive' | 'outline'
+> = {
+  active: 'default',
+  invited: 'secondary',
+  blocked: 'destructive',
+  inactive: 'outline',
 };
 
 function UsersContent() {
@@ -57,17 +64,13 @@ function UsersContent() {
 
   const loadUsers = useCallback(async () => {
     try {
-      const response = await fetchApi<PaginatedResponse<UserListItem>>(
-        API_ROUTES.USERS.LIST,
-        { method: "POST", body: JSON.stringify({ page: 1, limit: 50 }) }
+      const data = await fetchApi<{ data: UserListItem[] }>(
+        buildApiUrl(API_ROUTES.USERS.LIST),
+        { method: 'POST', body: JSON.stringify({ page: 1, limit: 50 }) },
       );
-      console.log("API Response:", response);
-      console.log("Response.data:", response?.data);
-      setUsers(response?.data || []);
+      setUsers(data?.data || []);
     } catch (err: any) {
-      console.error("Error loading users:", err);
-      toast.error(err.message || "Failed to load users");
-      setUsers([]);
+      toast.error(err.message || 'Failed to load users');
     } finally {
       setIsLoading(false);
     }
@@ -79,43 +82,43 @@ function UsersContent() {
 
   const handleBlock = async (userId: string) => {
     try {
-      await fetchApi(API_ROUTES.USERS.BLOCK(userId), {
-        method: "POST",
+      await fetchApi(buildApiUrl(API_ROUTES.USERS.BLOCK(userId)), {
+        method: 'POST',
       });
-      toast.success("User blocked");
+      toast.success('User blocked');
       loadUsers();
     } catch (err: any) {
-      toast.error(err.message || "Failed to block user");
+      toast.error(err.message || 'Failed to block user');
     }
   };
 
   const handleUnblock = async (userId: string) => {
     try {
-      await fetchApi(API_ROUTES.USERS.UNBLOCK(userId), {
-        method: "POST",
+      await fetchApi(buildApiUrl(API_ROUTES.USERS.UNBLOCK(userId)), {
+        method: 'POST',
       });
-      toast.success("User unblocked");
+      toast.success('User unblocked');
       loadUsers();
     } catch (err: any) {
-      toast.error(err.message || "Failed to unblock user");
+      toast.error(err.message || 'Failed to unblock user');
     }
   };
 
   const handleResendInvite = async (userId: string) => {
     try {
-      await fetchApi(API_ROUTES.USERS.RESEND_INVITE, {
-        method: "POST",
+      await fetchApi(buildApiUrl(API_ROUTES.USERS.RESEND_INVITE), {
+        method: 'POST',
         body: JSON.stringify({ userId }),
       });
-      toast.success("Invite resent");
+      toast.success('Invite resent');
     } catch (err: any) {
-      toast.error(err.message || "Failed to resend invite");
+      toast.error(err.message || 'Failed to resend invite');
     }
   };
 
   const getDisplayName = (user: UserListItem) => {
     if (user.firstName || user.lastName) {
-      return `${user.firstName || ""} ${user.lastName || ""}`.trim();
+      return `${user.firstName || ''} ${user.lastName || ''}`.trim();
     }
     return user.email;
   };
@@ -157,7 +160,10 @@ function UsersContent() {
           <TableBody>
             {users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                <TableCell
+                  colSpan={4}
+                  className="text-center py-8 text-muted-foreground"
+                >
                   No users found
                 </TableCell>
               </TableRow>
@@ -166,9 +172,14 @@ function UsersContent() {
                 <TableRow key={user.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <InitialsAvatar name={getDisplayName(user)} className="h-8 w-8 text-xs" />
+                      <InitialsAvatar
+                        name={getDisplayName(user)}
+                        className="h-8 w-8 text-xs"
+                      />
                       <div>
-                        <div className="font-medium">{getDisplayName(user)}</div>
+                        <div className="font-medium">
+                          {getDisplayName(user)}
+                        </div>
                         <div className="text-sm text-muted-foreground">
                           {user.email}
                         </div>
@@ -176,13 +187,13 @@ function UsersContent() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={statusVariant[user.status] || "outline"}>
+                    <Badge variant={statusVariant[user.status] || 'outline'}>
                       {user.status}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <span className="text-sm text-muted-foreground">
-                      {user.role?.name || "No role"}
+                      {user.role?.name || 'No role'}
                     </span>
                   </TableCell>
                   <TableCell>
@@ -190,12 +201,16 @@ function UsersContent() {
                       hasPermission(PERMISSIONS_ENUM.USER_CREATE)) && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                          >
                             <EllipsisVerticalIcon className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          {user.status === "invited" &&
+                          {user.status === 'invited' &&
                             hasPermission(PERMISSIONS_ENUM.USER_CREATE) && (
                               <DropdownMenuItem
                                 onClick={() => handleResendInvite(user.id)}
@@ -203,8 +218,10 @@ function UsersContent() {
                                 Resend Invite
                               </DropdownMenuItem>
                             )}
-                          {user.status === "active" &&
-                            hasPermission(PERMISSIONS_ENUM.USER_UPDATE_STATUS) && (
+                          {user.status === 'active' &&
+                            hasPermission(
+                              PERMISSIONS_ENUM.USER_UPDATE_STATUS,
+                            ) && (
                               <DropdownMenuItem
                                 onClick={() => handleBlock(user.id)}
                                 className="text-destructive"
@@ -212,8 +229,10 @@ function UsersContent() {
                                 Block
                               </DropdownMenuItem>
                             )}
-                          {user.status === "blocked" &&
-                            hasPermission(PERMISSIONS_ENUM.USER_UPDATE_STATUS) && (
+                          {user.status === 'blocked' &&
+                            hasPermission(
+                              PERMISSIONS_ENUM.USER_UPDATE_STATUS,
+                            ) && (
                               <DropdownMenuItem
                                 onClick={() => handleUnblock(user.id)}
                               >

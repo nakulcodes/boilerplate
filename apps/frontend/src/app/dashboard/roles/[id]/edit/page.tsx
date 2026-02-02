@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback, Suspense } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { fetchApi } from "@/utils/api-client";
-import { API_ROUTES } from "@/config/api-routes";
-import { PERMISSIONS_ENUM } from "@/constants/permissions.constants";
-import { PermissionGuard } from "@/components/auth/permission-guard";
-import { PermissionPicker } from "@/components/roles/permission-picker";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "@/lib/toast";
-import { ArrowLeftIcon } from "@heroicons/react/24/solid";
-import Link from "next/link";
-import type { Role } from "@/types/role.type";
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { fetchApi } from '@/utils/api-client';
+import { buildApiUrl, API_ROUTES } from '@/config/api-routes';
+import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
+import { PermissionGuard } from '@/components/auth/permission-guard';
+import { PermissionPicker } from '@/components/roles/permission-picker';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/lib/toast';
+import { ArrowLeftIcon } from '@heroicons/react/24/solid';
+import Link from 'next/link';
+import type { Role } from '@/types/role.type';
 
 function EditRoleContent() {
   const router = useRouter();
@@ -23,7 +23,7 @@ function EditRoleContent() {
   const roleId = params.id as string;
 
   const [role, setRole] = useState<Role | null>(null);
-  const [name, setName] = useState("");
+  const [name, setName] = useState('');
   const [permissions, setPermissions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -31,14 +31,14 @@ function EditRoleContent() {
   const loadRole = useCallback(async () => {
     try {
       const data = await fetchApi<Role>(
-        API_ROUTES.ROLES.GET(roleId)
+        buildApiUrl(API_ROUTES.ROLES.GET(roleId)),
       );
       setRole(data);
       setName(data.name);
       setPermissions([...data.permissions]);
     } catch (err: any) {
-      toast.error(err.message || "Failed to load role");
-      router.push("/dashboard/roles");
+      toast.error(err.message || 'Failed to load role');
+      router.push('/dashboard/roles');
     } finally {
       setIsLoading(false);
     }
@@ -54,14 +54,14 @@ function EditRoleContent() {
 
     setIsSaving(true);
     try {
-      await fetchApi(API_ROUTES.ROLES.UPDATE(roleId), {
-        method: "PUT",
+      await fetchApi(buildApiUrl(API_ROUTES.ROLES.UPDATE(roleId)), {
+        method: 'PUT',
         body: JSON.stringify({ name, permissions }),
       });
-      toast.success("Role updated");
-      router.push("/dashboard/roles");
+      toast.success('Role updated');
+      router.push('/dashboard/roles');
     } catch (err: any) {
-      toast.error(err.message || "Failed to update role");
+      toast.error(err.message || 'Failed to update role');
     } finally {
       setIsSaving(false);
     }
@@ -129,7 +129,7 @@ function EditRoleContent() {
 
         <div className="flex items-center gap-3">
           <Button type="submit" disabled={isSaving || !name.trim()}>
-            {isSaving ? "Saving..." : "Update Role"}
+            {isSaving ? 'Saving...' : 'Update Role'}
           </Button>
           <Link href="/dashboard/roles">
             <Button type="button" variant="outline" disabled={isSaving}>
