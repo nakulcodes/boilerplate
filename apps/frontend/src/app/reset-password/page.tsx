@@ -1,14 +1,11 @@
-import ResetPasswordForm from "@/components/auth/reset-password-form";
-import { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Reset Password",
-  description: "Reset your password with a token",
-};
+import { Suspense } from "react";
+import ResetPasswordForm from "@/components/auth/reset-password-form";
 
 export default function ResetPasswordPage() {
   return (
-    <div className=" flex h-screen w-full flex-col items-center justify-center">
+    <div className="flex h-screen w-full flex-col items-center justify-center">
       <div className="mx-auto flex w-full flex-col justify-center sm:w-96 space-y-6">
         <div className="flex flex-col space-y-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -18,7 +15,9 @@ export default function ResetPasswordPage() {
             Create a new password for your account
           </p>
         </div>
-        <ResetPasswordForm />
+        <Suspense fallback={null}>
+          <ResetPasswordForm />
+        </Suspense>
       </div>
     </div>
   );

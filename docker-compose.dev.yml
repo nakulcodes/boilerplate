@@ -1,4 +1,18 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-dev
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=boilerplate
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+
   frontend:
     image: node:20-alpine
     container_name: frontend-dev
@@ -33,8 +47,18 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=4000
+      - DB_URL=postgresql://user:password@postgres:5432/boilerplate
+      - JWT_ACCESS_SECRET=dev-access-secret-key-change-in-production
+      - JWT_REFRESH_SECRET=dev-refresh-secret-key-change-in-production
+      - JWT_ACCESS_EXPIRES_IN=1h
+      - JWT_REFRESH_EXPIRES_IN=30d
     networks:
       - app-network
+    depends_on:
+      - postgres
+
+volumes:
+  pgdata:
 
 networks:
   app-network:

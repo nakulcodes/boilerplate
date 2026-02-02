@@ -43,6 +43,8 @@ export class AuthService {
       email: user.email,
       organizationId: user.organizationId,
       permissions: [],
+      firstName: user.firstName ?? "",
+      lastName: user.lastName ?? "",
     };
 
     const accessSecret = this.configService.get<string>('JWT_ACCESS_SECRET');

@@ -1,11 +1,13 @@
 "use client";
 
+import { Suspense } from "react";
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getUserFromToken } from "@/utils/auth";
 import { useSession } from "@/contexts/session-context";
+import { setToken } from "@/utils/cookies";
 
-export default function LoginSuccess() {
+function LoginSuccessContent() {
   const router = useRouter();
   const { setUser } = useSession();
   const searchParams = useSearchParams();
@@ -18,42 +20,34 @@ export default function LoginSuccess() {
       return;
     }
 
-    const setTokenCookie = async () => {
-      try {
-        const response = await fetch("/api/auth/setcookie", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(token),
-        });
+    setToken(token);
+    const user = getUserFromToken(token);
 
-        if (!response.ok) {
-          router.push("/");
-          return;
-        }
-
-        const user = getUserFromToken(token);
-        setUser(user);
-        const route =
-          user?.status === "suspended"
-            ? "/no-access/suspended"
-            : user?.status === "pending"
-              ? "/no-access/pending"
-              : "/dashboard";
-
-        router.push(route);
-      } catch (err) {
-        router.push("/");
-      }
-    };
-
-    setTokenCookie();
+    if (user) {
+      setUser(user);
+      router.push("/dashboard");
+    } else {
+      router.push("/");
+    }
   }, [router, searchParams, setUser]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-white dark:bg-dark-background">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-black dark:border-white border-t-transparent"></div>
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-black dark:border-white border-t-transparent" />
     </div>
+  );
+}
+
+export default function LoginSuccess() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-black dark:border-white border-t-transparent" />
+        </div>
+      }
+    >
+      <LoginSuccessContent />
+    </Suspense>
   );
 }

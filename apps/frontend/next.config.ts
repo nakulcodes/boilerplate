@@ -1,14 +1,9 @@
-import type { NextConfig } from 'next';
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "export",
   images: {
-    domains: ["images.unsplash.com"], // Add other domains as needed
-  },
-  output: "standalone",
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '50mb',
-    },
+    unoptimized: true,
   },
 };
 

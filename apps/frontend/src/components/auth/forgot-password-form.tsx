@@ -1,4 +1,5 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,7 +13,8 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { toast } from "@/lib/toast";
 import Link from "next/link";
-import { fetchApi } from "@/utils/api";
+import { fetchApi } from "@/utils/api-client";
+import { API_ROUTES } from "@/config/api-routes";
 
 export default function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
@@ -24,15 +26,10 @@ export default function ForgotPasswordForm() {
     setIsLoading(true);
 
     try {
-      const response = await fetchApi("/auth/forgot-password", {
+      await fetchApi(API_ROUTES.AUTH.FORGOT_PASSWORD, {
         method: "POST",
         body: JSON.stringify({ email }),
       });
-
-      if (!response.success) {
-        toast.error("Error", response.error || "Failed to process request");
-        return;
-      }
 
       setIsSuccess(true);
       toast.success("Success", "Password reset link sent to your email");
@@ -56,7 +53,6 @@ export default function ForgotPasswordForm() {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-          
           <div className="text-center">
             <Link
               href="/"

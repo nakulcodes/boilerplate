@@ -2,6 +2,8 @@
 
 import { JWTPayload } from "@/types/user.type";
 import { getUserFromToken } from "@/utils/auth";
+import { getToken, clearTokens } from "@/utils/cookies";
+import { buildApiUrl, API_ROUTES } from "@/config/api-routes";
 import {
   createContext,
   useContext,
@@ -30,62 +32,46 @@ const SessionContext = createContext<SessionContextType>({
 
 interface SessionProviderProps {
   children: ReactNode;
-  initialUser?: JWTPayload | null;
-  token?: string | null;
 }
 
-export function SessionProvider({
-  children,
-  initialUser,
-  token,
-}: SessionProviderProps) {
-  const [user, setUser] = useState<JWTPayload | null>(initialUser ?? null);
-  const [isLoading, setIsLoading] = useState(!initialUser && !!token);
+export function SessionProvider({ children }: SessionProviderProps) {
+  const [user, setUser] = useState<JWTPayload | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const isAuthenticated = !!user;
   const router = useRouter();
 
   const logout = useCallback(async () => {
     try {
+      const token = getToken();
+      if (token) {
+        await fetch(buildApiUrl(API_ROUTES.AUTH.LOGOUT), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ refreshToken: "" }),
+        }).catch(() => {});
+      }
+    } finally {
       setUser(null);
-
-      await fetch("/api/auth/logout", { method: "POST" });
-
-      router.refresh();
-
+      clearTokens();
       router.push("/");
-
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
-    } catch (error) {
-      console.error("Logout error:", error);
-      // Even if logout API fails, still navigate away and reload
-      router.push("/");
-      window.location.reload();
     }
   }, [router]);
 
   useEffect(() => {
-    if (!token || initialUser) return;
-
-    const initializeUser = async () => {
-      try {
-        const userData = getUserFromToken(token);
-        if (!userData) {
-          logout();
-          return;
-        }
-        setUser(userData as JWTPayload);
-      } catch (error) {
-        console.error("Error initializing user:", error);
-        logout();
-      } finally {
-        setIsLoading(false);
+    const token = getToken();
+    if (token) {
+      const userData = getUserFromToken(token);
+      if (userData) {
+        setUser(userData);
+      } else {
+        clearTokens();
       }
-    };
-
-    initializeUser();
-  }, [token, initialUser, logout]);
+    }
+    setIsLoading(false);
+  }, []);
 
   return (
     <SessionContext.Provider

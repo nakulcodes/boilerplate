@@ -1,90 +1,42 @@
 import { Permission } from "./permissions.type";
 
 export enum UserStatus {
+  INVITED = "invited",
   ACTIVE = "active",
-  SUSPENDED = "suspended",
-  PENDING = "pending",
+  INACTIVE = "inactive",
 }
-
-
 
 export interface User {
   id: string;
   email: string;
   firstName: string;
-  lastName: string;
-  roleId: string;
-  password: string;
-  role: {
-    name: string;
-  };
-  partner: {
-    name: string;
-  };
-  permissions?: string[];
-  createdAt: string;
-  updatedAt: string;
-  status: UserStatus;
-  partnerId: string;
-  isEmpireAccount?: boolean;
-  isImpersonated?: boolean;
-  originalAdminEmail?: string;
+  lastName: string | null;
+  organizationId: string;
+}
+
+export interface Organization {
+  id: string;
+  name: string;
 }
 
 export interface JWTPayload {
-  user_id: string;
+  userId: string;
   email: string;
-  role: string;
-  firstName: string;
-  lastName: string;
-  type: string;
+  organizationId: string;
   permissions: Permission[];
+  firstName?: string;
+  lastName?: string | null;
   exp?: number;
-  status: UserStatus;
-  partnerId: string;
-  isEmpireAccount: boolean;
-  isImpersonated?: boolean;
-  originalAdminId?: string;
-  originalAdminEmail?: string;
-}
-export interface ImportUser {
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  password: string;
-  status: UserStatus;
+  iat?: number;
 }
 
-export interface GetUsersParams {
-  page?: number;
-  limit?: number;
-  search?: string;
-  status?: string;
-  role?: string;
-  partnerId?: string;
+export interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  user: User;
+  organization: Organization;
 }
 
-export interface ImportUserResponse {
-  success: boolean;
-  data?: {
-    savedUsers: User[];
-    errors: string[];
-  };
-  message?: string[] | string;
-  error?: string;
-  statusCode?: number;
-}
-
-export interface NewUserData {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  roleId: string;
-  partnerId: string;
-}
-
-export const getFullName = (user: User): string => {
+export const getFullName = (user: Pick<User, "firstName" | "lastName">): string => {
   return `${user.firstName}${user.lastName ? " " + user.lastName : ""}`;
 };

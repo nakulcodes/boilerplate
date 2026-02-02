@@ -1,95 +1,37 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/contexts/session-context";
 import { useTheme } from "next-themes";
-import Image from "next/image";
-import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
-import { toast } from "@/lib/toast";
+import { usePathname } from "next/navigation";
 import { SunIcon, MoonIcon } from "@heroicons/react/24/outline";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function DashboardHeader() {
-  const { user, setUser } = useSession();
-  const router = useRouter();
+  const { user, logout } = useSession();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
-
-  const currentTab = pathname?.includes("/documentation")
-    ? "documentation"
-    : "dashboard";
-
-  const handleTabChange = (value: string) => {
-    router.push(value === "documentation" ? "/documentation" : "/dashboard");
-  };
-
-  const logout = async () => {
-    try {
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-      });
-      if (response.ok) {
-        setUser(null);
-        router.push("/");
-      } else {
-        toast.error("Error", "Failed to logout");
-      }
-    } catch (error) {
-      console.error("Error during logout:", error);
-    }
-  };
 
   return (
     <header className="border-b border-border dark:border-border bg-white dark:bg-dark-background dark:text-dark-text">
       <div className="flex h-16 items-center justify-between px-6 shadow-sm">
         <div className="flex items-center space-x-2">
-          <Image
-            src="/logo-icon.png"
-            alt="Empire Imports Logo"
-            width={32}
-            height={32}
-            className="h-8 rounded-full w-auto"
-          />
           <span className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-            Empire Imports
+            Boilerplate
           </span>
-
-            <div className="pl-2">
-              <Tabs value={currentTab} onValueChange={handleTabChange}>
-                <TabsList className="bg-zinc-100 text-xs  h-8 rounded-3xl dark:bg-zinc-800">
-                  <TabsTrigger
-                    className="rounded-3xl text-xs"
-                    value="dashboard"
-                  >
-                    App
-                  </TabsTrigger>
-                  <TabsTrigger
-                    className="rounded-3xl text-xs"
-                    value="documentation"
-                  >
-                    Doc
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-        
         </div>
 
         <div className="flex items-center space-x-6">
           {user && (
-            <Link
-              href="/dashboard/settings/profile"
-              className="flex items-center space-x-3"
-            >
+            <div className="flex items-center space-x-3">
               <div className="h-8 w-8 rounded-full bg-zinc-900 dark:bg-zinc-700 flex items-center justify-center">
                 <span className="text-sm font-medium text-white">
-                  {user?.email?.[0].toUpperCase()}
+                  {user.email[0].toUpperCase()}
                 </span>
               </div>
               <span className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
-                {user?.email}
+                {user.firstName || user.email}
               </span>
-            </Link>
+            </div>
           )}
           <Button
             variant="ghost"
