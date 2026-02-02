@@ -1,8 +1,5 @@
-// Types and interfaces
-export * from './types';
-
-// Permissions
-export * from './permissions';
+// Re-export from shared package for backward compatibility
+export * from '@boilerplate/shared';
 
 // Integration Provider enum
 export enum IntegrationProvider {

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetchApi } from '@/utils/api-client';
-import { buildApiUrl, API_ROUTES } from '@/config/api-routes';
+import { API_ROUTES } from '@/config/api-routes';
 import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
 import { PermissionGuard } from '@/components/auth/permission-guard';
 import { PermissionPicker } from '@/components/roles/permission-picker';
@@ -27,7 +27,7 @@ function CreateRoleContent() {
 
     setIsLoading(true);
     try {
-      await fetchApi(buildApiUrl(API_ROUTES.ROLES.CREATE), {
+      await fetchApi(API_ROUTES.ROLES.CREATE, {
         method: 'POST',
         body: JSON.stringify({ name, permissions }),
       });

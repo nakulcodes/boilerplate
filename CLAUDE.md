@@ -13,10 +13,12 @@
 
 ## Architecture
 
-- **Monorepo**: pnpm workspaces with `apps/frontend`, `apps/backend`, `packages/core`
+- **Monorepo**: pnpm workspaces with `apps/frontend`, `apps/backend`, `packages/shared`, `packages/core`
 - **Frontend**: Next.js 15 (static export, fully client-side rendered) — no SSR, no server components, no server actions
 - **Backend**: NestJS 11 with TypeORM + PostgreSQL
-- **Shared**: `@boilerplate/core` — commands, types, utilities shared across frontend and backend
+- **Shared Packages**:
+  - `@boilerplate/shared` — frontend-safe types, permissions, and utilities (no NestJS dependencies)
+  - `@boilerplate/core` — backend-only services (mail, storage, AI, cache) + re-exports from shared
 - **Package Manager**: pnpm 9.15.0
 
 ## Code Style
@@ -66,7 +68,7 @@ Before writing new code, use these existing utilities:
 
 **Permissions** — `src/hooks/use-permissions.ts`
 - `usePermissions()` — returns `{ hasPermission, hasAnyPermission, hasAllPermissions }`
-- Permission values defined in `src/constants/permissions.constants.ts`
+- Permission values re-exported from `@boilerplate/shared` in `src/constants/permissions.constants.ts`
 
 **Error Class** — `src/utils/error-class.ts`
 - `ApiError(message, statusCode, data?)` — thrown by `fetchApi`, catch in components
@@ -111,7 +113,7 @@ Before writing new code, use these existing utilities:
 - Responses are wrapped by `ResponseInterceptor` in `{ data: T }` format
 - Errors return `{ statusCode, message, timestamp, path }`
 - Use the command/usecase pattern for business logic
-- `@boilerplate/core` must be built before backend can run (`pnpm build:packages`)
+- Packages must be built before apps can run: `pnpm build:packages` (builds both `@boilerplate/shared` and `@boilerplate/core`)
 
 ### Backend: Use What Exists
 
@@ -192,7 +194,32 @@ Validation happens at `Command.create(data)` — throws `CommandValidationExcept
 
 ---
 
-## @boilerplate/core — Shared Package
+## Shared Packages
+
+### @boilerplate/shared — Frontend-Safe Package
+
+Used by both frontend and backend. Contains no NestJS dependencies.
+
+**Types** — `src/types.ts`
+- `ApiResponse<T>` — `{ success, payload?, metadata?, error?, message? }`
+- `PaginatedResponse<T>` — `{ success, payload[], metadata }`
+- `PaginationMetadata` — `{ page, limit, total, totalPages, hasNextPage, hasPreviousPage }`
+
+**Permissions** — `src/permissions.ts`
+- `PERMISSIONS_ENUM` — all permission constants
+- `ALL_PERMISSIONS` — array of all permissions
+- `PERMISSION_GROUPS` — grouped permissions by category
+
+**Utilities** — `src/utils/`
+- `addHours(hours, from?)`, `addDays(days, from?)` — date math
+- `generateSecureToken(prefix, byteLength?)` — `prefix_hexstring`
+- `generateInviteToken()`, `generatePasswordResetToken()` — prefixed tokens
+- `createPaginationMetadata(page, limit, total)`, `calculateSkip(page, limit)` — pagination helpers
+- `buildSlugFromDomain(domain)` — slug generation
+
+### @boilerplate/core — Backend-Only Package
+
+Used only by backend. Re-exports everything from `@boilerplate/shared` plus backend-specific services.
 
 **Commands** — `src/commands/`
 - `BaseCommand` — static `create<T>(data)` with class-validator validation
@@ -200,20 +227,10 @@ Validation happens at `Command.create(data)` — throws `CommandValidationExcept
 - `BasePaginatedCommand` — adds `page`, `limit`
 - `CommandValidationException` — thrown on validation failure
 
-**Types** — `src/types/`
-- `ApiResponse<T>` — `{ success, payload?, metadata?, error?, message? }`
-- `PaginatedResponse<T>` — `{ success, payload[], metadata }`
-- `PaginationMetadata` — `{ page, limit, total, totalPages, hasNextPage, hasPreviousPage }`
-
-**Utilities** — `src/utils/`
-- `addHours(hours, from?)`, `addDays(days, from?)` — date math
-- `generateSecureToken(prefix, byteLength?)` — `prefix_hexstring`
-- `generateInviteToken()`, `generatePasswordResetToken()` — prefixed tokens
+**Backend-Specific Utilities** — `src/utils/`
 - `encryptIntegrationData(data, key)`, `decryptIntegrationData(encrypted, key)` — AES-256-GCM
 - `buildUrl(baseUrl, path)` — joins URLs cleanly
-- `createPaginationMetadata(page, limit, total)`, `calculateSkip(page, limit)` — pagination helpers
 - `validateEmailDomain(email, domain)`, `extractEmailDomain(email)` — email utils
-- `buildSlugFromDomain(domain)` — slug generation
 
 **Services** — `src/services/`
 - Mail (Resend/SES with templates), Storage (S3/GCS), Cache (Redis), AI (OpenAI/Google)

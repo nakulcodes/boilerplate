@@ -20,6 +20,11 @@ export function PermissionGuard({
 }: PermissionGuardProps) {
   const { isAuthenticated, isLoading } = useSession();
   const { hasAnyPermission, hasAllPermissions } = usePermissions();
+  const isDevBypass = process.env.NEXT_PUBLIC_DEV_BYPASS_PERMISSIONS === 'true';
+
+  if (isDevBypass) {
+    return <>{children}</>;
+  }
 
   if (isLoading || !isAuthenticated) {
     return fallback;

@@ -8,6 +8,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 
@@ -15,9 +16,28 @@ export const PERMISSIONS_KEY = 'requiredPermissions';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly configService: ConfigService,
+  ) {}
 
   canActivate(context: ExecutionContext): boolean {
+    // Skip permission checks in development mode
+    const nodeEnv = this.configService.get<string>('NODE_ENV');
+    if (nodeEnv === 'development') {
+      const requiredPermissions = this.reflector.getAllAndOverride<string[]>(
+        PERMISSIONS_KEY,
+        [context.getHandler(), context.getClass()],
+      );
+
+      if (requiredPermissions && requiredPermissions.length > 0) {
+        console.warn(
+          `⚠️  [DEV MODE] Permission check bypassed for: [${requiredPermissions.join(', ')}]`,
+        );
+      }
+      return true;
+    }
+
     const requiredPermissions = this.reflector.getAllAndOverride<string[]>(
       PERMISSIONS_KEY,
       [context.getHandler(), context.getClass()],

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { fetchApi } from '@/utils/api-client';
-import { buildApiUrl, API_ROUTES } from '@/config/api-routes';
+import { API_ROUTES } from '@/config/api-routes';
 import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
 import { usePermissions } from '@/hooks/use-permissions';
 import { PermissionGuard } from '@/components/auth/permission-guard';
@@ -46,7 +46,7 @@ function RolesContent() {
 
   const loadRoles = useCallback(async () => {
     try {
-      const data = await fetchApi<Role[]>(buildApiUrl(API_ROUTES.ROLES.LIST));
+      const data = await fetchApi<Role[]>(API_ROUTES.ROLES.LIST);
       setRoles(data);
     } catch (err: any) {
       toast.error(err.message || 'Failed to load roles');
@@ -62,7 +62,7 @@ function RolesContent() {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await fetchApi(buildApiUrl(API_ROUTES.ROLES.DELETE(deleteTarget.id)), {
+      await fetchApi(API_ROUTES.ROLES.DELETE(deleteTarget.id), {
         method: 'DELETE',
       });
       toast.success('Role deleted');
