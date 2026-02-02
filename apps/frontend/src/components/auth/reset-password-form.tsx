@@ -1,4 +1,5 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,7 +15,8 @@ import { toast } from "@/lib/toast";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
-import { fetchApi } from "@/utils/api";
+import { fetchApi } from "@/utils/api-client";
+import { API_ROUTES } from "@/config/api-routes";
 
 export default function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -60,34 +62,21 @@ export default function ResetPasswordForm() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setError("Password must be at least 6 characters long");
+    if (newPassword.length < 8) {
+      setError("Password must be at least 8 characters long");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const response = await fetchApi("/auth/reset-password-with-token", {
+      await fetchApi(API_ROUTES.AUTH.RESET_PASSWORD, {
         method: "POST",
-        body: JSON.stringify({
-          token,
-          newPassword,
-        }),
+        body: JSON.stringify({ token, password: newPassword }),
       });
 
-      if (!response.success) {
-        setError(response.message || "Failed to reset password");
-        toast.error("Error", response.message || "Failed to reset password");
-        return;
-      }
-
       toast.success("Success", "Your password has been reset successfully");
-
-      // Redirect to login page after a short delay
-      setTimeout(() => {
-        router.push("/");
-      }, 2000);
+      setTimeout(() => router.push("/"), 2000);
     } catch (err) {
       const message = err instanceof Error ? err.message : "An error occurred";
       setError(message);

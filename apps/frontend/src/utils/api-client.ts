@@ -1,40 +1,37 @@
 "use client";
 
 import { ApiError } from "@/utils/error-class";
-import { getRuntimeConfig } from "@/utils/runtime-config";
+import { API_URL } from "@/config/api-routes";
+import { getToken } from "@/utils/cookies";
 
-export async function fetchApi(endpoint: string, options: RequestInit = {}) {
-  const config = await getRuntimeConfig();
-  if (!config || !config.apiUrl) {
-    throw new ApiError("API URL is not configured at runtime", 500);
-  }
-  const baseUrl = config.apiUrl + "/api";
+export async function fetchApi<T = unknown>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const token = getToken();
 
-  try {
-    const defaultOptions: RequestInit = {
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        ...(options.headers || {}),
-      },
-    };
-    const response = await fetch(`${baseUrl}${endpoint}`, {
-      ...defaultOptions,
-      ...options,
-    });
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers as Record<string, string> || {}),
+  };
 
-    const data = await response.json();
-    if (!data.success) {
-      if (response.status === 401) {
-        throw new ApiError("Unauthorized", 401);
-      }
-      throw new ApiError(data.message, response.status);
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new ApiError("Unauthorized", 401);
     }
-    return data;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError("An unexpected error occurred", 500);
+    throw new ApiError(
+      data.message || "Request failed",
+      response.status
+    );
   }
+
+  return data.data as T;
 }

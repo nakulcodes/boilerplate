@@ -10,7 +10,7 @@ export interface PasswordResetEmailVariables {
 /**
  * Generate subject line for password reset email
  */
-export function passwordResetEmailSubject(vars: PasswordResetEmailVariables): string {
+export function passwordResetEmailSubject(_vars: PasswordResetEmailVariables): string {
   return 'Reset Your Password';
 }
 

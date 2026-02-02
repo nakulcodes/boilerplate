@@ -1,64 +1,24 @@
 import { useSession } from "@/contexts/session-context";
 import { Permission } from "@/types/permissions.type";
-import { DEFAULT_ROLES } from "@/constants/role.constants";
 
 export function usePermissions() {
   const { user } = useSession();
 
-  const isAdmin =
-    user?.role === DEFAULT_ROLES.EMPIRE_ADMIN ||
-    user?.role === DEFAULT_ROLES.PARTNER_ADMIN;
-
   const hasPermission = (requiredPermission: Permission): boolean => {
-    // Admin check first - most permissive
-    if (isAdmin) {
-      return true;
-    }
-
-    // Check if user has permissions array
-    if (!user?.permissions || !Array.isArray(user.permissions)) {
-      return false;
-    }
-
+    if (!user?.permissions?.length) return false;
     return user.permissions.includes(requiredPermission);
   };
 
   const hasAnyPermission = (requiredPermissions: Permission[]): boolean => {
-    // Admin check first - most permissive
-    if (isAdmin) {
-      return true;
-    }
-
-    // Check if user has permissions array
-    if (!user?.permissions || !Array.isArray(user.permissions)) {
-      return false;
-    }
-
-    return requiredPermissions.some((permission) =>
-      user.permissions.includes(permission)
-    );
+    if (!requiredPermissions.length) return true;
+    if (!user?.permissions?.length) return false;
+    return requiredPermissions.some((p) => user.permissions.includes(p));
   };
 
   const hasAllPermissions = (requiredPermissions: Permission[]): boolean => {
-    // Admin check first - most permissive
-    if (isAdmin) {
-      return true;
-    }
-
-    // Check if user has permissions array
-    if (!user?.permissions || !Array.isArray(user.permissions)) {
-      return false;
-    }
-
-    return requiredPermissions.every((permission) =>
-      user.permissions.includes(permission)
-    );
+    if (!user?.permissions?.length) return false;
+    return requiredPermissions.every((p) => user.permissions.includes(p));
   };
 
-  return {
-    hasPermission,
-    hasAnyPermission,
-    hasAllPermissions,
-    isAdmin,
-  };
+  return { hasPermission, hasAnyPermission, hasAllPermissions };
 }

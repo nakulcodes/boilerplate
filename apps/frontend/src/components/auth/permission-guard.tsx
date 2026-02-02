@@ -19,14 +19,10 @@ export function PermissionGuard({
   fallback = null,
 }: PermissionGuardProps) {
   const { isAuthenticated, isLoading } = useSession();
-  const { hasAnyPermission, hasAllPermissions, isAdmin } = usePermissions();
+  const { hasAnyPermission, hasAllPermissions } = usePermissions();
 
   if (isLoading || !isAuthenticated) {
     return fallback;
-  }
-
-  if (isAdmin) {
-    return <>{children}</>;
   }
 
   const permissionArray = Array.isArray(permissions)
