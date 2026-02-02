@@ -144,7 +144,7 @@ export default function DashboardLayout({ children }) {
 ## Permissions
 
 - `usePermissions()` — returns `{ hasPermission, hasAnyPermission, hasAllPermissions, getScope }`
-- Permission constants re-exported from `@boilerplate/core` in `src/constants/permissions.constants.ts`
+- Permission constants re-exported from `@boilerplate/shared` in `src/constants/permissions.constants.ts`
 - `NEXT_PUBLIC_DEV_BYPASS_PERMISSIONS=true` bypasses all permission checks in development
 - Scope support: `getScope('users')` returns `'own' | 'team' | 'all' | null`
 
@@ -161,6 +161,171 @@ export default function DashboardLayout({ children }) {
   }
   ```
 - Error boundary catches unhandled 401s, shows countdown, auto-logs out
+
+## Component Library
+
+This project uses **shadcn/ui** (new-york style) with **Radix UI** primitives and **Tailwind CSS**.
+
+- Config: `components.json` (style: `new-york`, base color: `zinc`)
+- Add new components: `npx shadcn@latest add <component>`
+- NEVER modify existing `src/components/ui/` files unless fixing a bug — these are shadcn-managed
+- Icons: `lucide-react`
+- Class merging: `cn()` from `src/lib/utils.ts` (uses `clsx` + `tailwind-merge`)
+- Variants: `class-variance-authority` (CVA) — used in Button, Badge, etc.
+
+### Available UI Components
+
+All in `src/components/ui/`:
+
+- **Layout**: `card`, `separator`, `tabs`, `scroll-area`
+- **Forms**: `input`, `label`, `button`, `checkbox`, `select`, `multi-select`, `switch`
+- **Data Display**: `table`, `table-skeleton`, `badge`, `avatar`, `skeleton`
+- **Feedback**: `toast`, `toaster`, `tooltip`, `alert-dialog`, `dialog`
+- **Navigation**: `dropdown-menu`, `command`, `popover`
+- **Status**: `status-select`
+
+### Feature Components
+
+- `src/components/auth/` — `AuthGuard`, `PermissionGuard`, `LoginForm`, `ForgotPasswordForm`, `ResetPasswordForm`
+- `src/components/dashboard/` — `DashboardContent`, `DashboardHeader`, `DashboardNav`
+- `src/components/roles/` — `PermissionPicker`
+- `src/components/error-boundary.tsx` — global error boundary with 401 auto-logout
+- `src/components/theme-provider.tsx` — next-themes wrapper
+
+## Data Tables
+
+Tables use the composable shadcn `Table` component (`src/components/ui/table.tsx`), NOT a third-party data table library.
+
+### Table Components
+
+```typescript
+import {
+  Table, TableHeader, TableBody, TableRow,
+  TableHead, TableCell,
+} from '@/components/ui/table';
+```
+
+### Loading State
+
+Use `TableSkeleton` from `src/components/ui/table-skeleton.tsx` as a placeholder while data loads.
+
+### Pattern for List Pages
+
+```typescript
+const [data, setData] = useState<Item[]>([]);
+const [isLoading, setIsLoading] = useState(true);
+
+useEffect(() => {
+  fetchApi<Item[]>(API_ROUTES.ITEMS.LIST)
+    .then(setData)
+    .finally(() => setIsLoading(false));
+}, []);
+
+if (isLoading) return <TableSkeleton />;
+
+return (
+  <Table>
+    <TableHeader>
+      <TableRow>
+        <TableHead>Name</TableHead>
+        <TableHead>Status</TableHead>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      {data.map((item) => (
+        <TableRow key={item.id}>
+          <TableCell>{item.name}</TableCell>
+          <TableCell><Badge>{item.status}</Badge></TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  </Table>
+);
+```
+
+## Forms (react-hook-form + zod)
+
+All forms use **react-hook-form** with **zod** validation via `@hookform/resolvers`.
+
+### Zod Schemas
+
+Schemas live in `src/schemas/`:
+
+- `auth.schema.ts` — `loginSchema`, `forgotPasswordSchema`, `resetPasswordSchema`
+- `role.schema.ts` — `roleSchema`
+
+When adding a new form, create a schema in the appropriate file (or a new file in `src/schemas/`). Always export the inferred type alongside the schema:
+
+```typescript
+import { z } from 'zod/v4';
+
+export const mySchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.email('Invalid email'),
+});
+
+export type MyFormData = z.infer<typeof mySchema>;
+```
+
+### Form Pattern
+
+```typescript
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { mySchema, MyFormData } from '@/schemas/my.schema';
+
+const {
+  register,
+  handleSubmit,
+  formState: { errors, isSubmitting },
+} = useForm<MyFormData>({
+  resolver: zodResolver(mySchema),
+  defaultValues: { name: '', email: '' },
+});
+
+const onSubmit = async (data: MyFormData) => {
+  await fetchApi(API_ROUTES.MY.CREATE, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+};
+
+return (
+  <form onSubmit={handleSubmit(onSubmit)}>
+    <Input {...register('name')} />
+    {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
+    <Button type="submit" disabled={isSubmitting}>Submit</Button>
+  </form>
+);
+```
+
+### Controller Pattern (for non-native inputs)
+
+Use `Controller` for components that don't support `ref` (like `PermissionPicker`, custom selects):
+
+```typescript
+import { Controller } from 'react-hook-form';
+
+<Controller
+  name="permissions"
+  control={control}
+  render={({ field }) => (
+    <PermissionPicker
+      selected={field.value}
+      onChange={field.onChange}
+    />
+  )}
+/>
+```
+
+### Form Rules
+
+- NEVER use raw `useState` for form fields — use `useForm` + zod
+- NEVER use manual `isLoading` state for form submission — use `isSubmitting` from `formState`
+- Always provide `defaultValues` in `useForm`
+- Use `reset()` to populate form with fetched data (edit pages)
+- Show field errors with `errors.fieldName?.message`
+- For cross-field validation (e.g. confirm password), use `.refine()` on the schema
 
 ## Component Conventions
 
