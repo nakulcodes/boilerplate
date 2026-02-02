@@ -7,7 +7,6 @@ import {
   OrganizationRepository,
   RoleRepository,
 } from './repositories';
-import { DatabaseSeederService } from './seeders/database-seeder.service';
 
 const entities = [UserEntity, OrganizationEntity, RoleEntity];
 const repositories = [UserRepository, OrganizationRepository, RoleRepository];
@@ -30,7 +29,7 @@ const repositories = [UserRepository, OrganizationRepository, RoleRepository];
     }),
     TypeOrmModule.forFeature(entities),
   ],
-  providers: [...repositories, DatabaseSeederService],
-  exports: [TypeOrmModule, ...repositories, DatabaseSeederService],
+  providers: [...repositories],
+  exports: [TypeOrmModule, ...repositories],
 })
 export class DatabaseModule {}

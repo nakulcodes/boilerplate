@@ -1,10 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { ALL_PERMISSIONS } from '@boilerplate/core';
 import {
   OrganizationRepository,
   UserRepository,
   RoleRepository,
 } from '../../../../database/repositories';
-import { DatabaseSeederService } from '../../../../database/seeders/database-seeder.service';
 import { AuthService } from '../../services/auth.service';
 import { UserRegisterCommand } from './user-register.command';
 import { RegisterResponseDto } from '../../dtos/auth-response.dto';
@@ -16,7 +16,6 @@ export class UserRegister {
     private readonly userRepository: UserRepository,
     private readonly organizationRepository: OrganizationRepository,
     private readonly roleRepository: RoleRepository,
-    private readonly databaseSeederService: DatabaseSeederService,
   ) {}
 
   async execute(command: UserRegisterCommand): Promise<RegisterResponseDto> {
@@ -35,10 +34,13 @@ export class UserRegister {
     });
     await this.organizationRepository.save(organization);
 
-    await this.databaseSeederService.seedOrganizationDefaults(organization.id);
-    const defaultRole = await this.roleRepository.findDefaultRole(
-      organization.id,
-    );
+    const adminRole = this.roleRepository.create({
+      name: 'Admin',
+      permissions: ALL_PERMISSIONS,
+      organizationId: organization.id,
+      isDefault: true,
+    });
+    const defaultRole = await this.roleRepository.save(adminRole);
 
     const user = this.userRepository.create({
       email,
@@ -46,7 +48,7 @@ export class UserRegister {
       lastName: command.lastName || null,
       password: passwordHash,
       organizationId: organization.id,
-      roleId: defaultRole?.id ?? null,
+      roleId: defaultRole.id,
       isActive: true,
     });
     const savedUser = await this.userRepository.save(user);
