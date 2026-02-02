@@ -157,6 +157,15 @@ Before writing new code, use these existing utilities:
 
 ### Backend: Database
 
+**Repository Pattern** — `DatabaseModule` is `@Global()` and handles ALL entity registration via `TypeOrmModule.forFeature()` once. Feature modules NEVER call `TypeOrmModule.forFeature()` — just inject repositories directly.
+
+When adding a new entity:
+1. Create entity in `database/entities/`
+2. Create repository in `database/repositories/` (extends `Repository<Entity>`, uses `@InjectRepository`)
+3. Add entity to `entities` array in `database/db.module.ts`
+4. Add repository to `repositories` array in `database/db.module.ts`
+5. Inject repository in your usecase/service — no `forFeature` needed
+
 **Entities** — `database/entities/`
 - `BaseEntity` — `id` (UUID), `createdAt`, `updatedAt`
 - `UserEntity` — email, password, firstName, lastName, organizationId, status, tokens
@@ -167,7 +176,7 @@ Before writing new code, use these existing utilities:
 - `OrganizationStatus`: `active`, `inactive`, `suspended`
 
 **Repositories** — `database/repositories/`
-- `UserRepository`, `OrganizationRepository` — extend TypeORM Repository
+- `UserRepository`, `OrganizationRepository` — extend TypeORM Repository, use `@InjectRepository` internally
 
 ### Backend: Command/Usecase Pattern
 
