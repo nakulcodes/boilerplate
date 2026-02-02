@@ -6,18 +6,12 @@ export interface WelcomeEmailVariables {
   loginUrl?: string;
 }
 
-/**
- * Generate subject line for welcome email
- */
 export function welcomeEmailSubject(vars: WelcomeEmailVariables): string {
   return `Welcome to ${vars.organizationName}`;
 }
 
-/**
- * Generate welcome email text with RabbitHR footer
- */
 export function welcomeEmailTemplate(vars: WelcomeEmailVariables): string {
-  const body = `
+  return `
 Hi ${vars.userName},
 
 Welcome to ${vars.organizationName}!
@@ -30,12 +24,8 @@ Your account has been created successfully. ${
 
 If you have any questions, feel free to reach out to our support team.
   `.trim();
-  return body;
 }
 
-/**
- * Generate simple HTML welcome email with button (minimal styling)
- */
 export function welcomeEmailHtml(vars: WelcomeEmailVariables): string {
   return `
 <!DOCTYPE html>
@@ -59,11 +49,6 @@ export function welcomeEmailHtml(vars: WelcomeEmailVariables): string {
   `.trim();
 }
 
-/**
- * Build complete welcome email (subject, text, and html)
- * @param vars - Welcome email variables
- * @returns Object with subject, text, and html
- */
 export function buildWelcomeEmail(vars: WelcomeEmailVariables) {
   return {
     subject: welcomeEmailSubject(vars),

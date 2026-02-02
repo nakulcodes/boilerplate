@@ -13,7 +13,7 @@ export interface UserInviteEmailVariables {
  * Generate subject line for user invitation email
  */
 export function userInviteEmailSubject(vars: UserInviteEmailVariables): string {
-  return `You've been invited to join ${vars.organizationName} on RabbitHR`;
+  return `You've been invited to join ${vars.organizationName}`;
 }
 
 /**
@@ -23,7 +23,7 @@ export function userInviteEmailTemplate(vars: UserInviteEmailVariables): string 
   const body = `
 Hi ${vars.userName},
 
-${vars.inviterName} has invited you to join ${vars.organizationName} on RabbitHR.
+${vars.inviterName} has invited you to join ${vars.organizationName}.
 
 To accept this invitation and set up your account, please click the link below:
 ${vars.inviteLink}
@@ -47,7 +47,7 @@ export function userInviteEmailHtml(vars: UserInviteEmailVariables): string {
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
   <p>Hi ${vars.userName},</p>
 
-  <p><strong>${vars.inviterName}</strong> has invited you to join <strong>${vars.organizationName}</strong> on RabbitHR.</p>
+  <p><strong>${vars.inviterName}</strong> has invited you to join <strong>${vars.organizationName}</strong>.</p>
 
   <p>To accept this invitation and set up your account, please click the button below:</p>
 

@@ -7,18 +7,12 @@ export interface PasswordResetEmailVariables {
   expiryHours: number;
 }
 
-/**
- * Generate subject line for password reset email
- */
 export function passwordResetEmailSubject(_vars: PasswordResetEmailVariables): string {
   return 'Reset Your Password';
 }
 
-/**
- * Generate password reset email text with RabbitHR footer
- */
 export function passwordResetEmailTemplate(vars: PasswordResetEmailVariables): string {
-  const body = `
+  return `
 Hi ${vars.userName},
 
 We received a request to reset your password for ${vars.organizationName}.
@@ -32,12 +26,8 @@ If you didn't request a password reset, you can safely ignore this email. Your p
 
 For security reasons, please do not share this link with anyone.
   `.trim();
-  return body;
 }
 
-/**
- * Generate simple HTML email with button (minimal styling)
- */
 export function passwordResetEmailHtml(vars: PasswordResetEmailVariables): string {
   return `
 <!DOCTYPE html>
@@ -65,11 +55,6 @@ export function passwordResetEmailHtml(vars: PasswordResetEmailVariables): strin
   `.trim();
 }
 
-/**
- * Build complete password reset email (subject, text, and html)
- * @param vars - Password reset email variables
- * @returns Object with subject, text, and html
- */
 export function buildPasswordResetEmail(vars: PasswordResetEmailVariables) {
   return {
     subject: passwordResetEmailSubject(vars),
