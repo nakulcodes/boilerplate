@@ -61,3 +61,4 @@ yarn-error.log*
 # Misc
 .turbo
 .eslintcache
+gh_2.63.2_linux_amd64/

@@ -13,7 +13,7 @@ export class SendEmailRequestDto {
 
   @ApiProperty({
     description: 'Email subject',
-    example: 'Welcome to RabbitHR',
+    example: 'Welcome to our platform',
   })
   @IsString()
   subject!: string;
@@ -36,7 +36,7 @@ export class SendEmailRequestDto {
 
   @ApiProperty({
     description: 'Reply-to email address (optional)',
-    example: 'support@rabbithr.com',
+    example: 'support@example.com',
     required: false,
   })
   @IsEmail()

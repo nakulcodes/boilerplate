@@ -31,7 +31,7 @@ export class SESMailService implements MailService {
         secretAccessKey: process.env.SES_SECRET_ACCESS_KEY as string,
       },
     });
-    const fromName = process.env.MAIL_FROM_NAME || 'RabbitHR';
+    const fromName = process.env.MAIL_FROM_NAME || 'Boilerplate';
     const fromEmail = process.env.MAIL_FROM_EMAIL as string;
     this.defaultFrom = `"${fromName}" <${fromEmail}>`;
   }
@@ -89,7 +89,7 @@ export class ResendMailService implements MailService {
       throw new Error('RESEND_API_KEY is not defined in environment variables');
     }
     this.resend = new Resend(apiKey);
-    const fromName = process.env.MAIL_FROM_NAME || 'RabbitHR';
+    const fromName = process.env.MAIL_FROM_NAME || 'Boilerplate';
     const fromEmail = process.env.MAIL_FROM_EMAIL as string;
     this.defaultFrom = `${fromName} <${fromEmail}>`;
   }
