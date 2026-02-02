@@ -62,6 +62,35 @@ function waitForRefresh(): Promise<string> {
   });
 }
 
+interface PaginatedBackendResponse<T = unknown> {
+  data: T[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+interface StandardBackendResponse<T = unknown> {
+  data: T;
+}
+
+function isPaginatedResponse<T>(
+  response: unknown
+): response is PaginatedBackendResponse<T> {
+  if (!response || typeof response !== "object") {
+    return false;
+  }
+
+  const hasDataArray =
+    "data" in response && Array.isArray((response as Record<string, unknown>).data);
+  const hasPaginationMeta =
+    "total" in response && "page" in response && "limit" in response;
+
+  return hasDataArray && hasPaginationMeta;
+}
+
 export async function fetchApi<T = unknown>(
   endpoint: string,
   options: RequestInit = {},
@@ -124,8 +153,16 @@ export async function fetchApi<T = unknown>(
       clearTokens();
       throw new ApiError('Unauthorized', 401);
     }
-    throw new ApiError(data.message || 'Request failed', response.status);
+    throw new ApiError(data.message || "Request failed", response.status);
   }
 
-  return data.data as T;
+  if (isPaginatedResponse(data)) {
+    return data as T;
+  }
+
+  if (data && typeof data === "object" && "data" in data) {
+    return (data as StandardBackendResponse).data as T;
+  }
+
+  return data as T;
 }

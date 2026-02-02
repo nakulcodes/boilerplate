@@ -1,22 +1,14 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
-import { fetchApi } from '@/utils/api-client';
-import { API_ROUTES } from '@/config/api-routes';
-import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
-import { usePermissions } from '@/hooks/use-permissions';
-import { PermissionGuard } from '@/components/auth/permission-guard';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { useState, useEffect, useCallback, useMemo } from "react";
+import Link from "next/link";
+import { fetchApi } from "@/utils/api-client";
+import { API_ROUTES } from "@/config/api-routes";
+import { PERMISSIONS_ENUM } from "@/constants/permissions.constants";
+import { usePermissions } from "@/hooks/use-permissions";
+import { PermissionGuard } from "@/components/auth/permission-guard";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,24 +24,41 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from '@/lib/toast';
-import { EllipsisVerticalIcon } from '@heroicons/react/24/solid';
-import type { Role } from '@/types/role.type';
+} from "@/components/ui/alert-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "@/lib/toast";
+import { EllipsisVerticalIcon } from "@heroicons/react/24/solid";
+import type { Role } from "@/types/role.type";
+import { PaginatedResponse } from "@/types/pagination.type";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getPaginationRowModel,
+  ColumnDef,
+  VisibilityState,
+} from "@tanstack/react-table";
+import { DataTable, DataTablePagination } from "@/components/common/data-table";
 
 function RolesContent() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<Role | null>(null);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const { hasPermission } = usePermissions();
 
   const loadRoles = useCallback(async () => {
     try {
-      const data = await fetchApi<Role[]>(API_ROUTES.ROLES.LIST);
-      setRoles(data);
+      const response = await fetchApi<PaginatedResponse<Role>>(
+        API_ROUTES.ROLES.LIST,
+        { method: "POST", body: JSON.stringify({ page: 1, limit: 100 }) }
+      );
+      console.log("API Response:", response);
+      console.log("Response.data:", response?.data);
+      setRoles(response?.data || []);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to load roles');
+      console.error("Error loading roles:", err);
+      toast.error(err.message || "Failed to load roles");
+      setRoles([]);
     } finally {
       setIsLoading(false);
     }
@@ -73,6 +82,88 @@ function RolesContent() {
       setDeleteTarget(null);
     }
   };
+
+  const columns = useMemo<ColumnDef<Role>[]>(
+    () => [
+      {
+        accessorKey: "name",
+        header: "Name",
+        enableHiding: false,
+        cell: ({ row }) => (
+          <span className="font-medium">{row.original.name}</span>
+        ),
+      },
+      {
+        accessorKey: "permissions",
+        header: "Permissions",
+        enableHiding: true,
+        cell: ({ row }) => (
+          <span className="text-sm text-muted-foreground">
+            {row.original.permissions.length} permission
+            {row.original.permissions.length !== 1 ? "s" : ""}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "isDefault",
+        header: "Type",
+        size: 80,
+        enableHiding: true,
+        cell: ({ row }) =>
+          row.original.isDefault ? (
+            <Badge variant="secondary">Default</Badge>
+          ) : null,
+      },
+      {
+        id: "actions",
+        header: "",
+        size: 48,
+        enableHiding: false,
+        cell: ({ row }) =>
+          hasPermission(PERMISSIONS_ENUM.ROLE_UPDATE) ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <EllipsisVerticalIcon className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <Link href={`/dashboard/roles/${row.original.id}/edit`}>
+                    Edit
+                  </Link>
+                </DropdownMenuItem>
+                {!row.original.isDefault && (
+                  <DropdownMenuItem
+                    onClick={() => setDeleteTarget(row.original)}
+                    className="text-destructive"
+                  >
+                    Delete
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null,
+      },
+    ],
+    [hasPermission]
+  );
+
+  const table = useReactTable({
+    data: roles,
+    columns,
+    state: {
+      columnVisibility,
+    },
+    onColumnVisibilityChange: setColumnVisibility,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: 10,
+      },
+    },
+  });
 
   if (isLoading) {
     return (
@@ -104,77 +195,13 @@ function RolesContent() {
         )}
       </div>
 
-      <div className="rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Permissions</TableHead>
-              <TableHead className="w-20">Type</TableHead>
-              <TableHead className="w-12" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {roles.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="text-center py-8 text-muted-foreground"
-                >
-                  No roles found
-                </TableCell>
-              </TableRow>
-            ) : (
-              roles.map((role) => (
-                <TableRow key={role.id}>
-                  <TableCell className="font-medium">{role.name}</TableCell>
-                  <TableCell>
-                    <span className="text-sm text-muted-foreground">
-                      {role.permissions.length} permission
-                      {role.permissions.length !== 1 ? 's' : ''}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {role.isDefault && (
-                      <Badge variant="secondary">Default</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {hasPermission(PERMISSIONS_ENUM.ROLE_UPDATE) && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                          >
-                            <EllipsisVerticalIcon className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link href={`/dashboard/roles/${role.id}/edit`}>
-                              Edit
-                            </Link>
-                          </DropdownMenuItem>
-                          {!role.isDefault && (
-                            <DropdownMenuItem
-                              onClick={() => setDeleteTarget(role)}
-                              className="text-destructive"
-                            >
-                              Delete
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <DataTable
+        table={table}
+        isLoading={isLoading}
+        emptyMessage="No roles found"
+      />
+
+      <DataTablePagination table={table} totalItems={roles.length} />
 
       <AlertDialog
         open={!!deleteTarget}

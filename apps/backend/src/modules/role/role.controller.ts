@@ -15,6 +15,8 @@ import {
   type UserSessionData,
 } from '../shared/decorators/user-session.decorator';
 import { RequirePermissions } from '../shared/decorators/require-permissions.decorator';
+import { ApiOkPaginatedResponse } from '../shared/decorators/api-ok-paginated-response.decorator';
+import { PaginatedResponseDto } from '../shared/dtos/pagination-response';
 import { RoleResponseDto } from './dtos/role-response.dto';
 import { CreateRoleDto } from './dtos/create-role.dto';
 import { UpdateRoleDto } from './dtos/update-role.dto';
@@ -68,6 +70,31 @@ export class RoleController {
         organizationId: user.organizationId,
       }),
     ) as any;
+  }
+
+  @Post('list')
+  @RequirePermissions(PERMISSIONS_ENUM.ROLE_LIST_READ)
+  @ApiOperation({ summary: 'List all roles in the organization with pagination' })
+  @ApiOkPaginatedResponse(RoleResponseDto)
+  async listPaginated(
+    @UserSession() user: UserSessionData,
+  ): Promise<PaginatedResponseDto<RoleResponseDto>> {
+    const roles = await this.listRoles.execute(
+      ListRolesCommand.create({
+        userId: user.userId,
+        organizationId: user.organizationId,
+      }),
+    ) as any;
+
+    return {
+      data: roles,
+      page: 1,
+      limit: roles.length,
+      total: roles.length,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    };
   }
 
   @Get(':id')

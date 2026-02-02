@@ -1,31 +1,32 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { fetchApi } from '@/utils/api-client';
-import { API_ROUTES } from '@/config/api-routes';
-import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
-import { usePermissions } from '@/hooks/use-permissions';
-import { PermissionGuard } from '@/components/auth/permission-guard';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { InitialsAvatar } from '@/components/ui/initials-avatar';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { fetchApi } from "@/utils/api-client";
+import { API_ROUTES } from "@/config/api-routes";
+import { PERMISSIONS_ENUM } from "@/constants/permissions.constants";
+import { usePermissions } from "@/hooks/use-permissions";
+import { PermissionGuard } from "@/components/auth/permission-guard";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { InitialsAvatar } from "@/components/ui/initials-avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from '@/lib/toast';
-import { EllipsisVerticalIcon } from '@heroicons/react/24/solid';
+} from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "@/lib/toast";
+import { EllipsisVerticalIcon } from "@heroicons/react/24/solid";
+import { PaginatedResponse } from "@/types/pagination.type";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getPaginationRowModel,
+  ColumnDef,
+  VisibilityState,
+} from "@tanstack/react-table";
+import { DataTable, DataTablePagination } from "@/components/common/data-table";
 
 interface UserListItem {
   id: string;
@@ -49,17 +50,18 @@ interface UserListItem {
 
 const statusVariant: Record<
   string,
-  'default' | 'secondary' | 'destructive' | 'outline'
+  "default" | "secondary" | "destructive" | "outline"
 > = {
-  active: 'default',
-  invited: 'secondary',
-  blocked: 'destructive',
-  inactive: 'outline',
+  active: "default",
+  invited: "secondary",
+  blocked: "destructive",
+  inactive: "outline",
 };
 
 function UsersContent() {
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const { hasPermission } = usePermissions();
 
   const loadUsers = useCallback(async () => {
@@ -123,6 +125,111 @@ function UsersContent() {
     return user.email;
   };
 
+  const columns = useMemo<ColumnDef<UserListItem>[]>(
+    () => [
+      {
+        accessorKey: "email",
+        header: "User",
+        enableHiding: false,
+        cell: ({ row }) => (
+          <div className="flex items-center gap-3">
+            <InitialsAvatar
+              name={getDisplayName(row.original)}
+              className="h-8 w-8 text-xs"
+            />
+            <div>
+              <div className="font-medium">{getDisplayName(row.original)}</div>
+              <div className="text-sm text-muted-foreground">
+                {row.original.email}
+              </div>
+            </div>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: "Status",
+        enableHiding: true,
+        cell: ({ row }) => (
+          <Badge variant={statusVariant[row.original.status] || "outline"}>
+            {row.original.status}
+          </Badge>
+        ),
+      },
+      {
+        accessorKey: "role",
+        header: "Role",
+        enableHiding: true,
+        cell: ({ row }) => (
+          <span className="text-sm text-muted-foreground">
+            {row.original.role?.name || "No role"}
+          </span>
+        ),
+      },
+      {
+        id: "actions",
+        header: "",
+        size: 48,
+        enableHiding: false,
+        cell: ({ row }) =>
+          hasPermission(PERMISSIONS_ENUM.USER_UPDATE_STATUS) ||
+          hasPermission(PERMISSIONS_ENUM.USER_CREATE) ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <EllipsisVerticalIcon className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {row.original.status === "invited" &&
+                  hasPermission(PERMISSIONS_ENUM.USER_CREATE) && (
+                    <DropdownMenuItem
+                      onClick={() => handleResendInvite(row.original.id)}
+                    >
+                      Resend Invite
+                    </DropdownMenuItem>
+                  )}
+                {row.original.status === "active" &&
+                  hasPermission(PERMISSIONS_ENUM.USER_UPDATE_STATUS) && (
+                    <DropdownMenuItem
+                      onClick={() => handleBlock(row.original.id)}
+                      className="text-destructive"
+                    >
+                      Block
+                    </DropdownMenuItem>
+                  )}
+                {row.original.status === "blocked" &&
+                  hasPermission(PERMISSIONS_ENUM.USER_UPDATE_STATUS) && (
+                    <DropdownMenuItem
+                      onClick={() => handleUnblock(row.original.id)}
+                    >
+                      Unblock
+                    </DropdownMenuItem>
+                  )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null,
+      },
+    ],
+    [hasPermission]
+  );
+
+  const table = useReactTable({
+    data: users,
+    columns,
+    state: {
+      columnVisibility,
+    },
+    onColumnVisibilityChange: setColumnVisibility,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: 10,
+      },
+    },
+  });
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -147,108 +254,13 @@ function UsersContent() {
         </div>
       </div>
 
-      <div className="rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead className="w-12" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="text-center py-8 text-muted-foreground"
-                >
-                  No users found
-                </TableCell>
-              </TableRow>
-            ) : (
-              users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <InitialsAvatar
-                        name={getDisplayName(user)}
-                        className="h-8 w-8 text-xs"
-                      />
-                      <div>
-                        <div className="font-medium">
-                          {getDisplayName(user)}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {user.email}
-                        </div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusVariant[user.status] || 'outline'}>
-                      {user.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm text-muted-foreground">
-                      {user.role?.name || 'No role'}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {(hasPermission(PERMISSIONS_ENUM.USER_UPDATE_STATUS) ||
-                      hasPermission(PERMISSIONS_ENUM.USER_CREATE)) && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                          >
-                            <EllipsisVerticalIcon className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {user.status === 'invited' &&
-                            hasPermission(PERMISSIONS_ENUM.USER_CREATE) && (
-                              <DropdownMenuItem
-                                onClick={() => handleResendInvite(user.id)}
-                              >
-                                Resend Invite
-                              </DropdownMenuItem>
-                            )}
-                          {user.status === 'active' &&
-                            hasPermission(
-                              PERMISSIONS_ENUM.USER_UPDATE_STATUS,
-                            ) && (
-                              <DropdownMenuItem
-                                onClick={() => handleBlock(user.id)}
-                                className="text-destructive"
-                              >
-                                Block
-                              </DropdownMenuItem>
-                            )}
-                          {user.status === 'blocked' &&
-                            hasPermission(
-                              PERMISSIONS_ENUM.USER_UPDATE_STATUS,
-                            ) && (
-                              <DropdownMenuItem
-                                onClick={() => handleUnblock(user.id)}
-                              >
-                                Unblock
-                              </DropdownMenuItem>
-                            )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <DataTable
+        table={table}
+        isLoading={isLoading}
+        emptyMessage="No users found"
+      />
+
+      <DataTablePagination table={table} totalItems={users.length} />
     </div>
   );
 }
