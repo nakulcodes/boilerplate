@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { roleSchema, RoleFormData } from '@/schemas/role.schema';
 import { fetchApi } from '@/utils/api-client';
 import { API_ROUTES } from '@/config/api-routes';
 import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
@@ -17,26 +19,27 @@ import Link from 'next/link';
 
 function CreateRoleContent() {
   const router = useRouter();
-  const [name, setName] = useState('');
-  const [permissions, setPermissions] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) return;
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors, isSubmitting },
+  } = useForm<RoleFormData>({
+    resolver: zodResolver(roleSchema),
+    defaultValues: { name: '', permissions: [] },
+  });
 
-    setIsLoading(true);
+  const onSubmit = async (formData: RoleFormData) => {
     try {
       await fetchApi(API_ROUTES.ROLES.CREATE, {
         method: 'POST',
-        body: JSON.stringify({ name, permissions }),
+        body: JSON.stringify(formData),
       });
       toast.success('Role created');
       router.push('/dashboard/roles');
     } catch (err: any) {
       toast.error(err.message || 'Failed to create role');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -58,16 +61,18 @@ function CreateRoleContent() {
 
       <Separator />
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         <div className="space-y-2 max-w-md">
           <Label htmlFor="role-name">Role Name</Label>
           <Input
             id="role-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Editor, Viewer, Manager"
-            disabled={isLoading}
+            disabled={isSubmitting}
+            {...register('name')}
           />
+          {errors.name && (
+            <p className="text-sm text-red-500">{errors.name.message}</p>
+          )}
         </div>
 
         <div className="space-y-3">
@@ -77,21 +82,27 @@ function CreateRoleContent() {
               Select which actions this role can perform
             </p>
           </div>
-          <PermissionPicker
-            selected={permissions}
-            onChange={setPermissions}
-            disabled={isLoading}
+          <Controller
+            name="permissions"
+            control={control}
+            render={({ field: { value, onChange } }) => (
+              <PermissionPicker
+                selected={value}
+                onChange={onChange}
+                disabled={isSubmitting}
+              />
+            )}
           />
         </div>
 
         <Separator />
 
         <div className="flex items-center gap-3">
-          <Button type="submit" disabled={isLoading || !name.trim()}>
-            {isLoading ? 'Creating...' : 'Create Role'}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Creating...' : 'Create Role'}
           </Button>
           <Link href="/dashboard/roles">
-            <Button type="button" variant="outline" disabled={isLoading}>
+            <Button type="button" variant="outline" disabled={isSubmitting}>
               Cancel
             </Button>
           </Link>

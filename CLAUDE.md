@@ -61,6 +61,27 @@ Full details in `apps/frontend/CLAUDE.md`.
 - `getToken()`, `setToken()`, `getRefreshToken()`, `setRefreshToken()`, `clearTokens()`
 - Auto-refresh on 401 with request queuing built into `fetchApi`
 
+### Component Library
+
+- **shadcn/ui** (new-york style) + **Radix UI** primitives + **Tailwind CSS**
+- Add components: `npx shadcn@latest add <component>`
+- Icons: `lucide-react`
+- All UI primitives in `src/components/ui/` — do not modify unless fixing a bug
+
+### Data Tables
+
+- Use composable shadcn `Table` components (`Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`)
+- Loading state: `TableSkeleton` from `src/components/ui/table-skeleton.tsx`
+- No third-party data table library — tables are built with shadcn primitives
+
+### Forms
+
+- **react-hook-form** + **zod** (v4) via `@hookform/resolvers`
+- Schemas in `src/schemas/` — `auth.schema.ts`, `role.schema.ts`
+- Use `useForm` + `zodResolver` — NEVER raw `useState` for form fields
+- Use `isSubmitting` from `formState` — NEVER manual `isLoading` state
+- Use `Controller` for non-native inputs (permission picker, custom selects)
+
 ### Key Utilities
 
 - `fetchApi<T>(endpoint, options?)` — `src/utils/api-client.ts`
