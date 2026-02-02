@@ -1,5 +1,5 @@
-import { Table } from "@tanstack/react-table";
-import { ReactNode } from "react";
+import { Table } from '@tanstack/react-table';
+import { ReactNode } from 'react';
 
 export interface DataTablePaginationProps<TData> {
   table: Table<TData>;

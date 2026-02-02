@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { Settings2 } from "lucide-react";
-import { DataTableColumnToggleProps } from "./data-table-types";
+} from '@/components/ui/popover';
+import { Settings2 } from 'lucide-react';
+import { DataTableColumnToggleProps } from './data-table-types';
 
 export function DataTableColumnToggle<TData>({
   table,
@@ -17,7 +17,7 @@ export function DataTableColumnToggle<TData>({
     .getAllColumns()
     .filter(
       (column) =>
-        typeof column.accessorFn !== "undefined" && column.getCanHide()
+        typeof column.accessorFn !== 'undefined' && column.getCanHide(),
     );
 
   return (
@@ -33,7 +33,7 @@ export function DataTableColumnToggle<TData>({
           <div className="space-y-2">
             {columns.map((column) => {
               const title =
-                typeof column.columnDef.header === "string"
+                typeof column.columnDef.header === 'string'
                   ? column.columnDef.header
                   : column.id;
               return (

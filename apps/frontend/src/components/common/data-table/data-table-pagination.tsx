@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DataTablePaginationProps } from "./data-table-types";
+} from '@/components/ui/select';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { DataTablePaginationProps } from './data-table-types';
 
 export function DataTablePagination<TData>({
   table,

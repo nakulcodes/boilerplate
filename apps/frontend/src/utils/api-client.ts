@@ -77,16 +77,17 @@ interface StandardBackendResponse<T = unknown> {
 }
 
 function isPaginatedResponse<T>(
-  response: unknown
+  response: unknown,
 ): response is PaginatedBackendResponse<T> {
-  if (!response || typeof response !== "object") {
+  if (!response || typeof response !== 'object') {
     return false;
   }
 
   const hasDataArray =
-    "data" in response && Array.isArray((response as Record<string, unknown>).data);
+    'data' in response &&
+    Array.isArray((response as Record<string, unknown>).data);
   const hasPaginationMeta =
-    "total" in response && "page" in response && "limit" in response;
+    'total' in response && 'page' in response && 'limit' in response;
 
   return hasDataArray && hasPaginationMeta;
 }
@@ -153,14 +154,14 @@ export async function fetchApi<T = unknown>(
       clearTokens();
       throw new ApiError('Unauthorized', 401);
     }
-    throw new ApiError(data.message || "Request failed", response.status);
+    throw new ApiError(data.message || 'Request failed', response.status);
   }
 
   if (isPaginatedResponse(data)) {
     return data as T;
   }
 
-  if (data && typeof data === "object" && "data" in data) {
+  if (data && typeof data === 'object' && 'data' in data) {
     return (data as StandardBackendResponse).data as T;
   }
 

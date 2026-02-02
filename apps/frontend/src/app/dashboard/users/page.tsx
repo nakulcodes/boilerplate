@@ -1,32 +1,32 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { fetchApi } from "@/utils/api-client";
-import { API_ROUTES } from "@/config/api-routes";
-import { PERMISSIONS_ENUM } from "@/constants/permissions.constants";
-import { usePermissions } from "@/hooks/use-permissions";
-import { PermissionGuard } from "@/components/auth/permission-guard";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { InitialsAvatar } from "@/components/ui/initials-avatar";
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { fetchApi } from '@/utils/api-client';
+import { API_ROUTES } from '@/config/api-routes';
+import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
+import { usePermissions } from '@/hooks/use-permissions';
+import { PermissionGuard } from '@/components/auth/permission-guard';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { InitialsAvatar } from '@/components/ui/initials-avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "@/lib/toast";
-import { EllipsisVerticalIcon } from "@heroicons/react/24/solid";
-import { PaginatedResponse } from "@/types/pagination.type";
+} from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/lib/toast';
+import { EllipsisVerticalIcon } from '@heroicons/react/24/solid';
+import { PaginatedResponse } from '@/types/pagination.type';
 import {
   useReactTable,
   getCoreRowModel,
   getPaginationRowModel,
   ColumnDef,
   VisibilityState,
-} from "@tanstack/react-table";
-import { DataTable, DataTablePagination } from "@/components/common/data-table";
+} from '@tanstack/react-table';
+import { DataTable, DataTablePagination } from '@/components/common/data-table';
 
 interface UserListItem {
   id: string;
@@ -50,12 +50,12 @@ interface UserListItem {
 
 const statusVariant: Record<
   string,
-  "default" | "secondary" | "destructive" | "outline"
+  'default' | 'secondary' | 'destructive' | 'outline'
 > = {
-  active: "default",
-  invited: "secondary",
-  blocked: "destructive",
-  inactive: "outline",
+  active: 'default',
+  invited: 'secondary',
+  blocked: 'destructive',
+  inactive: 'outline',
 };
 
 function UsersContent() {
@@ -82,31 +82,37 @@ function UsersContent() {
     loadUsers();
   }, [loadUsers]);
 
-  const handleBlock = async (userId: string) => {
-    try {
-      await fetchApi(API_ROUTES.USERS.BLOCK(userId), {
-        method: 'POST',
-      });
-      toast.success('User blocked');
-      loadUsers();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to block user');
-    }
-  };
+  const handleBlock = useCallback(
+    async (userId: string) => {
+      try {
+        await fetchApi(API_ROUTES.USERS.BLOCK(userId), {
+          method: 'POST',
+        });
+        toast.success('User blocked');
+        loadUsers();
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to block user');
+      }
+    },
+    [loadUsers],
+  );
 
-  const handleUnblock = async (userId: string) => {
-    try {
-      await fetchApi(API_ROUTES.USERS.UNBLOCK(userId), {
-        method: 'POST',
-      });
-      toast.success('User unblocked');
-      loadUsers();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to unblock user');
-    }
-  };
+  const handleUnblock = useCallback(
+    async (userId: string) => {
+      try {
+        await fetchApi(API_ROUTES.USERS.UNBLOCK(userId), {
+          method: 'POST',
+        });
+        toast.success('User unblocked');
+        loadUsers();
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to unblock user');
+      }
+    },
+    [loadUsers],
+  );
 
-  const handleResendInvite = async (userId: string) => {
+  const handleResendInvite = useCallback(async (userId: string) => {
     try {
       await fetchApi(API_ROUTES.USERS.RESEND_INVITE, {
         method: 'POST',
@@ -116,7 +122,7 @@ function UsersContent() {
     } catch (err: any) {
       toast.error(err.message || 'Failed to resend invite');
     }
-  };
+  }, []);
 
   const getDisplayName = (user: UserListItem) => {
     if (user.firstName || user.lastName) {
@@ -128,8 +134,8 @@ function UsersContent() {
   const columns = useMemo<ColumnDef<UserListItem>[]>(
     () => [
       {
-        accessorKey: "email",
-        header: "User",
+        accessorKey: 'email',
+        header: 'User',
         enableHiding: false,
         cell: ({ row }) => (
           <div className="flex items-center gap-3">
@@ -147,28 +153,28 @@ function UsersContent() {
         ),
       },
       {
-        accessorKey: "status",
-        header: "Status",
+        accessorKey: 'status',
+        header: 'Status',
         enableHiding: true,
         cell: ({ row }) => (
-          <Badge variant={statusVariant[row.original.status] || "outline"}>
+          <Badge variant={statusVariant[row.original.status] || 'outline'}>
             {row.original.status}
           </Badge>
         ),
       },
       {
-        accessorKey: "role",
-        header: "Role",
+        accessorKey: 'role',
+        header: 'Role',
         enableHiding: true,
         cell: ({ row }) => (
           <span className="text-sm text-muted-foreground">
-            {row.original.role?.name || "No role"}
+            {row.original.role?.name || 'No role'}
           </span>
         ),
       },
       {
-        id: "actions",
-        header: "",
+        id: 'actions',
+        header: '',
         size: 48,
         enableHiding: false,
         cell: ({ row }) =>
@@ -181,7 +187,7 @@ function UsersContent() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {row.original.status === "invited" &&
+                {row.original.status === 'invited' &&
                   hasPermission(PERMISSIONS_ENUM.USER_CREATE) && (
                     <DropdownMenuItem
                       onClick={() => handleResendInvite(row.original.id)}
@@ -189,7 +195,7 @@ function UsersContent() {
                       Resend Invite
                     </DropdownMenuItem>
                   )}
-                {row.original.status === "active" &&
+                {row.original.status === 'active' &&
                   hasPermission(PERMISSIONS_ENUM.USER_UPDATE_STATUS) && (
                     <DropdownMenuItem
                       onClick={() => handleBlock(row.original.id)}
@@ -198,7 +204,7 @@ function UsersContent() {
                       Block
                     </DropdownMenuItem>
                   )}
-                {row.original.status === "blocked" &&
+                {row.original.status === 'blocked' &&
                   hasPermission(PERMISSIONS_ENUM.USER_UPDATE_STATUS) && (
                     <DropdownMenuItem
                       onClick={() => handleUnblock(row.original.id)}
@@ -211,7 +217,7 @@ function UsersContent() {
           ) : null,
       },
     ],
-    [hasPermission]
+    [hasPermission, handleBlock, handleUnblock, handleResendInvite],
   );
 
   const table = useReactTable({

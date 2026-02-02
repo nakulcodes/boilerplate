@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import Link from "next/link";
-import { fetchApi } from "@/utils/api-client";
-import { API_ROUTES } from "@/config/api-routes";
-import { PERMISSIONS_ENUM } from "@/constants/permissions.constants";
-import { usePermissions } from "@/hooks/use-permissions";
-import { PermissionGuard } from "@/components/auth/permission-guard";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import Link from 'next/link';
+import { fetchApi } from '@/utils/api-client';
+import { API_ROUTES } from '@/config/api-routes';
+import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
+import { usePermissions } from '@/hooks/use-permissions';
+import { PermissionGuard } from '@/components/auth/permission-guard';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,20 +24,20 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "@/lib/toast";
-import { EllipsisVerticalIcon } from "@heroicons/react/24/solid";
-import type { Role } from "@/types/role.type";
-import { PaginatedResponse } from "@/types/pagination.type";
+} from '@/components/ui/alert-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/lib/toast';
+import { EllipsisVerticalIcon } from '@heroicons/react/24/solid';
+import type { Role } from '@/types/role.type';
+import { PaginatedResponse } from '@/types/pagination.type';
 import {
   useReactTable,
   getCoreRowModel,
   getPaginationRowModel,
   ColumnDef,
   VisibilityState,
-} from "@tanstack/react-table";
-import { DataTable, DataTablePagination } from "@/components/common/data-table";
+} from '@tanstack/react-table';
+import { DataTable, DataTablePagination } from '@/components/common/data-table';
 
 function RolesContent() {
   const [roles, setRoles] = useState<Role[]>([]);
@@ -50,14 +50,14 @@ function RolesContent() {
     try {
       const response = await fetchApi<PaginatedResponse<Role>>(
         API_ROUTES.ROLES.LIST,
-        { method: "POST", body: JSON.stringify({ page: 1, limit: 100 }) }
+        { method: 'POST', body: JSON.stringify({ page: 1, limit: 100 }) },
       );
-      console.log("API Response:", response);
-      console.log("Response.data:", response?.data);
+      console.log('API Response:', response);
+      console.log('Response.data:', response?.data);
       setRoles(response?.data || []);
     } catch (err: any) {
-      console.error("Error loading roles:", err);
-      toast.error(err.message || "Failed to load roles");
+      console.error('Error loading roles:', err);
+      toast.error(err.message || 'Failed to load roles');
       setRoles([]);
     } finally {
       setIsLoading(false);
@@ -86,27 +86,27 @@ function RolesContent() {
   const columns = useMemo<ColumnDef<Role>[]>(
     () => [
       {
-        accessorKey: "name",
-        header: "Name",
+        accessorKey: 'name',
+        header: 'Name',
         enableHiding: false,
         cell: ({ row }) => (
           <span className="font-medium">{row.original.name}</span>
         ),
       },
       {
-        accessorKey: "permissions",
-        header: "Permissions",
+        accessorKey: 'permissions',
+        header: 'Permissions',
         enableHiding: true,
         cell: ({ row }) => (
           <span className="text-sm text-muted-foreground">
             {row.original.permissions.length} permission
-            {row.original.permissions.length !== 1 ? "s" : ""}
+            {row.original.permissions.length !== 1 ? 's' : ''}
           </span>
         ),
       },
       {
-        accessorKey: "isDefault",
-        header: "Type",
+        accessorKey: 'isDefault',
+        header: 'Type',
         size: 80,
         enableHiding: true,
         cell: ({ row }) =>
@@ -115,8 +115,8 @@ function RolesContent() {
           ) : null,
       },
       {
-        id: "actions",
-        header: "",
+        id: 'actions',
+        header: '',
         size: 48,
         enableHiding: false,
         cell: ({ row }) =>
@@ -129,7 +129,7 @@ function RolesContent() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href={`/dashboard/roles/${row.original.id}/edit`}>
+                  <Link href={`/dashboard/roles/edit?id=${row.original.id}`}>
                     Edit
                   </Link>
                 </DropdownMenuItem>
@@ -146,7 +146,7 @@ function RolesContent() {
           ) : null,
       },
     ],
-    [hasPermission]
+    [hasPermission],
   );
 
   const table = useReactTable({

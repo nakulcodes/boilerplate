@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
-import { DataTableToolbarProps } from "./data-table-types";
-import { Badge } from "@/components/ui/badge";
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
+import { DataTableToolbarProps } from './data-table-types';
+import { Badge } from '@/components/ui/badge';
 
 export function DataTableToolbar<TData>({
   table,
   searchValue,
   onSearchChange,
-  searchPlaceholder = "Search...",
+  searchPlaceholder = 'Search...',
   filters,
   actions,
   selectedCount = 0,

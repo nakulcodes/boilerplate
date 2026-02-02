@@ -74,17 +74,19 @@ export class RoleController {
 
   @Post('list')
   @RequirePermissions(PERMISSIONS_ENUM.ROLE_LIST_READ)
-  @ApiOperation({ summary: 'List all roles in the organization with pagination' })
+  @ApiOperation({
+    summary: 'List all roles in the organization with pagination',
+  })
   @ApiOkPaginatedResponse(RoleResponseDto)
   async listPaginated(
     @UserSession() user: UserSessionData,
   ): Promise<PaginatedResponseDto<RoleResponseDto>> {
-    const roles = await this.listRoles.execute(
+    const roles = (await this.listRoles.execute(
       ListRolesCommand.create({
         userId: user.userId,
         organizationId: user.organizationId,
       }),
-    ) as any;
+    )) as any;
 
     return {
       data: roles,

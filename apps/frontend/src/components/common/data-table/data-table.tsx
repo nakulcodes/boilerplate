@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { flexRender, Table as TanStackTable } from "@tanstack/react-table";
+import { flexRender, Table as TanStackTable } from '@tanstack/react-table';
 import {
   Table,
   TableBody,
@@ -8,9 +8,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ReactNode } from "react";
+} from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ReactNode } from 'react';
 
 interface DataTableProps<TData> {
   table: TanStackTable<TData>;
@@ -26,7 +26,7 @@ export function DataTable<TData>({
   isLoading,
   onRowClick,
   getRowClassName,
-  emptyMessage = "No results found.",
+  emptyMessage = 'No results found.',
   enableRowSelection = false,
 }: DataTableProps<TData>) {
   const columns = table.getAllColumns();
@@ -57,10 +57,10 @@ export function DataTable<TData>({
                   ? null
                   : flexRender(
                       header.column.columnDef.header,
-                      header.getContext()
+                      header.getContext(),
                     )}
               </TableHead>
-            ))
+            )),
           )}
         </TableRow>
       </TableHeader>
@@ -96,7 +96,7 @@ export function DataTable<TData>({
           rows.map((row) => (
             <TableRow
               key={row.id}
-              data-state={row.getIsSelected() && "selected"}
+              data-state={row.getIsSelected() && 'selected'}
               onClick={() => onRowClick?.(row.original)}
               className={getRowClassName?.(row.original)}
             >

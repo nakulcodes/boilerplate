@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { fetchApi } from '@/utils/api-client';
 import { API_ROUTES } from '@/config/api-routes';
 import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
@@ -19,8 +19,8 @@ import type { Role } from '@/types/role.type';
 
 function EditRoleContent() {
   const router = useRouter();
-  const params = useParams();
-  const roleId = params.id as string;
+  const searchParams = useSearchParams();
+  const roleId = searchParams.get('id');
 
   const [role, setRole] = useState<Role | null>(null);
   const [name, setName] = useState('');
@@ -29,6 +29,11 @@ function EditRoleContent() {
   const [isSaving, setIsSaving] = useState(false);
 
   const loadRole = useCallback(async () => {
+    if (!roleId) {
+      router.push('/dashboard/roles');
+      return;
+    }
+
     try {
       const data = await fetchApi<Role>(API_ROUTES.ROLES.GET(roleId));
       setRole(data);
@@ -48,7 +53,7 @@ function EditRoleContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || !roleId) return;
 
     setIsSaving(true);
     try {
