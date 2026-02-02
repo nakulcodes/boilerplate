@@ -35,11 +35,11 @@
   "lint-staged": {
     "apps/frontend/**/*.{ts,tsx}": [
       "prettier --write",
-      "eslint --fix"
+      "npx --prefix apps/frontend eslint --fix"
     ],
     "apps/backend/**/*.ts": [
       "prettier --write",
-      "eslint --fix"
+      "npx --prefix apps/backend eslint --fix"
     ],
     "packages/**/*.ts": [
       "prettier --write"

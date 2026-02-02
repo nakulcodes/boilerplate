@@ -11,24 +11,35 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  forgotPasswordSchema,
+  ForgotPasswordFormData,
+} from '@/schemas/auth.schema';
 import { toast } from '@/lib/toast';
 import Link from 'next/link';
 import { fetchApi } from '@/utils/api-client';
 import { API_ROUTES } from '@/config/api-routes';
 
 export default function ForgotPasswordForm() {
-  const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    formState: { errors, isSubmitting },
+  } = useForm<ForgotPasswordFormData>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: '' },
+  });
 
+  const onSubmit = async (formData: ForgotPasswordFormData) => {
     try {
       await fetchApi(API_ROUTES.AUTH.FORGOT_PASSWORD, {
         method: 'POST',
-        body: JSON.stringify({ email }),
+        body: JSON.stringify(formData),
       });
 
       setIsSuccess(true);
@@ -36,8 +47,6 @@ export default function ForgotPasswordForm() {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An error occurred';
       toast.error('Error', message);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -49,7 +58,7 @@ export default function ForgotPasswordForm() {
             Check your email
           </CardTitle>
           <CardDescription className="text-center">
-            We&apos;ve sent a password reset link to {email}
+            We&apos;ve sent a password reset link to {getValues('email')}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
@@ -76,22 +85,22 @@ export default function ForgotPasswordForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="grid gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
-              name="email"
               placeholder="name@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoading}
+              disabled={isSubmitting}
+              {...register('email')}
             />
+            {errors.email && (
+              <p className="text-sm text-red-500">{errors.email.message}</p>
+            )}
           </div>
-          <Button className="w-full" type="submit" disabled={isLoading}>
-            {isLoading ? 'Sending...' : 'Send reset link'}
+          <Button className="w-full" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Sending...' : 'Send reset link'}
           </Button>
           <div className="text-center">
             <Link
