@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { fetchApi } from '@/utils/api-client';
-import { buildApiUrl, API_ROUTES } from '@/config/api-routes';
+import { API_ROUTES } from '@/config/api-routes';
 import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
 import { usePermissions } from '@/hooks/use-permissions';
 import { PermissionGuard } from '@/components/auth/permission-guard';
@@ -65,7 +65,7 @@ function UsersContent() {
   const loadUsers = useCallback(async () => {
     try {
       const data = await fetchApi<{ data: UserListItem[] }>(
-        buildApiUrl(API_ROUTES.USERS.LIST),
+        API_ROUTES.USERS.LIST,
         { method: 'POST', body: JSON.stringify({ page: 1, limit: 50 }) },
       );
       setUsers(data?.data || []);
@@ -82,7 +82,7 @@ function UsersContent() {
 
   const handleBlock = async (userId: string) => {
     try {
-      await fetchApi(buildApiUrl(API_ROUTES.USERS.BLOCK(userId)), {
+      await fetchApi(API_ROUTES.USERS.BLOCK(userId), {
         method: 'POST',
       });
       toast.success('User blocked');
@@ -94,7 +94,7 @@ function UsersContent() {
 
   const handleUnblock = async (userId: string) => {
     try {
-      await fetchApi(buildApiUrl(API_ROUTES.USERS.UNBLOCK(userId)), {
+      await fetchApi(API_ROUTES.USERS.UNBLOCK(userId), {
         method: 'POST',
       });
       toast.success('User unblocked');
@@ -106,7 +106,7 @@ function UsersContent() {
 
   const handleResendInvite = async (userId: string) => {
     try {
-      await fetchApi(buildApiUrl(API_ROUTES.USERS.RESEND_INVITE), {
+      await fetchApi(API_ROUTES.USERS.RESEND_INVITE, {
         method: 'POST',
         body: JSON.stringify({ userId }),
       });
