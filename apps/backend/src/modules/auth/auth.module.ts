@@ -10,6 +10,7 @@ import { RefreshJwtStrategy } from './strategies/refresh-jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RefreshJwtGuard } from './guards/refresh-jwt.guard';
 import { Login } from './usecases/login/login.usecase';
+import { UserRegister } from './usecases/register/user-register.usecase';
 import { PasswordResetRequest } from './usecases/password-reset-request/password-reset-request.usecase';
 import { PasswordReset } from './usecases/password-reset/password-reset.usecase';
 import { UpdatePassword } from './usecases/update-password/update-password.usecase';
@@ -18,6 +19,7 @@ import { Logout } from './usecases/logout/logout.usecase';
 
 const USE_CASES = [
   Login,
+  UserRegister,
   PasswordResetRequest,
   PasswordReset,
   UpdatePassword,
