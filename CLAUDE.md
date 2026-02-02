@@ -143,9 +143,38 @@ Re-exports everything from `@boilerplate/shared` plus:
 
 ## Git
 
-- Work on feature branches, not `main`
-- Commit messages: conventional commits format (`feat:`, `fix:`, `chore:`, etc.)
-- Husky pre-commit hook runs: lint-staged (prettier + eslint) then tsc --noEmit for both apps
+### Branch Rules
+
+- NEVER push directly to `main` — always create a feature branch and open a PR
+- Branch naming: `<type>/<short-description>` (e.g. `feat/user-invite`, `fix/token-refresh`, `chore/update-deps`)
+- Branch types:
+  - `feat/` — new features or functionality
+  - `fix/` — bug fixes
+  - `chore/` — tooling, config, dependency updates, refactors with no behavior change
+  - `docs/` — documentation only changes
+
+### Commit Messages
+
+Conventional commits format — prefix every commit message:
+
+- `feat:` — new feature or functionality (e.g. `feat: add role permissions picker`)
+- `fix:` — bug fix (e.g. `fix: prevent double URL prefix in fetchApi`)
+- `chore:` — tooling, config, deps, no behavior change (e.g. `chore: update eslint config`)
+- `refactor:` — code restructuring without behavior change (e.g. `refactor: extract pagination helper`)
+- `docs:` — documentation only (e.g. `docs: update CLAUDE.md with endpoint reference`)
+- `style:` — formatting, whitespace, prettier (e.g. `style: apply consistent single quotes`)
+- `test:` — adding or updating tests
+
+Keep messages concise (1 line), lowercase, no period at the end. If more context is needed, add a blank line then a body paragraph.
+
+### Pre-commit Hook
+
+Husky runs on every commit:
+1. `lint-staged` — prettier + eslint on staged files
+2. `tsc --noEmit` for frontend
+3. `tsc --noEmit` for backend
+
+If the hook fails, fix the issues before committing. Do not bypass with `--no-verify` unless bootstrapping tooling changes.
 
 ## Running Locally
 
