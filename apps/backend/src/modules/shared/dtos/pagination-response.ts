@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class PaginationMetadataDto {
+export class PaginatedResponseDto<T> {
+  @ApiProperty({
+    description: 'List of items',
+    isArray: true,
+    type: Object,
+  })
+  data!: T[];
+
   @ApiProperty({
     description: 'Current page number (1-indexed)',
   })
@@ -30,24 +37,4 @@ export class PaginationMetadataDto {
     description: 'Whether there is a previous page',
   })
   hasPreviousPage!: boolean;
-}
-
-export class PaginatedResponseDto<T> {
-  @ApiProperty({
-    description: 'Success status',
-  })
-  success!: boolean;
-
-  @ApiProperty({
-    description: 'List of items',
-    isArray: true,
-    type: Object,
-  })
-  payload!: T[];
-
-  @ApiProperty({
-    description: 'Pagination metadata',
-    type: PaginationMetadataDto,
-  })
-  metadata!: PaginationMetadataDto;
 }

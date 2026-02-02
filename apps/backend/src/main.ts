@@ -3,9 +3,9 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ResponseInterceptor } from './shared/framework/response.interceptor';
-import { LoggingInterceptor } from './shared/framework/logging.interceptor';
-import { GlobalExceptionFilter } from './shared/filters/global-exception.filter';
+import { ResponseInterceptor } from './modules/shared/framework/response.interceptor';
+import { LoggingInterceptor } from './modules/shared/framework/logging.interceptor';
+import { GlobalExceptionFilter } from './modules/shared/filters/global-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
