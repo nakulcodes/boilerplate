@@ -1,1 +1,5 @@
-export { PERMISSIONS_ENUM, ALL_PERMISSIONS, PERMISSION_GROUPS } from "@boilerplate/core";
+export {
+  PERMISSIONS_ENUM,
+  ALL_PERMISSIONS,
+  PERMISSION_GROUPS,
+} from '@boilerplate/core';

@@ -6,4 +6,4 @@ export interface PaginatedResponse<T> {
     page: number;
     lastPage: number;
   };
-} 
+}

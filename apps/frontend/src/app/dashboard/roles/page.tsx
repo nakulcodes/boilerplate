@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
-import { fetchApi } from "@/utils/api-client";
-import { buildApiUrl, API_ROUTES } from "@/config/api-routes";
-import { PERMISSIONS_ENUM } from "@/constants/permissions.constants";
-import { usePermissions } from "@/hooks/use-permissions";
-import { PermissionGuard } from "@/components/auth/permission-guard";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import { fetchApi } from '@/utils/api-client';
+import { buildApiUrl, API_ROUTES } from '@/config/api-routes';
+import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
+import { usePermissions } from '@/hooks/use-permissions';
+import { PermissionGuard } from '@/components/auth/permission-guard';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -16,13 +16,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,11 +32,11 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "@/lib/toast";
-import { EllipsisVerticalIcon } from "@heroicons/react/24/solid";
-import type { Role } from "@/types/role.type";
+} from '@/components/ui/alert-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/lib/toast';
+import { EllipsisVerticalIcon } from '@heroicons/react/24/solid';
+import type { Role } from '@/types/role.type';
 
 function RolesContent() {
   const [roles, setRoles] = useState<Role[]>([]);
@@ -46,12 +46,10 @@ function RolesContent() {
 
   const loadRoles = useCallback(async () => {
     try {
-      const data = await fetchApi<Role[]>(
-        buildApiUrl(API_ROUTES.ROLES.LIST)
-      );
+      const data = await fetchApi<Role[]>(buildApiUrl(API_ROUTES.ROLES.LIST));
       setRoles(data);
     } catch (err: any) {
-      toast.error(err.message || "Failed to load roles");
+      toast.error(err.message || 'Failed to load roles');
     } finally {
       setIsLoading(false);
     }
@@ -65,12 +63,12 @@ function RolesContent() {
     if (!deleteTarget) return;
     try {
       await fetchApi(buildApiUrl(API_ROUTES.ROLES.DELETE(deleteTarget.id)), {
-        method: "DELETE",
+        method: 'DELETE',
       });
-      toast.success("Role deleted");
+      toast.success('Role deleted');
       loadRoles();
     } catch (err: any) {
-      toast.error(err.message || "Failed to delete role");
+      toast.error(err.message || 'Failed to delete role');
     } finally {
       setDeleteTarget(null);
     }
@@ -119,7 +117,10 @@ function RolesContent() {
           <TableBody>
             {roles.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                <TableCell
+                  colSpan={4}
+                  className="text-center py-8 text-muted-foreground"
+                >
                   No roles found
                 </TableCell>
               </TableRow>
@@ -130,7 +131,7 @@ function RolesContent() {
                   <TableCell>
                     <span className="text-sm text-muted-foreground">
                       {role.permissions.length} permission
-                      {role.permissions.length !== 1 ? "s" : ""}
+                      {role.permissions.length !== 1 ? 's' : ''}
                     </span>
                   </TableCell>
                   <TableCell>
@@ -142,7 +143,11 @@ function RolesContent() {
                     {hasPermission(PERMISSIONS_ENUM.ROLE_UPDATE) && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                          >
                             <EllipsisVerticalIcon className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -179,15 +184,13 @@ function RolesContent() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete role</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete the role &quot;{deleteTarget?.name}&quot;?
-              This cannot be undone.
+              Are you sure you want to delete the role &quot;
+              {deleteTarget?.name}&quot;? This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
-              Delete
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

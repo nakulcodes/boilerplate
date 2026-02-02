@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useSession } from "@/contexts/session-context";
-import { Card } from "@/components/ui/card";
+import { useSession } from '@/contexts/session-context';
+import { Card } from '@/components/ui/card';
 
 export function DashboardContent() {
   const { user } = useSession();
@@ -10,7 +10,7 @@ export function DashboardContent() {
     <div className="space-y-8 container mx-auto dark:text-dark-text">
       <div className="space-y-2">
         <h1 className="text-3xl font-medium tracking-tight">
-          Welcome back{user?.firstName ? `, ${user.firstName}` : ""}!
+          Welcome back{user?.firstName ? `, ${user.firstName}` : ''}!
         </h1>
         <p className="text-muted-foreground text-lg">
           Here&apos;s your dashboard overview
@@ -25,7 +25,7 @@ export function DashboardContent() {
                 Organization
               </h3>
               <p className="text-lg font-semibold">
-                {user?.organizationId ? "Connected" : "Not set"}
+                {user?.organizationId ? 'Connected' : 'Not set'}
               </p>
             </div>
           </div>
@@ -38,9 +38,7 @@ export function DashboardContent() {
               <h3 className="text-sm font-medium text-muted-foreground">
                 Account
               </h3>
-              <p className="text-lg font-semibold">
-                {user?.email}
-              </p>
+              <p className="text-lg font-semibold">{user?.email}</p>
             </div>
           </div>
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 to-green-600" />

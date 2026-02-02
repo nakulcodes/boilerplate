@@ -1,9 +1,9 @@
-import { Permission } from "./permissions.type";
+import { Permission } from './permissions.type';
 
 export enum UserStatus {
-  INVITED = "invited",
-  ACTIVE = "active",
-  INACTIVE = "inactive",
+  INVITED = 'invited',
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
 }
 
 export interface User {
@@ -37,6 +37,8 @@ export interface LoginResponse {
   organization: Organization;
 }
 
-export const getFullName = (user: Pick<User, "firstName" | "lastName">): string => {
-  return `${user.firstName}${user.lastName ? " " + user.lastName : ""}`;
+export const getFullName = (
+  user: Pick<User, 'firstName' | 'lastName'>,
+): string => {
+  return `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}`;
 };

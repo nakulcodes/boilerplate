@@ -1,6 +1,6 @@
-"use client";
-import { LockClosedIcon } from "@heroicons/react/24/solid";
-import Link from "next/link";
+'use client';
+import { LockClosedIcon } from '@heroicons/react/24/solid';
+import Link from 'next/link';
 
 export default function NoAccessPage() {
   const goBack = () => {

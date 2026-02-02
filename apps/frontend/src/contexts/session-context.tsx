@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { JWTPayload } from "@/types/user.type";
-import { getUserFromToken } from "@/utils/auth";
-import { getToken, clearTokens } from "@/utils/cookies";
-import { buildApiUrl, API_ROUTES } from "@/config/api-routes";
+import { JWTPayload } from '@/types/user.type';
+import { getUserFromToken } from '@/utils/auth';
+import { getToken, clearTokens } from '@/utils/cookies';
+import { buildApiUrl, API_ROUTES } from '@/config/api-routes';
 import {
   createContext,
   useContext,
@@ -11,8 +11,8 @@ import {
   useState,
   useEffect,
   useCallback,
-} from "react";
-import { useRouter } from "next/navigation";
+} from 'react';
+import { useRouter } from 'next/navigation';
 
 interface SessionContextType {
   user: JWTPayload | null;
@@ -45,18 +45,18 @@ export function SessionProvider({ children }: SessionProviderProps) {
       const token = getToken();
       if (token) {
         await fetch(buildApiUrl(API_ROUTES.AUTH.LOGOUT), {
-          method: "POST",
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ refreshToken: "" }),
+          body: JSON.stringify({ refreshToken: '' }),
         }).catch(() => {});
       }
     } finally {
       setUser(null);
       clearTokens();
-      router.push("/");
+      router.push('/');
     }
   }, [router]);
 

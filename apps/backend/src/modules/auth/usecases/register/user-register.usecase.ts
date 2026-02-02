@@ -1,6 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { ALL_PERMISSIONS } from '@boilerplate/core';
-import { OrganizationRepository, UserRepository, RoleRepository } from '../../../../database/repositories';
+import {
+  OrganizationRepository,
+  UserRepository,
+  RoleRepository,
+} from '../../../../database/repositories';
+import { DatabaseSeederService } from '../../../../database/seeders/database-seeder.service';
 import { AuthService } from '../../services/auth.service';
 import { UserRegisterCommand } from './user-register.command';
 import { RegisterResponseDto } from '../../dtos/auth-response.dto';
@@ -12,10 +16,10 @@ export class UserRegister {
     private readonly userRepository: UserRepository,
     private readonly organizationRepository: OrganizationRepository,
     private readonly roleRepository: RoleRepository,
+    private readonly databaseSeederService: DatabaseSeederService,
   ) {}
 
   async execute(command: UserRegisterCommand): Promise<RegisterResponseDto> {
-    // Check if user already exists
     const email = command.email.toLowerCase().trim();
     const existingUser = await this.userRepository.findOne({
       where: { email },
@@ -24,32 +28,25 @@ export class UserRegister {
       throw new BadRequestException('User already exists');
     }
 
-    // Hash password
     const passwordHash = await this.authService.hashPassword(command.password);
 
-    // Create organization
     const organization = this.organizationRepository.create({
       name: command.organizationName || `${command.firstName}'s Organization`,
     });
     await this.organizationRepository.save(organization);
 
-    // Create default Admin role for the organization
-    const adminRole = this.roleRepository.create({
-      name: 'Admin',
-      permissions: ALL_PERMISSIONS,
-      organizationId: organization.id,
-      isDefault: true,
-    });
-    await this.roleRepository.save(adminRole);
+    await this.databaseSeederService.seedOrganizationDefaults(organization.id);
+    const defaultRole = await this.roleRepository.findDefaultRole(
+      organization.id,
+    );
 
-    // Create user with Admin role
     const user = this.userRepository.create({
       email,
       firstName: command.firstName,
       lastName: command.lastName || null,
       password: passwordHash,
       organizationId: organization.id,
-      roleId: adminRole.id,
+      roleId: defaultRole?.id ?? null,
       isActive: true,
     });
     const savedUser = await this.userRepository.save(user);

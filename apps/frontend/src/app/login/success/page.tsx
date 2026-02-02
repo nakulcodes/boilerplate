@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { Suspense } from "react";
-import { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { getUserFromToken } from "@/utils/auth";
-import { useSession } from "@/contexts/session-context";
-import { setToken } from "@/utils/cookies";
+import { Suspense } from 'react';
+import { useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { getUserFromToken } from '@/utils/auth';
+import { useSession } from '@/contexts/session-context';
+import { setToken } from '@/utils/cookies';
 
 function LoginSuccessContent() {
   const router = useRouter();
@@ -13,10 +13,10 @@ function LoginSuccessContent() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const token = searchParams.get("data");
+    const token = searchParams.get('data');
 
     if (!token) {
-      router.push("/");
+      router.push('/');
       return;
     }
 
@@ -25,9 +25,9 @@ function LoginSuccessContent() {
 
     if (user) {
       setUser(user);
-      router.push("/dashboard");
+      router.push('/dashboard');
     } else {
-      router.push("/");
+      router.push('/');
     }
   }, [router, searchParams, setUser]);
 

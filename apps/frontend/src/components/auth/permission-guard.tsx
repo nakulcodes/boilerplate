@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { ReactNode } from "react";
-import { usePermissions } from "@/hooks/use-permissions";
-import { useSession } from "@/contexts/session-context";
-import { Permission } from "@/types/permissions.type";
+import { ReactNode } from 'react';
+import { usePermissions } from '@/hooks/use-permissions';
+import { useSession } from '@/contexts/session-context';
+import { Permission } from '@/types/permissions.type';
 
 interface PermissionGuardProps {
   children: ReactNode;

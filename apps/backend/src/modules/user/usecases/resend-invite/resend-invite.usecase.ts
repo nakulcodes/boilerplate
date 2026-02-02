@@ -62,7 +62,9 @@ export class ResendInvite {
     // TODO: Resend invitation email (no password)
     // For now, just log the invite link
     this.logger.log(`Resend invite link for ${user.email}: ${inviteLink}`);
-    this.logger.log(`Inviter: ${inviterName}, Organization: ${user.organization.name}`);
+    this.logger.log(
+      `Inviter: ${inviterName}, Organization: ${user.organization.name}`,
+    );
 
     return {
       inviteLink,

@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { Check, ChevronsUpDown, Search, X } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from 'react';
+import { Check, ChevronsUpDown, Search, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from '@/components/ui/popover';
 
 interface Option {
   label: string;
@@ -28,16 +28,16 @@ export function MultiSelect({
   value,
   onChange,
   disabled,
-  placeholder = "Select options...",
+  placeholder = 'Select options...',
 }: MultiSelectProps) {
   const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [filteredOptions, setFilteredOptions] = useState(options);
 
   useEffect(() => {
     if (searchQuery) {
       const filtered = options.filter((option) =>
-        option.label.toLowerCase().includes(searchQuery.toLowerCase())
+        option.label.toLowerCase().includes(searchQuery.toLowerCase()),
       );
       setFilteredOptions(filtered);
     } else {
@@ -74,7 +74,7 @@ export function MultiSelect({
           >
             <span className="text-sm">
               {value.length > 0
-                ? `${value.length} option${value.length === 1 ? "" : "s"} selected`
+                ? `${value.length} option${value.length === 1 ? '' : 's'} selected`
                 : placeholder}
             </span>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -82,7 +82,7 @@ export function MultiSelect({
         </PopoverTrigger>
         <PopoverContent
           className="p-0 shadow-lg font-dmSans"
-          style={{ width: "var(--radix-popover-trigger-width)" }}
+          style={{ width: 'var(--radix-popover-trigger-width)' }}
           align="start"
         >
           <div className="px-3 py-2 border-b">
@@ -108,24 +108,24 @@ export function MultiSelect({
                     key={option.value}
                     onClick={() => toggleOption(option.value)}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2 cursor-pointer bg-gray-50 dark:bg-background hover:bg-gray-50 dark:hover:bg-gray-700",
-                      value.includes(option.value) && "bg-gray-50"
+                      'flex items-center gap-3 px-3 py-2 cursor-pointer bg-gray-50 dark:bg-background hover:bg-gray-50 dark:hover:bg-gray-700',
+                      value.includes(option.value) && 'bg-gray-50',
                     )}
                   >
                     <div
                       className={cn(
-                        "flex h-4 w-4 items-center justify-center rounded-sm border",
+                        'flex h-4 w-4 items-center justify-center rounded-sm border',
                         value.includes(option.value)
-                          ? "border-gray-900 bg-gray-900 dark:border-gray-600 dark:bg-gray-600"
-                          : "border-gray-300 dark:border-gray-600"
+                          ? 'border-gray-900 bg-gray-900 dark:border-gray-600 dark:bg-gray-600'
+                          : 'border-gray-300 dark:border-gray-600',
                       )}
                     >
                       <Check
                         className={cn(
-                          "h-3 w-3 text-white",
+                          'h-3 w-3 text-white',
                           value.includes(option.value)
-                            ? "opacity-100"
-                            : "opacity-0"
+                            ? 'opacity-100'
+                            : 'opacity-0',
                         )}
                       />
                     </div>

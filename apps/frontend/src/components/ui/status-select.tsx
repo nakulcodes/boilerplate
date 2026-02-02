@@ -4,12 +4,12 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 
 export type StatusType = {
   value: string;
   label: string;
-  variant: "success" | "error" | "warning";
+  variant: 'success' | 'error' | 'warning';
 };
 
 interface StatusSelectProps {
@@ -19,14 +19,14 @@ interface StatusSelectProps {
   onValueChange: (value: string) => void;
 }
 
-const getStatusStyles = (variant: StatusType["variant"]) => {
+const getStatusStyles = (variant: StatusType['variant']) => {
   switch (variant) {
-    case "success":
-      return "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200";
-    case "error":
-      return "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200";
-    case "warning":
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-200";
+    case 'success':
+      return 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200';
+    case 'error':
+      return 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200';
+    case 'warning':
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-200';
   }
 };
 
@@ -49,7 +49,7 @@ export function StatusSelect({
           {selectedOption && (
             <span
               className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusStyles(
-                selectedOption.variant
+                selectedOption.variant,
               )}`}
             >
               {selectedOption.label}
@@ -62,7 +62,7 @@ export function StatusSelect({
           <SelectItem key={option.value} value={option.value}>
             <span
               className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusStyles(
-                option.variant
+                option.variant,
               )}`}
             >
               {option.label}

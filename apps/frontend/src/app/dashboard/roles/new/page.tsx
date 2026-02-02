@@ -1,23 +1,23 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { fetchApi } from "@/utils/api-client";
-import { buildApiUrl, API_ROUTES } from "@/config/api-routes";
-import { PERMISSIONS_ENUM } from "@/constants/permissions.constants";
-import { PermissionGuard } from "@/components/auth/permission-guard";
-import { PermissionPicker } from "@/components/roles/permission-picker";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { toast } from "@/lib/toast";
-import { ArrowLeftIcon } from "@heroicons/react/24/solid";
-import Link from "next/link";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { fetchApi } from '@/utils/api-client';
+import { buildApiUrl, API_ROUTES } from '@/config/api-routes';
+import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
+import { PermissionGuard } from '@/components/auth/permission-guard';
+import { PermissionPicker } from '@/components/roles/permission-picker';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { toast } from '@/lib/toast';
+import { ArrowLeftIcon } from '@heroicons/react/24/solid';
+import Link from 'next/link';
 
 function CreateRoleContent() {
   const router = useRouter();
-  const [name, setName] = useState("");
+  const [name, setName] = useState('');
   const [permissions, setPermissions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -28,13 +28,13 @@ function CreateRoleContent() {
     setIsLoading(true);
     try {
       await fetchApi(buildApiUrl(API_ROUTES.ROLES.CREATE), {
-        method: "POST",
+        method: 'POST',
         body: JSON.stringify({ name, permissions }),
       });
-      toast.success("Role created");
-      router.push("/dashboard/roles");
+      toast.success('Role created');
+      router.push('/dashboard/roles');
     } catch (err: any) {
-      toast.error(err.message || "Failed to create role");
+      toast.error(err.message || 'Failed to create role');
     } finally {
       setIsLoading(false);
     }
@@ -49,9 +49,7 @@ function CreateRoleContent() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Create Role
-          </h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Create Role</h1>
           <p className="text-sm text-muted-foreground">
             Define a new role with specific permissions
           </p>
@@ -90,7 +88,7 @@ function CreateRoleContent() {
 
         <div className="flex items-center gap-3">
           <Button type="submit" disabled={isLoading || !name.trim()}>
-            {isLoading ? "Creating..." : "Create Role"}
+            {isLoading ? 'Creating...' : 'Create Role'}
           </Button>
           <Link href="/dashboard/roles">
             <Button type="button" variant="outline" disabled={isLoading}>

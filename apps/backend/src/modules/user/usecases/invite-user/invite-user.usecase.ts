@@ -6,7 +6,10 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import { OrganizationRepository, UserRepository } from '../../../../database/repositories';
+import {
+  OrganizationRepository,
+  UserRepository,
+} from '../../../../database/repositories';
 import { UserStatus } from '../../../../database/enums';
 import {
   buildUrl,
@@ -114,7 +117,9 @@ export class InviteUser {
     // TODO: Send invitation email (no credentials - user onboards themselves)
     // For now, just log the invite link
     this.logger.log(`Invite link for ${command.email}: ${inviteLink}`);
-    this.logger.log(`Inviter: ${inviterName}, Organization: ${userWithOrg?.organization.name || 'Organization'}`);
+    this.logger.log(
+      `Inviter: ${inviterName}, Organization: ${userWithOrg?.organization.name || 'Organization'}`,
+    );
 
     return {
       userId: savedUser.id,

@@ -9,7 +9,10 @@ export class UpdateRoleDto {
   @Trim()
   name?: string;
 
-  @ApiPropertyOptional({ type: [String], example: ['user:read', 'user:list:read'] })
+  @ApiPropertyOptional({
+    type: [String],
+    example: ['user:read', 'user:list:read'],
+  })
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
