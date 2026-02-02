@@ -169,6 +169,53 @@ export class RoleController {
 - `formatUserName(user)` — full name or email fallback
 - `escapeRegExp(text)`
 
+## API Endpoints
+
+### Auth (`/api/v1/auth`)
+
+- `POST /register` — public, creates user + org + default admin role
+- `POST /login` — public, returns `{ accessToken, refreshToken, user, organization }`
+- `POST /refresh` — RefreshJwtGuard, body: `{ refreshToken }`, returns new token pair
+- `POST /logout` — authenticated, body: `{ refreshToken }`, invalidates refresh token
+- `POST /update-password` — authenticated, body: `{ currentPassword, newPassword, confirmPassword }`
+- `POST /reset/request` — public, body: `{ email }`, sends password reset email
+- `POST /reset` — public, body: `{ password, token }`, resets password
+
+### Users (`/api/v1/users`)
+
+- `POST /list` — **paginated**, permission: `USER_LIST_READ`
+  - Body: `{ page, limit, status?, search?, invitedBy? }`
+  - Page is 0-indexed, limit default 10 (max 100)
+  - Response: `{ data: User[], page, limit, total, totalPages, hasNextPage, hasPreviousPage }`
+- `POST /invite` — permission: `USER_CREATE`, body: `{ email, firstName, lastName }`
+- `POST /resend-invite` — permission: `USER_CREATE`, body: `{ userId }`
+- `POST /accept-invite` — public, body: `{ inviteToken, firstName, lastName, password }`
+- `GET /me` — authenticated, returns current user with role and org
+- `PUT /profile` — authenticated, body: `{ firstName, lastName }`
+- `PUT /:id` — permission: `USER_UPDATE`, body: `{ firstName, lastName }`
+- `POST /:id/block` — permission: `USER_UPDATE_STATUS`
+- `POST /:id/unblock` — permission: `USER_UPDATE_STATUS`
+
+### Roles (`/api/v1/roles`)
+
+- `GET /` — **not paginated** (returns all), permission: `ROLE_LIST_READ`
+- `POST /` — permission: `ROLE_CREATE`, body: `{ name, permissions }`
+- `GET /:id` — permission: `ROLE_READ`
+- `PUT /:id` — permission: `ROLE_UPDATE`, body: `{ name, permissions }`
+- `DELETE /:id` — permission: `ROLE_UPDATE`
+
+### Pagination Pattern
+
+User list uses POST with pagination. Roles return all items via GET. When adding a new paginated endpoint:
+
+1. Create command extending `BasePaginatedCommand` (provides `page`, `limit`)
+2. Create DTO extending `ListPaginationDto` (provides `page`, `limit` with validation)
+3. In usecase, use `calculateSkip(page, limit)` for offset and `calculatePaginationMetadata(page, limit, total)` for response
+4. Use `@ApiOkPaginatedResponse(YourDto)` on the controller method
+5. Response shape: `{ data: T[], page, limit, total, totalPages, hasNextPage, hasPreviousPage }`
+
+For simple lists that don't need pagination (like roles), just return the array directly — ResponseInterceptor wraps it in `{ data: T[] }`.
+
 ## Response Format
 
 ```

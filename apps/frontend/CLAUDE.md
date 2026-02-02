@@ -41,11 +41,64 @@ const response = await fetch(buildApiUrl(API_ROUTES.AUTH.LOGIN), { ... });
 
 **NEVER combine both**: `fetchApi(buildApiUrl(...))` causes double URL prefix.
 
+## API Routes Reference
+
+All routes are defined in `src/config/api-routes.ts`. Here's what exists:
+
+**Auth** (unauthenticated — use `fetch(buildApiUrl(...))`)
+- `AUTH.LOGIN` — `POST /auth/login`
+- `AUTH.REGISTER` — `POST /auth/register`
+- `AUTH.REFRESH` — `POST /auth/refresh`
+- `AUTH.LOGOUT` — `POST /auth/logout`
+- `AUTH.FORGOT_PASSWORD` — `POST /auth/reset/request`
+- `AUTH.RESET_PASSWORD` — `POST /auth/reset`
+- `AUTH.UPDATE_PASSWORD` — `POST /auth/update-password`
+
+**Users** (authenticated — use `fetchApi(...)`)
+- `USERS.ME` — `GET /users/me`
+- `USERS.PROFILE` — `PUT /users/profile`
+- `USERS.LIST` — `POST /users/list` — **paginated**, body: `{ page, limit, status?, search? }`
+- `USERS.INVITE` — `POST /users/invite`
+- `USERS.RESEND_INVITE` — `POST /users/resend-invite`
+- `USERS.UPDATE(id)` — `PUT /users/:id`
+- `USERS.BLOCK(id)` — `POST /users/:id/block`
+- `USERS.UNBLOCK(id)` — `POST /users/:id/unblock`
+
+**Roles** (authenticated — use `fetchApi(...)`)
+- `ROLES.LIST` — `GET /roles` — **not paginated**, returns all roles
+- `ROLES.CREATE` — `POST /roles`
+- `ROLES.GET(id)` — `GET /roles/:id`
+- `ROLES.UPDATE(id)` — `PUT /roles/:id`
+- `ROLES.DELETE(id)` — `DELETE /roles/:id`
+
+## Pagination
+
+Not all list endpoints are paginated. Know the difference:
+
+**Paginated** (user list): POST with body `{ page, limit }`, response includes metadata:
+```typescript
+const data = await fetchApi<{ data: UserListItem[] }>(
+  API_ROUTES.USERS.LIST,
+  { method: 'POST', body: JSON.stringify({ page: 1, limit: 50 }) },
+);
+// data.data = array of users
+```
+Response shape from backend: `{ data: T[], page, limit, total, totalPages, hasNextPage, hasPreviousPage }`
+
+**Non-paginated** (role list): GET, returns all items as array:
+```typescript
+const roles = await fetchApi<Role[]>(API_ROUTES.ROLES.LIST);
+// roles = array of all roles
+```
+
+When the backend wraps in `{ data: T }`, `fetchApi` unwraps it automatically. But for paginated responses that return `{ data: T[], page, total, ... }`, the outer `{ data: ... }` is unwrapped by fetchApi, so you receive `{ data: T[], page, total, ... }` — the inner `data` field is the actual array.
+
 ## Adding a New API Endpoint
 
 1. Add the route to `API_ROUTES` in `src/config/api-routes.ts`
 2. Use `fetchApi(API_ROUTES.YOUR.ROUTE)` in your component
 3. Match the response type to the backend DTO
+4. For paginated endpoints, send `{ page, limit }` in body and handle the pagination metadata
 
 ## Token Storage
 

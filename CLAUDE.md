@@ -102,6 +102,16 @@ modules/<feature>/usecases/<operation>/
 
 Commands extend `OrganizationCommand` (or `AuthenticatedCommand`). Validate with `Command.create(data)`.
 
+### Endpoints & Pagination
+
+- `POST /users/list` — **paginated**: body `{ page, limit, status?, search? }`, response includes `{ data[], page, limit, total, totalPages, hasNextPage, hasPreviousPage }`
+- `GET /roles` — **not paginated**: returns all roles as array
+- Auth endpoints (`/auth/*`) are public except `/logout` and `/update-password`
+- All other user/role endpoints require specific permissions (see `apps/backend/CLAUDE.md` for full list)
+
+When adding a paginated endpoint: use `BasePaginatedCommand` + `ListPaginationDto` on backend, send `{ page, limit }` in POST body from frontend.
+When adding a simple list: use `OrganizationCommand` on backend, GET endpoint, frontend receives array directly.
+
 ---
 
 ## Shared Packages
