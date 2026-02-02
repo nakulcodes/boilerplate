@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from '@/components/ui/use-toast';
 import {
   Toast,
   ToastClose,
@@ -8,14 +8,14 @@ import {
   ToastProvider,
   ToastTitle,
   ToastViewport,
-} from "@/components/ui/toast";
+} from '@/components/ui/toast';
 import {
   CheckCircleIcon,
   XMarkIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
-} from "@heroicons/react/24/solid";
-import { cn } from "@/lib/utils";
+} from '@heroicons/react/24/solid';
+import { cn } from '@/lib/utils';
 
 export function Toaster() {
   const { toasts } = useToast();
@@ -27,41 +27,41 @@ export function Toaster() {
           <Toast key={id} {...props}>
             <div
               className={cn(
-                "flex items-start gap-4 py-2 px-1",
-                !description && "items-center"
+                'flex items-start gap-4 py-2 px-1',
+                !description && 'items-center',
               )}
             >
-              {props.variant === "success" && (
+              {props.variant === 'success' && (
                 <div
                   className={cn(
-                    "rounded-full bg-white dark:bg-dark-background shadow-sm p-1.5",
-                    !description && "mt-0"
+                    'rounded-full bg-white dark:bg-dark-background shadow-sm p-1.5',
+                    !description && 'mt-0',
                   )}
                 >
                   <CheckCircleIcon className="h-5 w-5 text-green-600 dark:text-green-500" />
                 </div>
               )}
-              {props.variant === "error" && (
+              {props.variant === 'error' && (
                 <div
                   className={cn(
-                    "rounded-full bg-white dark:bg-dark-background shadow-sm p-1.5",
-                    !description && "mt-0"
+                    'rounded-full bg-white dark:bg-dark-background shadow-sm p-1.5',
+                    !description && 'mt-0',
                   )}
                 >
                   <ExclamationTriangleIcon className="h-5 w-5 text-red-600 dark:text-red-500" />
                 </div>
               )}
-              {props.variant === "info" && (
+              {props.variant === 'info' && (
                 <div
                   className={cn(
-                    "rounded-full bg-white dark:bg-dark-background shadow-sm p-1.5",
-                    !description && "mt-0"
+                    'rounded-full bg-white dark:bg-dark-background shadow-sm p-1.5',
+                    !description && 'mt-0',
                   )}
                 >
                   <InformationCircleIcon className="h-5 w-5 text-blue-600 dark:text-blue-500" />
                 </div>
               )}
-              <div className={cn("grid gap-1", !description && "py-0.5")}>
+              <div className={cn('grid gap-1', !description && 'py-0.5')}>
                 {title && (
                   <ToastTitle className="text-[15px] font-medium leading-none text-gray-900 ">
                     {title}

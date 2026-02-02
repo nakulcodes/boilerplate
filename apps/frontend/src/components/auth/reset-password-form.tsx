@@ -1,32 +1,32 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import { toast } from "@/lib/toast";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
-import { fetchApi } from "@/utils/api-client";
-import { API_ROUTES } from "@/config/api-routes";
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useState } from 'react';
+import { toast } from '@/lib/toast';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { fetchApi } from '@/utils/api-client';
+import { API_ROUTES } from '@/config/api-routes';
 
 export default function ResetPasswordForm() {
   const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  const token = searchParams.get('token');
   const router = useRouter();
 
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -55,15 +55,15 @@ export default function ResetPasswordForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match");
+      setError('Passwords do not match');
       return;
     }
 
     if (newPassword.length < 8) {
-      setError("Password must be at least 8 characters long");
+      setError('Password must be at least 8 characters long');
       return;
     }
 
@@ -71,16 +71,16 @@ export default function ResetPasswordForm() {
 
     try {
       await fetchApi(API_ROUTES.AUTH.RESET_PASSWORD, {
-        method: "POST",
+        method: 'POST',
         body: JSON.stringify({ token, password: newPassword }),
       });
 
-      toast.success("Success", "Your password has been reset successfully");
-      setTimeout(() => router.push("/"), 2000);
+      toast.success('Success', 'Your password has been reset successfully');
+      setTimeout(() => router.push('/'), 2000);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "An error occurred";
+      const message = err instanceof Error ? err.message : 'An error occurred';
       setError(message);
-      toast.error("Error", message);
+      toast.error('Error', message);
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +101,7 @@ export default function ResetPasswordForm() {
             <div className="relative">
               <Input
                 id="new-password"
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
@@ -128,7 +128,7 @@ export default function ResetPasswordForm() {
             <div className="relative">
               <Input
                 id="confirm-password"
-                type={showConfirmPassword ? "text" : "password"}
+                type={showConfirmPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
@@ -155,7 +155,7 @@ export default function ResetPasswordForm() {
           )}
 
           <Button className="w-full" type="submit" disabled={isLoading}>
-            {isLoading ? "Resetting..." : "Reset Password"}
+            {isLoading ? 'Resetting...' : 'Reset Password'}
           </Button>
 
           <div className="text-center">

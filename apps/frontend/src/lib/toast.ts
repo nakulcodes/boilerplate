@@ -1,15 +1,15 @@
-import { toast as baseToast } from "@/components/ui/use-toast";
-import { ReactNode } from "react";
+import { toast as baseToast } from '@/components/ui/use-toast';
+import { ReactNode } from 'react';
 
 export const toast = {
   show: ({
     title,
     description,
-    variant = "default",
+    variant = 'default',
   }: {
     title?: string;
     description?: string | ReactNode;
-    variant?: "default" | "success" | "error" | "info";
+    variant?: 'default' | 'success' | 'error' | 'info';
   }) => {
     baseToast({
       title,
@@ -22,7 +22,7 @@ export const toast = {
     baseToast({
       title,
       description,
-      variant: "success",
+      variant: 'success',
     });
   },
 
@@ -30,7 +30,7 @@ export const toast = {
     baseToast({
       title,
       description,
-      variant: "error",
+      variant: 'error',
     });
   },
 
@@ -38,7 +38,7 @@ export const toast = {
     baseToast({
       title,
       description,
-      variant: "info",
+      variant: 'info',
     });
   },
 };

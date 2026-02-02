@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-// Inline DTOs for auth responses to avoid importing full DTOs with extra fields
 class AuthUserDto {
   @ApiProperty()
   id!: string;

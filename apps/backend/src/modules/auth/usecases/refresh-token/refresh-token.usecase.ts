@@ -1,6 +1,9 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 
-import { UserRepository } from '../../../../database/repositories';
+import {
+  UserRepository,
+  RoleRepository,
+} from '../../../../database/repositories';
 
 import { AuthService } from '../../services/auth.service';
 import { RefreshTokenCommand } from './refresh-token.command';
@@ -10,6 +13,7 @@ import { RefreshTokenResponseDto } from '../../dtos/refresh-token.dto';
 export class RefreshToken {
   constructor(
     private readonly userRepository: UserRepository,
+    private readonly roleRepository: RoleRepository,
     private readonly authService: AuthService,
   ) {}
 
@@ -27,6 +31,9 @@ export class RefreshToken {
         'email',
         'organizationId',
         'isActive',
+        'firstName',
+        'lastName',
+        'roleId',
         'refreshToken',
         'refreshTokenExpires',
       ],
@@ -46,8 +53,16 @@ export class RefreshToken {
       throw new UnauthorizedException('Refresh token has expired');
     }
 
+    // Load role permissions for access token
+    const role = user.roleId
+      ? await this.roleRepository.findById(user.roleId)
+      : null;
+
     // Generate new access token
-    const accessToken = this.authService.generateAccessToken(user);
+    const accessToken = this.authService.generateAccessToken(
+      user,
+      role?.permissions ?? [],
+    );
 
     // Generate new refresh token (token rotation)
     const refreshToken = this.authService.generateRefreshToken(user);

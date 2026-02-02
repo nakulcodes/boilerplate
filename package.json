@@ -23,7 +23,23 @@
     "docker:build": "docker-compose build",
     "docker:up": "docker-compose up",
     "docker:down": "docker-compose down",
-    "docker:dev": "docker-compose -f docker-compose.dev.yml up"
+    "docker:dev": "docker-compose -f docker-compose.dev.yml up",
+    "prepare": "husky",
+    "format": "prettier --write \"apps/**/*.{ts,tsx}\" \"packages/**/*.ts\"",
+    "format:check": "prettier --check \"apps/**/*.{ts,tsx}\" \"packages/**/*.ts\""
+  },
+  "lint-staged": {
+    "apps/frontend/**/*.{ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "apps/backend/**/*.ts": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "packages/**/*.ts": [
+      "prettier --write"
+    ]
   },
   "keywords": [
     "monorepo",
@@ -36,5 +52,10 @@
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"
   },
-  "packageManager": "pnpm@9.15.0"
+  "packageManager": "pnpm@9.15.0",
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.4.2"
+  }
 }

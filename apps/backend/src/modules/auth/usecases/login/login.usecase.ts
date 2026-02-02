@@ -16,7 +16,7 @@ export class Login {
     const email = command.email.toLowerCase().trim();
     const user = await this.userRepository.findOne({
       where: { email },
-      relations: { organization: true },
+      relations: { organization: true, role: true },
     });
 
     if (!user) {
@@ -38,7 +38,10 @@ export class Login {
     }
 
     // Generate access and refresh tokens
-    const accessToken = this.authService.generateAccessToken(user);
+    const accessToken = this.authService.generateAccessToken(
+      user,
+      user.role?.permissions ?? [],
+    );
     const refreshToken = this.authService.generateRefreshToken(user);
     const refreshTokenExpires = this.authService.getRefreshTokenExpiry();
 

@@ -1,0 +1,4 @@
+npx lint-staged
+
+npx --package typescript tsc --noEmit --project apps/frontend/tsconfig.json
+npx --package typescript tsc --noEmit --project apps/backend/tsconfig.json

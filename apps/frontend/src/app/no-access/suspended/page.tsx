@@ -1,17 +1,17 @@
-"use client";
+'use client';
 
 import {
   InformationCircleIcon,
   ExclamationTriangleIcon,
-} from "@heroicons/react/24/outline";
+} from '@heroicons/react/24/outline';
 import {
   EnvelopeIcon,
   PhoneIcon,
   ArrowRightOnRectangleIcon,
-} from "@heroicons/react/24/solid";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { useSession } from "@/contexts/session-context";
+} from '@heroicons/react/24/solid';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { useSession } from '@/contexts/session-context';
 
 export default function Page() {
   const { logout } = useSession();
@@ -25,8 +25,8 @@ export default function Page() {
           Account Suspended
         </h1>
         <p className="text-gray-600 dark:text-gray-300 mb-8">
-          Your account is currently suspended. Please contact support
-          if you have any questions.
+          Your account is currently suspended. Please contact support if you
+          have any questions.
         </p>
         <div className="flex justify-center space-x-6 mb-8">
           <Link

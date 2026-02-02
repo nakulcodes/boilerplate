@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { DashboardHeader } from "@/components/dashboard/dashboard-header";
-import { DashboardNav } from "@/components/dashboard/dashboard-nav";
-import { AuthGuard } from "@/components/auth/auth-guard";
+import { DashboardHeader } from '@/components/dashboard/dashboard-header';
+import { DashboardNav } from '@/components/dashboard/dashboard-nav';
+import { AuthGuard } from '@/components/auth/auth-guard';
 
 export default function DashboardLayout({
   children,
