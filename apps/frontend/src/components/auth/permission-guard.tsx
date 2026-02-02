@@ -1,0 +1,40 @@
+"use client";
+
+import { ReactNode } from "react";
+import { usePermissions } from "@/hooks/use-permissions";
+import { useSession } from "@/contexts/session-context";
+import { Permission } from "@/types/permissions.type";
+
+interface PermissionGuardProps {
+  children: ReactNode;
+  permissions: Permission | Permission[];
+  requireAll?: boolean;
+  fallback?: ReactNode;
+}
+
+export function PermissionGuard({
+  children,
+  permissions,
+  requireAll = false,
+  fallback = null,
+}: PermissionGuardProps) {
+  const { isAuthenticated, isLoading } = useSession();
+  const { hasAnyPermission, hasAllPermissions, isAdmin } = usePermissions();
+
+  if (isLoading || !isAuthenticated) {
+    return fallback;
+  }
+
+  if (isAdmin) {
+    return <>{children}</>;
+  }
+
+  const permissionArray = Array.isArray(permissions)
+    ? permissions
+    : [permissions];
+  const hasAccess = requireAll
+    ? hasAllPermissions(permissionArray)
+    : hasAnyPermission(permissionArray);
+
+  return hasAccess ? <>{children}</> : fallback;
+}

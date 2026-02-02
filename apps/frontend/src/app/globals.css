@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+    --background: #ffff;
+    --foreground: #000;
+    --destructive: #ffc9c9;
+    --chart-1: 12 76% 61%;
+    --dark-background: #0f0f0f;
+    --dark-card: #111113;
+    --border: #e6e6e6;
+  }
+  .dark {
+    --background: #121212;
+    --foreground: #fff;
+    --destructive: #ffc9c9;
+    --chart-1: 12 76% 61%;
+    --dark-background: #111111;
+    --dark-card: #111113;
+    --border: #262626;
+    --dark-text: #dfdfdf;
+  }
+}
