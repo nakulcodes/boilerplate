@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { roleSchema, RoleFormData } from '@/schemas/role.schema';
 import { fetchApi } from '@/utils/api-client';
 import { API_ROUTES } from '@/config/api-routes';
 import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
@@ -22,46 +25,45 @@ function EditRoleContent() {
   const params = useParams();
   const roleId = params.id as string;
 
-  const [role, setRole] = useState<Role | null>(null);
-  const [name, setName] = useState('');
-  const [permissions, setPermissions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<RoleFormData>({
+    resolver: zodResolver(roleSchema),
+    defaultValues: { name: '', permissions: [] },
+  });
 
   const loadRole = useCallback(async () => {
     try {
       const data = await fetchApi<Role>(API_ROUTES.ROLES.GET(roleId));
-      setRole(data);
-      setName(data.name);
-      setPermissions([...data.permissions]);
+      reset({ name: data.name, permissions: [...data.permissions] });
     } catch (err: any) {
       toast.error(err.message || 'Failed to load role');
       router.push('/dashboard/roles');
     } finally {
       setIsLoading(false);
     }
-  }, [roleId, router]);
+  }, [roleId, router, reset]);
 
   useEffect(() => {
     loadRole();
   }, [loadRole]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) return;
-
-    setIsSaving(true);
+  const onSubmit = async (formData: RoleFormData) => {
     try {
       await fetchApi(API_ROUTES.ROLES.UPDATE(roleId), {
         method: 'PUT',
-        body: JSON.stringify({ name, permissions }),
+        body: JSON.stringify(formData),
       });
       toast.success('Role updated');
       router.push('/dashboard/roles');
     } catch (err: any) {
       toast.error(err.message || 'Failed to update role');
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -97,16 +99,18 @@ function EditRoleContent() {
 
       <Separator />
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         <div className="space-y-2 max-w-md">
           <Label htmlFor="role-name">Role Name</Label>
           <Input
             id="role-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Editor, Viewer, Manager"
-            disabled={isSaving}
+            disabled={isSubmitting}
+            {...register('name')}
           />
+          {errors.name && (
+            <p className="text-sm text-red-500">{errors.name.message}</p>
+          )}
         </div>
 
         <div className="space-y-3">
@@ -116,21 +120,27 @@ function EditRoleContent() {
               Select which actions this role can perform
             </p>
           </div>
-          <PermissionPicker
-            selected={permissions}
-            onChange={setPermissions}
-            disabled={isSaving}
+          <Controller
+            name="permissions"
+            control={control}
+            render={({ field }) => (
+              <PermissionPicker
+                selected={field.value}
+                onChange={field.onChange}
+                disabled={isSubmitting}
+              />
+            )}
           />
         </div>
 
         <Separator />
 
         <div className="flex items-center gap-3">
-          <Button type="submit" disabled={isSaving || !name.trim()}>
-            {isSaving ? 'Saving...' : 'Update Role'}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : 'Update Role'}
           </Button>
           <Link href="/dashboard/roles">
-            <Button type="button" variant="outline" disabled={isSaving}>
+            <Button type="button" variant="outline" disabled={isSubmitting}>
               Cancel
             </Button>
           </Link>

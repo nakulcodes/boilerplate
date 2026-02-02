@@ -11,6 +11,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  resetPasswordSchema,
+  ResetPasswordFormData,
+} from '@/schemas/auth.schema';
 import { toast } from '@/lib/toast';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -23,12 +29,17 @@ export default function ResetPasswordForm() {
   const token = searchParams.get('token');
   const router = useRouter();
 
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<ResetPasswordFormData>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: { password: '', confirmPassword: '' },
+  });
 
   if (!token) {
     return (
@@ -53,36 +64,18 @@ export default function ResetPasswordForm() {
     );
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    if (newPassword.length < 8) {
-      setError('Password must be at least 8 characters long');
-      return;
-    }
-
-    setIsLoading(true);
-
+  const onSubmit = async (formData: ResetPasswordFormData) => {
     try {
       await fetchApi(API_ROUTES.AUTH.RESET_PASSWORD, {
         method: 'POST',
-        body: JSON.stringify({ token, password: newPassword }),
+        body: JSON.stringify({ token, password: formData.password }),
       });
 
       toast.success('Success', 'Your password has been reset successfully');
       setTimeout(() => router.push('/'), 2000);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An error occurred';
-      setError(message);
       toast.error('Error', message);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -95,19 +88,17 @@ export default function ResetPasswordForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="grid gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="new-password">New Password</Label>
+            <Label htmlFor="password">New Password</Label>
             <div className="relative">
               <Input
-                id="new-password"
+                id="password"
                 type={showPassword ? 'text' : 'password'}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
                 className="pr-10"
                 placeholder="••••••••"
-                disabled={isLoading}
+                disabled={isSubmitting}
+                {...register('password')}
               />
               <button
                 type="button"
@@ -121,20 +112,21 @@ export default function ResetPasswordForm() {
                 )}
               </button>
             </div>
+            {errors.password && (
+              <p className="text-sm text-red-500">{errors.password.message}</p>
+            )}
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="confirm-password">Confirm Password</Label>
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
             <div className="relative">
               <Input
-                id="confirm-password"
+                id="confirmPassword"
                 type={showConfirmPassword ? 'text' : 'password'}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
                 className="pr-10"
                 placeholder="••••••••"
-                disabled={isLoading}
+                disabled={isSubmitting}
+                {...register('confirmPassword')}
               />
               <button
                 type="button"
@@ -148,14 +140,15 @@ export default function ResetPasswordForm() {
                 )}
               </button>
             </div>
+            {errors.confirmPassword && (
+              <p className="text-sm text-red-500">
+                {errors.confirmPassword.message}
+              </p>
+            )}
           </div>
 
-          {error && (
-            <div className="text-sm text-red-500 text-center">{error}</div>
-          )}
-
-          <Button className="w-full" type="submit" disabled={isLoading}>
-            {isLoading ? 'Resetting...' : 'Reset Password'}
+          <Button className="w-full" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Resetting...' : 'Reset Password'}
           </Button>
 
           <div className="text-center">

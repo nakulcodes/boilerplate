@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { loginSchema, LoginFormData } from '@/schemas/auth.schema';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from '@/contexts/session-context';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
@@ -15,25 +18,31 @@ import { setToken, setRefreshToken } from '@/utils/cookies';
 import { LoginResponse } from '@/types/user.type';
 
 export default function LoginForm() {
-  const [email, setEmail] = useState('');
   const searchParams = useSearchParams();
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(searchParams.get('error') || '');
   const router = useRouter();
   const { setUser } = useSession();
   const [showPassword, setShowPassword] = useState(false);
+  const [serverError, setServerError] = useState(
+    searchParams.get('error') || '',
+  );
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: '', password: '' },
+  });
+
+  const onSubmit = async (formData: LoginFormData) => {
+    setServerError('');
 
     try {
       const response = await fetch(buildApiUrl(API_ROUTES.AUTH.LOGIN), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
@@ -58,10 +67,8 @@ export default function LoginForm() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Invalid email or password';
-      setError(message);
+      setServerError(message);
       toast.error('Error logging in', message);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -72,30 +79,27 @@ export default function LoginForm() {
         <p className="text-center text-sm">Enter your credentials to sign in</p>
       </CardHeader>
       <CardContent className="grid gap-4">
-        <form onSubmit={handleSubmit} className="grid gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
-              name="email"
               placeholder="name@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
+              {...register('email')}
             />
+            {errors.email && (
+              <p className="text-sm text-red-500">{errors.email.message}</p>
+            )}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="password">Password</Label>
             <div className="relative">
               <Input
                 id="password"
-                name="password"
                 type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
                 className="pr-10"
+                {...register('password')}
               />
               <button
                 type="button"
@@ -109,12 +113,17 @@ export default function LoginForm() {
                 )}
               </button>
             </div>
+            {errors.password && (
+              <p className="text-sm text-red-500">{errors.password.message}</p>
+            )}
           </div>
-          {error && (
-            <div className="text-sm text-red-500 text-center">{error}</div>
+          {serverError && (
+            <div className="text-sm text-red-500 text-center">
+              {serverError}
+            </div>
           )}
-          <Button className="w-full" type="submit" disabled={isLoading}>
-            {isLoading ? 'Signing in...' : 'Sign in'}
+          <Button className="w-full" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Signing in...' : 'Sign in'}
           </Button>
           <div className="text-sm text-center text-muted-foreground">
             <a
