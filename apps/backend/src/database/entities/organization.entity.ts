@@ -38,12 +38,6 @@ export class OrganizationEntity extends BaseEntity {
   })
   status!: OrganizationStatus;
 
-  @Column({ type: 'boolean', default: false })
-  careersPageEnabled!: boolean;
-
-  @Column({ type: 'jsonb', nullable: true })
-  careersPageSettings!: Record<string, any> | null;
-
   @OneToMany(() => UserEntity, (user) => user.organization, {
     cascade: false,
   })
