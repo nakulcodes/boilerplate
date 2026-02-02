@@ -1,4 +1,8 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import { ALL_PERMISSIONS } from '@boilerplate/core';
 import { RoleRepository } from '../../../../database/repositories';
 import { RoleEntity } from '../../../../database/entities';

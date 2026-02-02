@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
@@ -14,7 +14,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -72,12 +72,12 @@ function RolesContent() {
     if (!deleteTarget) return;
     try {
       await fetchApi(API_ROUTES.ROLES.DELETE(deleteTarget.id), {
-        method: "DELETE",
+        method: 'DELETE',
       });
-      toast.success("Role deleted");
+      toast.success('Role deleted');
       loadRoles();
     } catch (err: any) {
-      toast.error(err.message || "Failed to delete role");
+      toast.error(err.message || 'Failed to delete role');
     } finally {
       setDeleteTarget(null);
     }

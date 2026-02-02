@@ -1,4 +1,4 @@
-import { JWTPayload } from "@/types/user.type";
+import { JWTPayload } from '@/types/user.type';
 
 export function getUserFromToken(token: string): JWTPayload | null {
   if (!token) return null;
@@ -15,13 +15,13 @@ function isTokenExpired(payload: JWTPayload): boolean {
 
 function decodeJwt(token: string): JWTPayload | null {
   try {
-    const base64Payload = token.split(".")[1];
+    const base64Payload = token.split('.')[1];
     if (!base64Payload) return null;
 
     const jsonStr =
-      typeof atob === "function"
+      typeof atob === 'function'
         ? atob(base64Payload)
-        : Buffer.from(base64Payload, "base64").toString("utf8");
+        : Buffer.from(base64Payload, 'base64').toString('utf8');
 
     return JSON.parse(jsonStr) as JWTPayload;
   } catch {

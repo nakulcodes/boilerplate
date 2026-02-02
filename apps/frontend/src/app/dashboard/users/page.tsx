@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { fetchApi } from "@/utils/api-client";
@@ -66,17 +66,13 @@ function UsersContent() {
 
   const loadUsers = useCallback(async () => {
     try {
-      const response = await fetchApi<PaginatedResponse<UserListItem>>(
+      const data = await fetchApi<{ data: UserListItem[] }>(
         API_ROUTES.USERS.LIST,
-        { method: "POST", body: JSON.stringify({ page: 1, limit: 50 }) }
+        { method: 'POST', body: JSON.stringify({ page: 1, limit: 50 }) },
       );
-      console.log("API Response:", response);
-      console.log("Response.data:", response?.data);
-      setUsers(response?.data || []);
+      setUsers(data?.data || []);
     } catch (err: any) {
-      console.error("Error loading users:", err);
-      toast.error(err.message || "Failed to load users");
-      setUsers([]);
+      toast.error(err.message || 'Failed to load users');
     } finally {
       setIsLoading(false);
     }
@@ -89,42 +85,42 @@ function UsersContent() {
   const handleBlock = async (userId: string) => {
     try {
       await fetchApi(API_ROUTES.USERS.BLOCK(userId), {
-        method: "POST",
+        method: 'POST',
       });
-      toast.success("User blocked");
+      toast.success('User blocked');
       loadUsers();
     } catch (err: any) {
-      toast.error(err.message || "Failed to block user");
+      toast.error(err.message || 'Failed to block user');
     }
   };
 
   const handleUnblock = async (userId: string) => {
     try {
       await fetchApi(API_ROUTES.USERS.UNBLOCK(userId), {
-        method: "POST",
+        method: 'POST',
       });
-      toast.success("User unblocked");
+      toast.success('User unblocked');
       loadUsers();
     } catch (err: any) {
-      toast.error(err.message || "Failed to unblock user");
+      toast.error(err.message || 'Failed to unblock user');
     }
   };
 
   const handleResendInvite = async (userId: string) => {
     try {
       await fetchApi(API_ROUTES.USERS.RESEND_INVITE, {
-        method: "POST",
+        method: 'POST',
         body: JSON.stringify({ userId }),
       });
-      toast.success("Invite resent");
+      toast.success('Invite resent');
     } catch (err: any) {
-      toast.error(err.message || "Failed to resend invite");
+      toast.error(err.message || 'Failed to resend invite');
     }
   };
 
   const getDisplayName = (user: UserListItem) => {
     if (user.firstName || user.lastName) {
-      return `${user.firstName || ""} ${user.lastName || ""}`.trim();
+      return `${user.firstName || ''} ${user.lastName || ''}`.trim();
     }
     return user.email;
   };

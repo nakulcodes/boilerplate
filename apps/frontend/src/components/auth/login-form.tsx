@@ -1,25 +1,25 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useSession } from "@/contexts/session-context";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
-import { toast } from "@/lib/toast";
-import { buildApiUrl, API_ROUTES } from "@/config/api-routes";
-import { getUserFromToken } from "@/utils/auth";
-import { setToken, setRefreshToken } from "@/utils/cookies";
-import { LoginResponse } from "@/types/user.type";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useSession } from '@/contexts/session-context';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { toast } from '@/lib/toast';
+import { buildApiUrl, API_ROUTES } from '@/config/api-routes';
+import { getUserFromToken } from '@/utils/auth';
+import { setToken, setRefreshToken } from '@/utils/cookies';
+import { LoginResponse } from '@/types/user.type';
 
 export default function LoginForm() {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState('');
   const searchParams = useSearchParams();
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(searchParams.get("error") || "");
+  const [error, setError] = useState(searchParams.get('error') || '');
   const router = useRouter();
   const { setUser } = useSession();
   const [showPassword, setShowPassword] = useState(false);
@@ -27,19 +27,19 @@ export default function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
+    setError('');
 
     try {
       const response = await fetch(buildApiUrl(API_ROUTES.AUTH.LOGIN), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        toast.error("Failed to login", data.message || "Authentication failed");
+        toast.error('Failed to login', data.message || 'Authentication failed');
         return;
       }
 
@@ -53,13 +53,13 @@ export default function LoginForm() {
         setUser(jwtUser);
       }
 
-      toast.success("Success", "Logged in successfully");
-      router.push("/dashboard");
+      toast.success('Success', 'Logged in successfully');
+      router.push('/dashboard');
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Invalid email or password";
+        err instanceof Error ? err.message : 'Invalid email or password';
       setError(message);
-      toast.error("Error logging in", message);
+      toast.error('Error logging in', message);
     } finally {
       setIsLoading(false);
     }
@@ -69,9 +69,7 @@ export default function LoginForm() {
     <Card>
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl text-center">Sign in</CardTitle>
-        <p className="text-center text-sm">
-          Enter your credentials to sign in
-        </p>
+        <p className="text-center text-sm">Enter your credentials to sign in</p>
       </CardHeader>
       <CardContent className="grid gap-4">
         <form onSubmit={handleSubmit} className="grid gap-4">
@@ -93,7 +91,7 @@ export default function LoginForm() {
               <Input
                 id="password"
                 name="password"
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -116,7 +114,7 @@ export default function LoginForm() {
             <div className="text-sm text-red-500 text-center">{error}</div>
           )}
           <Button className="w-full" type="submit" disabled={isLoading}>
-            {isLoading ? "Signing in..." : "Sign in"}
+            {isLoading ? 'Signing in...' : 'Sign in'}
           </Button>
           <div className="text-sm text-center text-muted-foreground">
             <a

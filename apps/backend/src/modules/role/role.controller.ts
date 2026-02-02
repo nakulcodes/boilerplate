@@ -63,9 +63,7 @@ export class RoleController {
   @RequirePermissions(PERMISSIONS_ENUM.ROLE_LIST_READ)
   @ApiOperation({ summary: 'List all roles in the organization' })
   @ApiResponse({ status: 200, type: [RoleResponseDto] })
-  async list(
-    @UserSession() user: UserSessionData,
-  ): Promise<RoleResponseDto[]> {
+  async list(@UserSession() user: UserSessionData): Promise<RoleResponseDto[]> {
     return this.listRoles.execute(
       ListRolesCommand.create({
         userId: user.userId,

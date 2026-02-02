@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { Suspense } from "react";
-import LoginForm from "@/components/auth/login-form";
-import { useSession } from "@/contexts/session-context";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { Suspense } from 'react';
+import LoginForm from '@/components/auth/login-form';
+import { useSession } from '@/contexts/session-context';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function LoginPage() {
   const { isAuthenticated, isLoading } = useSession();
@@ -12,7 +12,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.push("/dashboard");
+      router.push('/dashboard');
     }
   }, [isLoading, isAuthenticated, router]);
 

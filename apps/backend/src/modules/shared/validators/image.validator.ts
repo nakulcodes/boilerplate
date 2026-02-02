@@ -12,7 +12,7 @@ export function IsImageUrl(validationOptions?: ValidationOptions) {
       propertyName,
       options: validationOptions,
       validator: {
-        validate(value: any, args: ValidationArguments) {
+        validate(value: any, _args: ValidationArguments) {
           const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'svg'];
           const extension = value.split('.').pop();
           if (!extension) return false;

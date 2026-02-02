@@ -1,14 +1,15 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "@/contexts/session-context";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSession } from '@/contexts/session-context';
 
 export default function ErrorBoundary({ error }: { error: Error }) {
   const router = useRouter();
   const { logout } = useSession();
   const [countdown, setCountdown] = useState(10);
-  const isUnauthorized = error.message?.includes("401") || error.message?.includes("Unauthorized");
+  const isUnauthorized =
+    error.message?.includes('401') || error.message?.includes('Unauthorized');
 
   useEffect(() => {
     if (!isUnauthorized) return;
@@ -51,7 +52,7 @@ export default function ErrorBoundary({ error }: { error: Error }) {
             Access Denied
           </h1>
           <p className="text-gray-600 dark:text-gray-300 text-center">
-            Your session has expired. You will be logged out in {countdown}{" "}
+            Your session has expired. You will be logged out in {countdown}{' '}
             seconds.
           </p>
         </div>

@@ -1,23 +1,23 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import { toast } from "@/lib/toast";
-import Link from "next/link";
-import { fetchApi } from "@/utils/api-client";
-import { API_ROUTES } from "@/config/api-routes";
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useState } from 'react';
+import { toast } from '@/lib/toast';
+import Link from 'next/link';
+import { fetchApi } from '@/utils/api-client';
+import { API_ROUTES } from '@/config/api-routes';
 
 export default function ForgotPasswordForm() {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -27,15 +27,15 @@ export default function ForgotPasswordForm() {
 
     try {
       await fetchApi(API_ROUTES.AUTH.FORGOT_PASSWORD, {
-        method: "POST",
+        method: 'POST',
         body: JSON.stringify({ email }),
       });
 
       setIsSuccess(true);
-      toast.success("Success", "Password reset link sent to your email");
+      toast.success('Success', 'Password reset link sent to your email');
     } catch (err) {
-      const message = err instanceof Error ? err.message : "An error occurred";
-      toast.error("Error", message);
+      const message = err instanceof Error ? err.message : 'An error occurred';
+      toast.error('Error', message);
     } finally {
       setIsLoading(false);
     }
@@ -91,7 +91,7 @@ export default function ForgotPasswordForm() {
             />
           </div>
           <Button className="w-full" type="submit" disabled={isLoading}>
-            {isLoading ? "Sending..." : "Send reset link"}
+            {isLoading ? 'Sending...' : 'Send reset link'}
           </Button>
           <div className="text-center">
             <Link

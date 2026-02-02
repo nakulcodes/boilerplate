@@ -1,10 +1,13 @@
-"use client";
+'use client';
 
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { PERMISSION_GROUPS, PERMISSIONS_ENUM } from "@/constants/permissions.constants";
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
+  PERMISSION_GROUPS,
+  PERMISSIONS_ENUM,
+} from '@/constants/permissions.constants';
 
 interface PermissionPickerProps {
   selected: string[];
@@ -21,7 +24,7 @@ export function PermissionPicker({
     onChange(
       selected.includes(permission)
         ? selected.filter((p) => p !== permission)
-        : [...selected, permission]
+        : [...selected, permission],
     );
   };
 
@@ -43,13 +46,13 @@ export function PermissionPicker({
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {groups.map(([key, group]) => {
         const allSelected = group.permissions.every((p) =>
-          selected.includes(p)
+          selected.includes(p),
         );
         const someSelected = group.permissions.some((p) =>
-          selected.includes(p)
+          selected.includes(p),
         );
         const selectedCount = group.permissions.filter((p) =>
-          selected.includes(p)
+          selected.includes(p),
         ).length;
 
         return (
@@ -64,10 +67,10 @@ export function PermissionPicker({
                       if (el) {
                         (el as HTMLButtonElement).dataset.state =
                           someSelected && !allSelected
-                            ? "indeterminate"
+                            ? 'indeterminate'
                             : allSelected
-                              ? "checked"
-                              : "unchecked";
+                              ? 'checked'
+                              : 'unchecked';
                       }
                     }}
                     onCheckedChange={() => toggleGroup(group.permissions)}
@@ -91,10 +94,10 @@ export function PermissionPicker({
               <div className="space-y-2.5">
                 {group.permissions.map((permission) => {
                   const label = permission
-                    .split(":")
+                    .split(':')
                     .slice(1)
-                    .join(" ")
-                    .replace(/-/g, " ");
+                    .join(' ')
+                    .replace(/-/g, ' ');
 
                   return (
                     <div
