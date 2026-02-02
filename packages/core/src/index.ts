@@ -1,6 +1,9 @@
 // Types and interfaces
 export * from './types';
 
+// Permissions
+export * from './permissions';
+
 // Integration Provider enum
 export enum IntegrationProvider {
   ZOOM = 'zoom',

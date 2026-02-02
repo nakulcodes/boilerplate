@@ -14,6 +14,7 @@ import { RequestIdMiddleware } from './middleware/request-id.middleware';
 
 // Filters
 import { GlobalExceptionFilter } from './filters/global-exception.filter';
+import { PermissionsGuard } from './decorators/require-permissions.decorator';
 
 const SHARED_PROVIDERS = [
   aiService,
@@ -22,6 +23,7 @@ const SHARED_PROVIDERS = [
   ResponseInterceptor,
   RequestIdMiddleware,
   GlobalExceptionFilter,
+  PermissionsGuard,
 ];
 
 @Global()

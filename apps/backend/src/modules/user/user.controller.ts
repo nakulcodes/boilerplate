@@ -1,7 +1,9 @@
 import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
+import { PERMISSIONS_ENUM } from '@boilerplate/core';
 import { RequireAuthentication } from '../shared/decorators/require-authentication.decorator';
+import { RequirePermissions } from '../shared/decorators/require-permissions.decorator';
 import {
   UserSession,
   type UserSessionData,
@@ -51,7 +53,7 @@ export class UserController {
   ) {}
 
   @Post('invite')
-  @RequireAuthentication()
+  @RequirePermissions(PERMISSIONS_ENUM.USER_CREATE)
   @ApiOperation({ summary: 'Invite a new user to the organization' })
   @ApiResponse({ status: 201, type: InviteResponseDto })
   async invite(
@@ -84,7 +86,7 @@ export class UserController {
   }
 
   @Post('resend-invite')
-  @RequireAuthentication()
+  @RequirePermissions(PERMISSIONS_ENUM.USER_CREATE)
   @ApiOperation({ summary: 'Resend invitation to a pending user' })
   @ApiResponse({ status: 200, type: InviteResponseDto })
   async resendInvitation(
@@ -129,7 +131,7 @@ export class UserController {
   }
 
   @Post('list')
-  @RequireAuthentication()
+  @RequirePermissions(PERMISSIONS_ENUM.USER_LIST_READ)
   @ApiOperation({
     summary: 'List users in organization with pagination and filters',
   })
@@ -152,7 +154,7 @@ export class UserController {
   }
 
   @Put(':id')
-  @RequireAuthentication()
+  @RequirePermissions(PERMISSIONS_ENUM.USER_UPDATE)
   @ApiOperation({ summary: 'Update user details (firstName, lastName)' })
   @ApiResponse({ status: 200 })
   async update(
@@ -171,7 +173,7 @@ export class UserController {
   }
 
   @Post(':id/block')
-  @RequireAuthentication()
+  @RequirePermissions(PERMISSIONS_ENUM.USER_UPDATE_STATUS)
   @ApiOperation({ summary: 'Block a user' })
   @ApiResponse({ status: 200 })
   async block(
@@ -188,7 +190,7 @@ export class UserController {
   }
 
   @Post(':id/unblock')
-  @RequireAuthentication()
+  @RequirePermissions(PERMISSIONS_ENUM.USER_UPDATE_STATUS)
   @ApiOperation({ summary: 'Unblock a user' })
   @ApiResponse({ status: 200 })
   async unblock(

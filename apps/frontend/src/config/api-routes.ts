@@ -14,6 +14,23 @@ export const API_ROUTES = {
     UPDATE_PASSWORD: "/auth/update-password",
     GOOGLE_CALLBACK: "/auth/google/callback",
   },
+  USERS: {
+    ME: "/users/me",
+    PROFILE: "/users/profile",
+    LIST: "/users/list",
+    INVITE: "/users/invite",
+    RESEND_INVITE: "/users/resend-invite",
+    UPDATE: (id: string) => `/users/${id}` as const,
+    BLOCK: (id: string) => `/users/${id}/block` as const,
+    UNBLOCK: (id: string) => `/users/${id}/unblock` as const,
+  },
+  ROLES: {
+    LIST: "/roles",
+    CREATE: "/roles",
+    GET: (id: string) => `/roles/${id}` as const,
+    UPDATE: (id: string) => `/roles/${id}` as const,
+    DELETE: (id: string) => `/roles/${id}` as const,
+  },
 } as const;
 
 export function buildApiUrl(route: string): string {

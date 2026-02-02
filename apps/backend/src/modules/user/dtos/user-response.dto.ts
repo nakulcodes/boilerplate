@@ -44,18 +44,18 @@ export class UserResponseDto {
   updatedAt!: Date;
 
   @ApiProperty({ required: false })
+  roleId?: string | null;
+
+  @ApiProperty({ required: false })
+  role?: {
+    id: string;
+    name: string;
+  } | null;
+
+  @ApiProperty({ required: false })
   invitedBy?: string | null;
 
-  @ApiProperty({
-    required: false,
-    // type: 'object',
-    // properties: {
-    //   id: { type: 'string' },
-    //   firstName: { type: 'string' },
-    //   lastName: { type: 'string' },
-    //   email: { type: 'string' },
-    // },
-  })
+  @ApiProperty({ required: false })
   inviter?: {
     id: string;
     firstName: string | null;

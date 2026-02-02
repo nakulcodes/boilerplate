@@ -15,7 +15,7 @@ export class GetCurrentUser {
     // Need to fetch with inviteToken for INVITED users
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      relations: { organization: true },
+      relations: { organization: true, role: true },
     });
 
     if (!user) {
@@ -40,6 +40,8 @@ export class GetCurrentUser {
       onboarded: user.onboarded,
       organizationId: user.organizationId,
       organization: user.organization,
+      roleId: user.roleId,
+      role: user.role ? { id: user.role.id, name: user.role.name } : null,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       invitedBy: user.invitedBy,

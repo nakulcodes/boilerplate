@@ -17,16 +17,10 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  /**
-   * Hash a plain text password using bcrypt
-   */
   async hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, 10);
   }
 
-  /**
-   * Compare a plain text password with a hashed password
-   */
   async comparePasswords(
     password: string,
     hashedPassword: string,
@@ -34,15 +28,12 @@ export class AuthService {
     return bcrypt.compare(password, hashedPassword);
   }
 
-  /**
-   * Generate access token for a user (1 hour expiry)
-   */
-  generateAccessToken(user: UserEntity): string {
+  generateAccessToken(user: UserEntity, permissions: string[] = []): string {
     const payload = {
       userId: user.id,
       email: user.email,
       organizationId: user.organizationId,
-      permissions: [],
+      permissions,
       firstName: user.firstName ?? "",
       lastName: user.lastName ?? "",
     };
@@ -56,9 +47,6 @@ export class AuthService {
     });
   }
 
-  /**
-   * Generate refresh token for a user (30 days expiry)
-   */
   generateRefreshToken(user: UserEntity): string {
     const payload = {
       userId: user.id,
@@ -75,38 +63,23 @@ export class AuthService {
     });
   }
 
-  /**
-   * Verify refresh token
-   */
   async verifyRefreshToken(token: string): Promise<any> {
     const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
     return this.jwtService.verify(token, { secret: refreshSecret });
   }
 
-  /**
-   * Calculate refresh token expiry (30 days from now)
-   */
   getRefreshTokenExpiry(): Date {
     return addDays(30);
   }
 
-  /**
-   * Generate JWT token for a user (legacy method - uses access token)
-   */
   generateJwtToken(user: UserEntity): string {
     return this.generateAccessToken(user);
   }
 
-  /**
-   * Generate a password reset token (uses application-generic utility)
-   */
   generatePasswordResetToken(): string {
     return generatePasswordResetToken();
   }
 
-  /**
-   * Calculate password reset token expiry (1 hour from now)
-   */
   getPasswordResetExpiry(): Date {
     return addHours(1);
   }

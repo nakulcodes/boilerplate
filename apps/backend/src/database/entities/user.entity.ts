@@ -6,6 +6,7 @@ import {
     Index,
   } from 'typeorm';
   import { OrganizationEntity } from './organization.entity';
+  import { RoleEntity } from './role.entity';
   import { BaseEntity } from './base.entity';
   import { UserStatus } from '../enums';
   
@@ -65,6 +66,13 @@ import {
     @JoinColumn({ name: 'organizationId' })
     organization!: OrganizationEntity;
   
+    @Column({ type: 'uuid', nullable: true })
+    roleId!: string | null;
+
+    @ManyToOne(() => RoleEntity, { nullable: true, onDelete: 'SET NULL' })
+    @JoinColumn({ name: 'roleId' })
+    role!: RoleEntity | null;
+
     @ManyToOne(() => UserEntity, { nullable: true })
     @JoinColumn({ name: 'invitedBy' })
     inviter!: UserEntity | null;

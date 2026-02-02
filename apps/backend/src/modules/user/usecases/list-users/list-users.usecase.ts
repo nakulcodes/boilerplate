@@ -24,6 +24,7 @@ export class ListUsers {
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.organization', 'organization')
+      .leftJoinAndSelect('user.role', 'role')
       .leftJoinAndSelect('user.inviter', 'inviter')
       .where('user.organizationId = :organizationId', {
         organizationId: command.organizationId,
@@ -40,8 +41,11 @@ export class ListUsers {
         'user.createdAt',
         'user.updatedAt',
         'user.invitedBy',
+        'user.roleId',
         'user.inviteToken',
         'user.inviteExpires',
+        'role.id',
+        'role.name',
         'organization.id',
         'organization.name',
         'inviter.id',

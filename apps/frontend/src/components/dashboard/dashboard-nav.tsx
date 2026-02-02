@@ -3,20 +3,44 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { usePermissions } from "@/hooks/use-permissions";
+import { PERMISSIONS_ENUM } from "@/constants/permissions.constants";
 import {
   HomeIcon,
   Cog6ToothIcon,
   UserIcon,
+  ShieldCheckIcon,
 } from "@heroicons/react/24/solid";
+import { Permission } from "@/types/permissions.type";
+
+interface Route {
+  href: string;
+  label: string;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  permission?: Permission;
+}
 
 export function DashboardNav() {
   const pathname = usePathname();
+  const { hasPermission } = usePermissions();
 
-  const routes = [
+  const routes: Route[] = [
     {
       href: "/dashboard",
       label: "Overview",
       icon: HomeIcon,
+    },
+    {
+      href: "/dashboard/users",
+      label: "Users",
+      icon: UserIcon,
+      permission: PERMISSIONS_ENUM.USER_LIST_READ,
+    },
+    {
+      href: "/dashboard/roles",
+      label: "Roles",
+      icon: ShieldCheckIcon,
+      permission: PERMISSIONS_ENUM.ROLE_LIST_READ,
     },
     {
       href: "/dashboard/settings",
@@ -24,6 +48,10 @@ export function DashboardNav() {
       icon: Cog6ToothIcon,
     },
   ];
+
+  const visibleRoutes = routes.filter(
+    (route) => !route.permission || hasPermission(route.permission)
+  );
 
   return (
     <nav className="border-r border-border dark:border-border bg-gray-50/40 dark:bg-dark-background lg:w-72">
@@ -37,7 +65,7 @@ export function DashboardNav() {
           </p>
         </div>
         <div className="space-y-2">
-          {routes.map((route) => {
+          {visibleRoutes.map((route) => {
             const isActive =
               route.href === "/dashboard"
                 ? pathname === "/dashboard"

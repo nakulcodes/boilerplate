@@ -4,19 +4,23 @@ import { ConfigService } from '@nestjs/config';
 import {
   UserEntity,
   OrganizationEntity,
+  RoleEntity,
 } from './entities';
 import {
   UserRepository,
-  OrganizationRepository
+  OrganizationRepository,
+  RoleRepository,
 } from './repositories';
 
 const entities = [
   UserEntity,
-  OrganizationEntity
+  OrganizationEntity,
+  RoleEntity,
 ];
 const repositories = [
   UserRepository,
   OrganizationRepository,
+  RoleRepository,
 ];
 
 @Global()
