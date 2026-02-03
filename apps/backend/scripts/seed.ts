@@ -13,6 +13,7 @@ import {
   OrganizationStatus,
   IntegrationCategory,
 } from '../src/database/enums';
+import { ALL_PERMISSIONS } from '@boilerplate/core';
 
 async function seed() {
   console.log('🌱 Starting database seed...\n');
@@ -57,6 +58,11 @@ async function seed() {
     console.log('\n🎭 Creating roles...');
     const rolesToCreate = [
       {
+        name: 'Super Admin',
+        permissions: ALL_PERMISSIONS,
+        isDefault: false,
+      },
+      {
         name: 'Admin',
         permissions: [
           'read',
@@ -97,17 +103,39 @@ async function seed() {
         roles.push(savedRole);
         console.log(`   ✓ Created role: ${savedRole.name}`);
       } else {
+        if (roleData.name === 'Super Admin') {
+          await roleRepo.update(
+            { id: existingRole.id },
+            { permissions: ALL_PERMISSIONS },
+          );
+          existingRole.permissions = ALL_PERMISSIONS;
+          console.log(
+            `   ℹ Role already exists: ${existingRole.name} (permissions updated)`,
+          );
+        } else {
+          console.log(`   ℹ Role already exists: ${existingRole.name}`);
+        }
         roles.push(existingRole);
-        console.log(`   ℹ Role already exists: ${existingRole.name}`);
       }
     }
 
     // 3. Create Users
     console.log('\n👤 Creating users...');
+    const superAdminRole = roles.find((r) => r.name === 'Super Admin');
     const adminRole = roles.find((r) => r.name === 'Admin');
     const userRole = roles.find((r) => r.name === 'User');
 
     const usersToCreate = [
+      {
+        email: 'superadmin@local.com',
+        password: 'Admin@123',
+        firstName: 'Super',
+        lastName: 'Admin',
+        role: superAdminRole,
+        status: UserStatus.ACTIVE,
+        isActive: true,
+        onboarded: true,
+      },
       {
         email: 'admin@acme-corp.local',
         password: 'Admin@123',
@@ -232,6 +260,7 @@ async function seed() {
     console.log(`   Roles: ${roles.length}`);
     console.log(`   Supported Integrations: ${integrationsToCreate.length}`);
     console.log('\n🔐 Test Credentials:');
+    console.log('   Super Admin: superadmin@acme-corp.local / SuperAdmin@123');
     console.log('   Admin: admin@acme-corp.local / Admin@123');
     console.log('   User: john.doe@acme-corp.local / User@123\n');
   } catch (error) {
