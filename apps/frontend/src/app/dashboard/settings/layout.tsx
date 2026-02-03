@@ -31,6 +31,12 @@ const tabs: SettingsTab[] = [
     match: (p) => p.startsWith('/dashboard/settings/roles'),
     permission: PERMISSIONS_ENUM.ROLE_LIST_READ,
   },
+  {
+    href: '/dashboard/settings/audit',
+    label: 'Audit Logs',
+    match: (p) => p.startsWith('/dashboard/settings/audit'),
+    permission: PERMISSIONS_ENUM.AUDIT_LIST_READ,
+  },
 ];
 
 export default function SettingsLayout({
