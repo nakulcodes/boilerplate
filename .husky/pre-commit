@@ -1,4 +1,4 @@
 npx lint-staged
 
-npx --package typescript tsc --noEmit --project apps/frontend/tsconfig.json
-npx --package typescript tsc --noEmit --project apps/backend/tsconfig.json
+npx pnpm --filter frontend exec tsc --noEmit
+npx pnpm --filter backend exec tsc --noEmit

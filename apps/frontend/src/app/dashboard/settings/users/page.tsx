@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { fetchApi } from '@/utils/api-client';
 import { API_ROUTES } from '@/config/api-routes';
 import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
@@ -14,14 +14,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { InitialsAvatar } from '@/components/ui/initials-avatar';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -30,6 +22,14 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/lib/toast';
 import { EllipsisVerticalIcon } from '@heroicons/react/24/solid';
+import {
+  useReactTable,
+  getCoreRowModel,
+  getPaginationRowModel,
+  ColumnDef,
+  VisibilityState,
+} from '@tanstack/react-table';
+import { DataTable, DataTablePagination } from '@/components/common/data-table';
 
 interface UserListItem {
   id: string;
@@ -66,6 +66,7 @@ function UsersContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<UserListItem | null>(null);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const { hasPermission } = usePermissions();
   const { user: currentUser } = useSession();
   const { startImpersonation } = useImpersonation();
@@ -88,27 +89,37 @@ function UsersContent() {
     loadUsers();
   }, [loadUsers]);
 
-  const handleBlock = async (userId: string) => {
-    try {
-      await fetchApi(API_ROUTES.USERS.BLOCK(userId), { method: 'POST' });
-      toast.success('User blocked');
-      loadUsers();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to block user');
-    }
-  };
+  const handleBlock = useCallback(
+    async (userId: string) => {
+      try {
+        await fetchApi(API_ROUTES.USERS.BLOCK(userId), {
+          method: 'POST',
+        });
+        toast.success('User blocked');
+        loadUsers();
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to block user');
+      }
+    },
+    [loadUsers],
+  );
 
-  const handleUnblock = async (userId: string) => {
-    try {
-      await fetchApi(API_ROUTES.USERS.UNBLOCK(userId), { method: 'POST' });
-      toast.success('User unblocked');
-      loadUsers();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to unblock user');
-    }
-  };
+  const handleUnblock = useCallback(
+    async (userId: string) => {
+      try {
+        await fetchApi(API_ROUTES.USERS.UNBLOCK(userId), {
+          method: 'POST',
+        });
+        toast.success('User unblocked');
+        loadUsers();
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to unblock user');
+      }
+    },
+    [loadUsers],
+  );
 
-  const handleResendInvite = async (userId: string) => {
+  const handleResendInvite = useCallback(async (userId: string) => {
     try {
       await fetchApi(API_ROUTES.USERS.RESEND_INVITE, {
         method: 'POST',
@@ -118,7 +129,7 @@ function UsersContent() {
     } catch (err: any) {
       toast.error(err.message || 'Failed to resend invite');
     }
-  };
+  }, []);
 
   const getDisplayName = (user: UserListItem) => {
     if (user.firstName || user.lastName) {
@@ -127,11 +138,138 @@ function UsersContent() {
     return user.email;
   };
 
-  const hasActions = (user: UserListItem) =>
-    hasPermission(PERMISSIONS_ENUM.USER_UPDATE_STATUS) ||
-    hasPermission(PERMISSIONS_ENUM.USER_CREATE) ||
-    hasPermission(PERMISSIONS_ENUM.USER_UPDATE) ||
-    hasPermission(PERMISSIONS_ENUM.USER_IMPERSONATE);
+  const columns = useMemo<ColumnDef<UserListItem>[]>(
+    () => [
+      {
+        accessorKey: 'email',
+        header: 'User',
+        enableHiding: false,
+        cell: ({ row }) => (
+          <div className="flex items-center gap-3">
+            <InitialsAvatar
+              name={getDisplayName(row.original)}
+              className="h-8 w-8 text-xs"
+            />
+            <div>
+              <div className="font-medium">{getDisplayName(row.original)}</div>
+              <div className="text-sm text-muted-foreground">
+                {row.original.email}
+              </div>
+            </div>
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'status',
+        header: 'Status',
+        enableHiding: true,
+        cell: ({ row }) => (
+          <Badge variant={statusVariant[row.original.status] || 'outline'}>
+            {row.original.status}
+          </Badge>
+        ),
+      },
+      {
+        accessorKey: 'role',
+        header: 'Role',
+        enableHiding: true,
+        cell: ({ row }) => (
+          <span className="text-sm text-muted-foreground">
+            {row.original.role?.name || 'No role'}
+          </span>
+        ),
+      },
+      {
+        id: 'actions',
+        header: '',
+        size: 48,
+        enableHiding: false,
+        cell: ({ row }) => {
+          const user = row.original;
+          const showActions =
+            hasPermission(PERMISSIONS_ENUM.USER_UPDATE_STATUS) ||
+            hasPermission(PERMISSIONS_ENUM.USER_CREATE) ||
+            hasPermission(PERMISSIONS_ENUM.USER_UPDATE) ||
+            hasPermission(PERMISSIONS_ENUM.USER_IMPERSONATE);
+
+          if (!showActions) return null;
+
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <EllipsisVerticalIcon className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {hasPermission(PERMISSIONS_ENUM.USER_UPDATE) && (
+                  <DropdownMenuItem onClick={() => setEditTarget(user)}>
+                    Edit
+                  </DropdownMenuItem>
+                )}
+                {user.status === 'invited' &&
+                  hasPermission(PERMISSIONS_ENUM.USER_CREATE) && (
+                    <DropdownMenuItem
+                      onClick={() => handleResendInvite(user.id)}
+                    >
+                      Resend Invite
+                    </DropdownMenuItem>
+                  )}
+                {user.status === 'active' &&
+                  user.id !== currentUser?.userId &&
+                  hasPermission(PERMISSIONS_ENUM.USER_IMPERSONATE) && (
+                    <DropdownMenuItem
+                      onClick={() => startImpersonation(user.id)}
+                    >
+                      Impersonate
+                    </DropdownMenuItem>
+                  )}
+                {user.status === 'active' &&
+                  hasPermission(PERMISSIONS_ENUM.USER_UPDATE_STATUS) && (
+                    <DropdownMenuItem
+                      onClick={() => handleBlock(user.id)}
+                      className="text-destructive"
+                    >
+                      Block
+                    </DropdownMenuItem>
+                  )}
+                {user.status === 'blocked' &&
+                  hasPermission(PERMISSIONS_ENUM.USER_UPDATE_STATUS) && (
+                    <DropdownMenuItem onClick={() => handleUnblock(user.id)}>
+                      Unblock
+                    </DropdownMenuItem>
+                  )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        },
+      },
+    ],
+    [
+      hasPermission,
+      handleBlock,
+      handleUnblock,
+      handleResendInvite,
+      currentUser?.userId,
+      startImpersonation,
+    ],
+  );
+
+  const table = useReactTable({
+    data: users,
+    columns,
+    state: {
+      columnVisibility,
+    },
+    onColumnVisibilityChange: setColumnVisibility,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: 10,
+      },
+    },
+  });
 
   if (isLoading) {
     return (
@@ -157,125 +295,13 @@ function UsersContent() {
         )}
       </div>
 
-      <div className="rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead className="w-12" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="text-center py-8 text-muted-foreground"
-                >
-                  No users found
-                </TableCell>
-              </TableRow>
-            ) : (
-              users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <InitialsAvatar
-                        name={getDisplayName(user)}
-                        className="h-8 w-8 text-xs"
-                      />
-                      <div>
-                        <div className="font-medium">
-                          {getDisplayName(user)}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {user.email}
-                        </div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusVariant[user.status] || 'outline'}>
-                      {user.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm text-muted-foreground">
-                      {user.role?.name || 'No role'}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {hasActions(user) && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                          >
-                            <EllipsisVerticalIcon className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {hasPermission(PERMISSIONS_ENUM.USER_UPDATE) && (
-                            <DropdownMenuItem
-                              onClick={() => setEditTarget(user)}
-                            >
-                              Edit
-                            </DropdownMenuItem>
-                          )}
-                          {user.status === 'invited' &&
-                            hasPermission(PERMISSIONS_ENUM.USER_CREATE) && (
-                              <DropdownMenuItem
-                                onClick={() => handleResendInvite(user.id)}
-                              >
-                                Resend Invite
-                              </DropdownMenuItem>
-                            )}
-                          {user.status === 'active' &&
-                            user.id !== currentUser?.userId &&
-                            hasPermission(
-                              PERMISSIONS_ENUM.USER_IMPERSONATE,
-                            ) && (
-                              <DropdownMenuItem
-                                onClick={() => startImpersonation(user.id)}
-                              >
-                                Impersonate
-                              </DropdownMenuItem>
-                            )}
-                          {user.status === 'active' &&
-                            hasPermission(
-                              PERMISSIONS_ENUM.USER_UPDATE_STATUS,
-                            ) && (
-                              <DropdownMenuItem
-                                onClick={() => handleBlock(user.id)}
-                                className="text-destructive"
-                              >
-                                Block
-                              </DropdownMenuItem>
-                            )}
-                          {user.status === 'blocked' &&
-                            hasPermission(
-                              PERMISSIONS_ENUM.USER_UPDATE_STATUS,
-                            ) && (
-                              <DropdownMenuItem
-                                onClick={() => handleUnblock(user.id)}
-                              >
-                                Unblock
-                              </DropdownMenuItem>
-                            )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <DataTable
+        table={table}
+        isLoading={isLoading}
+        emptyMessage="No users found"
+      />
+
+      <DataTablePagination table={table} totalItems={users.length} />
 
       <InviteUserDialog
         open={inviteOpen}

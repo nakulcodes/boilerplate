@@ -27,7 +27,7 @@ export const API_ROUTES = {
     UNBLOCK: (id: string) => `/users/${id}/unblock` as const,
   },
   ROLES: {
-    LIST: '/roles',
+    LIST: '/roles/list',
     CREATE: '/roles',
     GET: (id: string) => `/roles/${id}` as const,
     UPDATE: (id: string) => `/roles/${id}` as const,

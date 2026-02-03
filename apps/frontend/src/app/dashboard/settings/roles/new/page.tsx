@@ -85,10 +85,10 @@ function CreateRoleContent() {
           <Controller
             name="permissions"
             control={control}
-            render={({ field }) => (
+            render={({ field: { value, onChange } }) => (
               <PermissionPicker
-                selected={field.value}
-                onChange={field.onChange}
+                selected={value}
+                onChange={onChange}
                 disabled={isSubmitting}
               />
             )}
