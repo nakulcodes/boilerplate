@@ -6,15 +6,15 @@ export class ListPaginationDto {
   @ApiPropertyOptional({
     type: Number,
     required: false,
-    default: 0,
-    description: 'Page number (0-indexed)',
-    example: 0,
+    default: 1,
+    description: 'Page number (1-indexed)',
+    example: 1,
   })
   @Type(() => Number)
   @IsInt()
-  @Min(0)
+  @Min(1)
   @IsOptional()
-  page: number = 0;
+  page: number = 1;
 
   @ApiPropertyOptional({
     type: Number,

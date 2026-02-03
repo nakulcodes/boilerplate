@@ -185,7 +185,7 @@ export class RoleController {
 
 - `POST /list` — **paginated**, permission: `USER_LIST_READ`
   - Body: `{ page, limit, status?, search?, invitedBy? }`
-  - Page is 0-indexed, limit default 10 (max 100)
+  - Page is 1-indexed (first page = 1), limit default 10 (max 100)
   - Response: `{ data: User[], page, limit, total, totalPages, hasNextPage, hasPreviousPage }`
 - `POST /invite` — permission: `USER_CREATE`, body: `{ email, firstName, lastName }`
 - `POST /resend-invite` — permission: `USER_CREATE`, body: `{ userId }`
@@ -221,6 +221,57 @@ User list uses POST with pagination. Roles return all items via GET. When adding
 5. Response shape: `{ data: T[], page, limit, total, totalPages, hasNextPage, hasPreviousPage }`
 
 For simple lists that don't need pagination (like roles), just return the array directly — ResponseInterceptor wraps it in `{ data: T[] }`.
+
+## Pagination Rules
+
+**ALL pagination MUST use 1-indexed page numbers. This is non-negotiable.**
+
+### Backend Requirements:
+
+1. **Commands** extending `BasePaginatedCommand`:
+   - page is validated with `@Min(1)` (already enforced in base class)
+   - DO NOT override with `@Min(0)`
+
+2. **DTOs** extending `ListPaginationDto`:
+   - Default page is 1 (already enforced)
+   - DO NOT change default to 0
+
+3. **Usecases**:
+   - Use `calculateSkip(page, limit)` for database offset
+   - This function expects 1-indexed pages (page 1 = skip 0)
+   - Use `createPaginationMetadata(page, limit, total)` for response
+
+4. **Response shape**:
+   ```typescript
+   {
+     data: T[],
+     page: number,        // 1-indexed
+     limit: number,
+     total: number,
+     totalPages: number,
+     hasNextPage: boolean,
+     hasPreviousPage: boolean
+   }
+   ```
+
+### Why 1-indexed:
+
+- Standard REST API convention (first page is "page 1")
+- Matches `calculateSkip()` implementation
+- User-friendly (no confusion about "page 0")
+- Database offset is calculated as `(page - 1) * limit`
+
+### Common Mistakes:
+
+❌ `@Min(0)` on page field
+❌ `page: number = 0` as default
+❌ Frontend `useState(0)` for page
+❌ Sending `{ page: 0 }` in API requests
+
+✅ `@Min(1)` on page field
+✅ `page: number = 1` as default
+✅ Frontend `useState(1)` for page
+✅ Sending `{ page: 1 }` in API requests
 
 ## Response Format
 

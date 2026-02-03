@@ -94,6 +94,46 @@ const roles = await fetchApi<Role[]>(API_ROUTES.ROLES.LIST);
 
 When the backend wraps in `{ data: T }`, `fetchApi` unwraps it automatically. But for paginated responses that return `{ data: T[], page, total, ... }`, the outer `{ data: ... }` is unwrapped by fetchApi, so you receive `{ data: T[], page, total, ... }` — the inner `data` field is the actual array.
 
+## Pagination Rules (IMPORTANT)
+
+**ALL pagination uses 1-indexed page numbers. First page is page 1, NOT page 0.**
+
+### Rules:
+
+1. **State initialization**: `const [page, setPage] = useState(1)` (NEVER 0)
+2. **API requests**: Send `{ page: 1, limit: 10 }` for first page
+3. **Pagination controls**: Display "Page 1" for first page (not "Page 0")
+4. **Navigation**:
+   - Previous: `setPage(p => Math.max(1, p - 1))` (stop at 1)
+   - Next: `setPage(p => p + 1)`
+   - Disable previous when `page === 1`
+   - Disable next when `page >= totalPages`
+
+### Why 1-indexed:
+
+- Backend expects page ≥ 1
+- Standard REST convention
+- User-friendly display
+- Sending page: 0 causes negative database OFFSET errors
+
+### Response from backend:
+```typescript
+{
+  data: T[],
+  page: number,        // 1-indexed (1 = first page)
+  limit: number,
+  total: number,
+  totalPages: number,
+  hasNextPage: boolean,
+  hasPreviousPage: boolean
+}
+```
+
+### Common Mistakes:
+
+❌ NEVER: `useState(0)`, `{ page: 0 }`, `page === 0`, `Math.max(0, ...)`
+✅ ALWAYS: `useState(1)`, `{ page: 1 }`, `page === 1`, `Math.max(1, ...)`
+
 ## Adding a New API Endpoint
 
 1. Add the route to `API_ROUTES` in `src/config/api-routes.ts`

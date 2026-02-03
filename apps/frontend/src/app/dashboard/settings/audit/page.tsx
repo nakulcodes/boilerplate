@@ -90,7 +90,7 @@ function getActorName(actor?: AuditLogActor | null): string {
 function AuditLogsContent() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -137,14 +137,14 @@ function AuditLogsContent() {
 
   const handleSearch = () => {
     setAppliedFilters({ action: actionFilter, method: methodFilter });
-    setPage(0);
+    setPage(1);
   };
 
   const clearFilters = () => {
     setActionFilter('');
     setMethodFilter('all');
     setAppliedFilters({ action: '', method: 'all' });
-    setPage(0);
+    setPage(1);
   };
 
   const columns = useMemo<ColumnDef<AuditLog>[]>(
@@ -311,20 +311,20 @@ function AuditLogsContent() {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-            disabled={page === 0}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
             className="h-8 w-8"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <span className="text-sm text-muted-foreground min-w-[100px] text-center">
-            Page {page + 1} of {totalPages || 1}
+            Page {page} of {totalPages || 1}
           </span>
           <Button
             variant="outline"
             size="icon"
             onClick={() => setPage((p) => p + 1)}
-            disabled={page >= totalPages - 1}
+            disabled={page >= totalPages}
             className="h-8 w-8"
           >
             <ChevronRight className="h-4 w-4" />
