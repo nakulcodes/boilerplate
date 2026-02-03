@@ -5,9 +5,10 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  MinLength,
 } from 'class-validator';
 
-export class InviteUserCommand extends BaseCommand {
+export class CreateUserCommand extends BaseCommand {
   @IsEmail()
   @IsNotEmpty()
   email!: string;
@@ -26,9 +27,14 @@ export class InviteUserCommand extends BaseCommand {
 
   @IsUUID()
   @IsNotEmpty()
-  invitedBy!: string;
+  createdBy!: string;
 
   @IsUUID()
   @IsOptional()
   roleId?: string;
+
+  @IsString()
+  @MinLength(8)
+  @IsOptional()
+  password?: string;
 }

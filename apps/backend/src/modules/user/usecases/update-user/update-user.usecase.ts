@@ -2,11 +2,13 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   UserRepository,
   RoleRepository,
 } from '../../../../database/repositories';
+import { getPermissionScope } from '@boilerplate/core';
 import { UpdateUserCommand } from './update-user.command';
 
 @Injectable()
@@ -23,6 +25,21 @@ export class UpdateUser {
 
     if (!user) {
       throw new NotFoundException('User not found');
+    }
+
+    if (command.permissions && command.currentUserId) {
+      const scope = getPermissionScope(command.permissions, 'user:update');
+      if (scope === 'own') {
+        if (user.invitedBy !== command.currentUserId) {
+          throw new ForbiddenException('You can only update users you invited');
+        }
+      } else if (scope === 'team') {
+        if (user.roleId !== command.currentUserRoleId) {
+          throw new ForbiddenException(
+            'You can only update users in your team',
+          );
+        }
+      }
     }
 
     if (command.firstName !== undefined) {

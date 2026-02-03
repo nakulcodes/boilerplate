@@ -10,6 +10,7 @@ export interface UserSessionData {
   email: string;
   organizationId: string;
   permissions: string[];
+  roleId?: string;
 }
 
 export const UserSession = createParamDecorator(

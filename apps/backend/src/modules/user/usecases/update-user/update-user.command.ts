@@ -1,5 +1,5 @@
 import { BaseAuthenticatedCommand } from '@boilerplate/core';
-import { IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsArray, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class UpdateUserCommand extends BaseAuthenticatedCommand {
   @IsString()
@@ -13,4 +13,17 @@ export class UpdateUserCommand extends BaseAuthenticatedCommand {
   @IsUUID()
   @IsOptional()
   roleId?: string;
+
+  @IsUUID()
+  @IsOptional()
+  currentUserId?: string;
+
+  @IsUUID()
+  @IsOptional()
+  currentUserRoleId?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  permissions?: string[];
 }

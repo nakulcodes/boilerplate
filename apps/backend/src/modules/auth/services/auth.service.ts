@@ -40,6 +40,7 @@ export class AuthService {
       permissions,
       firstName: user.firstName ?? '',
       lastName: user.lastName ?? '',
+      roleId: user.roleId ?? null,
     };
 
     if (impersonatedBy) {

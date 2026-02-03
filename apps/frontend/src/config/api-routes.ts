@@ -20,6 +20,7 @@ export const API_ROUTES = {
     PROFILE: '/users/profile',
     LIST: '/users/list',
     INVITE: '/users/invite',
+    CREATE: '/users/create',
     ACCEPT_INVITE: '/users/accept-invite',
     RESEND_INVITE: '/users/resend-invite',
     UPDATE: (id: string) => `/users/${id}` as const,

@@ -4,9 +4,23 @@ export const inviteUserSchema = z.object({
   email: z.email('Please enter a valid email'),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
+  roleId: z.string().optional(),
 });
 
 export type InviteUserFormData = z.infer<typeof inviteUserSchema>;
+
+export const createUserSchema = z.object({
+  email: z.email('Please enter a valid email'),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  roleId: z.string().optional(),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .optional(),
+});
+
+export type CreateUserFormData = z.infer<typeof createUserSchema>;
 
 export const editUserSchema = z.object({
   firstName: z.string().optional(),

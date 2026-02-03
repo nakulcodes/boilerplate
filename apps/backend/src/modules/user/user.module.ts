@@ -11,6 +11,7 @@ import { UpdateUser } from './usecases/update-user/update-user.usecase';
 import { GetCurrentUser } from './usecases/get-current-user/get-current-user.usecase';
 import { ListUsers } from './usecases/list-users/list-users.usecase';
 import { UpdateProfile } from './usecases/update-profile/update-profile.usecase';
+import { CreateUser } from './usecases/create-user/create-user.usecase';
 
 const USE_CASES = [
   InviteUser,
@@ -22,6 +23,7 @@ const USE_CASES = [
   GetCurrentUser,
   ListUsers,
   UpdateProfile,
+  CreateUser,
 ];
 
 @Module({

@@ -5,9 +5,10 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  MinLength,
 } from 'class-validator';
 
-export class InviteUserDto {
+export class CreateUserDto {
   @ApiProperty({ example: 'john.doe@example.com' })
   @IsEmail()
   @IsNotEmpty()
@@ -31,4 +32,15 @@ export class InviteUserDto {
   @IsUUID()
   @IsOptional()
   roleId?: string;
+
+  @ApiProperty({
+    example: 'SecureP@ss123',
+    required: false,
+    description:
+      'Password for the user. If not provided, a random password will be generated.',
+  })
+  @IsString()
+  @MinLength(8)
+  @IsOptional()
+  password?: string;
 }
