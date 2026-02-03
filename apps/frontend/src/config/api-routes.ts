@@ -39,6 +39,11 @@ export const API_ROUTES = {
     LIST: '/audit/list',
     GET: (id: string) => `/audit/${id}` as const,
   },
+  INTEGRATIONS: {
+    LIST: '/integrations',
+    CONNECT: (provider: string) => `/integrations/${provider}/connect` as const,
+    DISCONNECT: (provider: string) => `/integrations/${provider}` as const,
+  },
 } as const;
 
 export function buildApiUrl(route: string): string {

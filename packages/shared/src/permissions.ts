@@ -24,6 +24,10 @@ export enum PERMISSIONS_ENUM {
 
   AUDIT_LIST_READ = 'audit:list:read',
   AUDIT_READ = 'audit:read',
+
+  INTEGRATION_LIST_READ = 'integration:list:read',
+  INTEGRATION_CONNECT = 'integration:connect',
+  INTEGRATION_DISCONNECT = 'integration:disconnect',
 }
 
 export const ALL_PERMISSIONS = Object.values(PERMISSIONS_ENUM);
@@ -93,6 +97,14 @@ export const PERMISSION_GROUPS: Record<
     permissions: [
       PERMISSIONS_ENUM.AUDIT_LIST_READ,
       PERMISSIONS_ENUM.AUDIT_READ,
+    ],
+  },
+  integrations: {
+    label: 'Integrations',
+    permissions: [
+      PERMISSIONS_ENUM.INTEGRATION_LIST_READ,
+      PERMISSIONS_ENUM.INTEGRATION_CONNECT,
+      PERMISSIONS_ENUM.INTEGRATION_DISCONNECT,
     ],
   },
 };
