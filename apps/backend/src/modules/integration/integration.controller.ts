@@ -5,8 +5,9 @@ import {
   Delete,
   Param,
   Query,
-  Redirect,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { PERMISSIONS_ENUM } from '@boilerplate/core';
@@ -71,20 +72,21 @@ export class IntegrationController {
 
   @Get('callback')
   @ApiOperation({ summary: 'Handle OAuth callback from provider' })
-  @Redirect()
   async callback(
     @Query('code') code: string,
     @Query('state') state: string,
     @Query('error') error: string | undefined,
-  ): Promise<{ url: string }> {
+    @Res() res: Response,
+  ): Promise<void> {
     const frontendUrl =
       this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
     const callbackPath = '/dashboard/settings/integrations/callback';
 
     if (error) {
-      return {
-        url: `${frontendUrl}${callbackPath}?error=${encodeURIComponent(error)}`,
-      };
+      res.redirect(
+        `${frontendUrl}${callbackPath}?error=${encodeURIComponent(error)}`,
+      );
+      return;
     }
 
     try {
@@ -92,14 +94,14 @@ export class IntegrationController {
         HandleOAuthCallbackCommand.create({ code, state }),
       );
 
-      return {
-        url: `${frontendUrl}${callbackPath}?success=true&provider=${result.provider}`,
-      };
+      res.redirect(
+        `${frontendUrl}${callbackPath}?success=true&provider=${result.provider}`,
+      );
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      return {
-        url: `${frontendUrl}${callbackPath}?error=${encodeURIComponent(errorMessage)}`,
-      };
+      res.redirect(
+        `${frontendUrl}${callbackPath}?error=${encodeURIComponent(errorMessage)}`,
+      );
     }
   }
 

@@ -117,8 +117,8 @@ function IntegrationCard({
   };
 
   return (
-    <Card className="flex flex-col">
-      <CardHeader className="flex-row items-start gap-4 space-y-0">
+    <Card className="flex h-full min-h-[240px] flex-col">
+      <CardHeader className="relative flex-row items-start gap-4 space-y-0 pb-3">
         <div className="flex h-12 w-12 items-center justify-center rounded-lg border bg-muted/50 p-2">
           {integration.iconUrl ? (
             <img
@@ -130,7 +130,7 @@ function IntegrationCard({
             <div className="h-full w-full rounded bg-muted" />
           )}
         </div>
-        <div className="flex-1 space-y-1">
+        <div className="flex-1 space-y-1 pr-20">
           <CardTitle className="text-base">{integration.name}</CardTitle>
           {integration.description && (
             <CardDescription className="text-sm line-clamp-2">
@@ -138,17 +138,14 @@ function IntegrationCard({
             </CardDescription>
           )}
         </div>
+        {getStatusBadge() && (
+          <div className="absolute right-6 top-6">{getStatusBadge()}</div>
+        )}
       </CardHeader>
-      <CardContent className="flex-1 space-y-3">
-        <div className="flex items-center gap-2">{getStatusBadge()}</div>
+      <CardContent className="flex-1 space-y-2 pt-0">
         {integration.isConnected && integration.accountEmail && (
           <p className="text-sm text-muted-foreground">
             Connected as: {integration.accountEmail}
-          </p>
-        )}
-        {!integration.isConfigured && (
-          <p className="text-sm text-muted-foreground">
-            This integration is not configured. Contact your administrator.
           </p>
         )}
         {integration.status === 'error' && integration.errorMessage && (
