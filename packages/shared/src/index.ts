@@ -6,3 +6,6 @@ export * from './permissions';
 
 // Utilities
 export * from './utils';
+
+// Events
+export * from './events';

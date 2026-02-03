@@ -1,11 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserRepository } from '../../../../database/repositories';
 import { UserStatus } from '../../../../database/enums';
+import { EventName, UserUnblockedEvent } from '@boilerplate/core';
+import { AppEventEmitter } from '../../../events/services/event-emitter.service';
 import { UnblockUserCommand } from './unblock-user.command';
 
 @Injectable()
 export class UnblockUser {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly eventEmitter: AppEventEmitter,
+  ) {}
 
   async execute(command: UnblockUserCommand) {
     // Find user
@@ -22,6 +27,15 @@ export class UnblockUser {
     user.isActive = true;
 
     await this.userRepository.save(user);
+
+    this.eventEmitter.emit<UserUnblockedEvent>({
+      eventName: EventName.USER_UNBLOCKED,
+      timestamp: new Date(),
+      userId: user.id,
+      organizationId: command.organizationId,
+      unblockedBy: command.currentUserId,
+      triggeredBy: command.currentUserId,
+    });
 
     return { success: true };
   }

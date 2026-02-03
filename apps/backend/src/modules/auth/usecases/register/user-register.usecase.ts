@@ -1,11 +1,17 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ALL_PERMISSIONS } from '@boilerplate/core';
 import {
+  EventName,
+  UserRegisteredEvent,
+  OrganizationCreatedEvent,
+} from '@boilerplate/core';
+import {
   OrganizationRepository,
   UserRepository,
   RoleRepository,
 } from '../../../../database/repositories';
 import { AuthService } from '../../services/auth.service';
+import { AppEventEmitter } from '../../../events/services/event-emitter.service';
 import { UserRegisterCommand } from './user-register.command';
 import { RegisterResponseDto } from '../../dtos/auth-response.dto';
 
@@ -16,6 +22,7 @@ export class UserRegister {
     private readonly userRepository: UserRepository,
     private readonly organizationRepository: OrganizationRepository,
     private readonly roleRepository: RoleRepository,
+    private readonly eventEmitter: AppEventEmitter,
   ) {}
 
   async execute(command: UserRegisterCommand): Promise<RegisterResponseDto> {
@@ -52,6 +59,22 @@ export class UserRegister {
       isActive: true,
     });
     const savedUser = await this.userRepository.save(user);
+
+    this.eventEmitter.emit<OrganizationCreatedEvent>({
+      eventName: EventName.ORGANIZATION_CREATED,
+      timestamp: new Date(),
+      organizationId: organization.id,
+      createdBy: savedUser.id,
+      triggeredBy: savedUser.id,
+    });
+
+    this.eventEmitter.emit<UserRegisteredEvent>({
+      eventName: EventName.USER_REGISTERED,
+      timestamp: new Date(),
+      userId: savedUser.id,
+      organizationId: savedUser.organizationId,
+      triggeredBy: savedUser.id,
+    });
 
     return {
       user: {

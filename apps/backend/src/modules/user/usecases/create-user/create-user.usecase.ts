@@ -6,7 +6,9 @@ import {
   RoleRepository,
 } from '../../../../database/repositories';
 import { UserStatus } from '../../../../database/enums';
+import { EventName, UserCreatedEvent } from '@boilerplate/core';
 import { AuthService } from '../../../auth/services/auth.service';
+import { AppEventEmitter } from '../../../events/services/event-emitter.service';
 
 import { CreateUserCommand } from './create-user.command';
 
@@ -24,6 +26,7 @@ export class CreateUser {
     private readonly userRepository: UserRepository,
     private readonly roleRepository: RoleRepository,
     private readonly authService: AuthService,
+    private readonly eventEmitter: AppEventEmitter,
   ) {}
 
   async execute(command: CreateUserCommand): Promise<CreateUserResult> {
@@ -70,6 +73,16 @@ export class CreateUser {
     });
 
     const savedUser = await this.userRepository.save(user);
+
+    this.eventEmitter.emit<UserCreatedEvent>({
+      eventName: EventName.USER_CREATED,
+      timestamp: new Date(),
+      userId: savedUser.id,
+      organizationId: command.organizationId,
+      createdBy: command.createdBy,
+      generatedPassword: generatedPassword || undefined,
+      triggeredBy: command.createdBy,
+    });
 
     return {
       userId: savedUser.id,

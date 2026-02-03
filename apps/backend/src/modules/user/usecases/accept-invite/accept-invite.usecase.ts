@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { UserRepository } from '../../../../database/repositories';
 import { UserStatus } from '../../../../database/enums';
+import { EventName, UserInviteAcceptedEvent } from '@boilerplate/core';
+import { AppEventEmitter } from '../../../events/services/event-emitter.service';
 import { AcceptInviteCommand } from './accept-invite.command';
 import { AuthService } from '../../../auth/services/auth.service';
 
@@ -13,6 +15,7 @@ export class AcceptInvite {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly authService: AuthService,
+    private readonly eventEmitter: AppEventEmitter,
   ) {}
 
   async execute(command: AcceptInviteCommand) {
@@ -51,6 +54,14 @@ export class AcceptInvite {
     user.inviteExpires = null;
 
     await this.userRepository.save(user);
+
+    this.eventEmitter.emit<UserInviteAcceptedEvent>({
+      eventName: EventName.USER_INVITE_ACCEPTED,
+      timestamp: new Date(),
+      userId: user.id,
+      organizationId: user.organizationId,
+      triggeredBy: user.id,
+    });
 
     return {
       success: true,

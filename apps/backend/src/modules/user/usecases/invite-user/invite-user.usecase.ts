@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, Logger } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import {
@@ -7,6 +7,8 @@ import {
 } from '../../../../database/repositories';
 import { UserStatus } from '../../../../database/enums';
 import { buildUrl, generateInviteToken, addHours } from '@boilerplate/core';
+import { EventName, UserInvitedEvent } from '@boilerplate/core';
+import { AppEventEmitter } from '../../../events/services/event-emitter.service';
 
 import { InviteUserCommand } from './invite-user.command';
 
@@ -18,12 +20,11 @@ export interface InviteUserResult {
 
 @Injectable()
 export class InviteUser {
-  private readonly logger = new Logger(InviteUser.name);
-
   constructor(
     private readonly userRepository: UserRepository,
     private readonly roleRepository: RoleRepository,
     private readonly configService: ConfigService,
+    private readonly eventEmitter: AppEventEmitter,
   ) {}
 
   async execute(command: InviteUserCommand): Promise<InviteUserResult> {
@@ -71,36 +72,26 @@ export class InviteUser {
     // Save user to database
     const savedUser = await this.userRepository.save(user);
 
-    // Build invite link
     const frontendBaseUrl = this.configService.get<string>('FRONTEND_BASE_URL');
     const inviteLink = buildUrl(
       frontendBaseUrl,
       `/accept-invite?token=${inviteToken}`,
     );
 
-    // Get inviter details
-    const inviter = await this.userRepository.findById(command.invitedBy);
-    const inviterName = inviter
-      ? `${inviter.firstName} ${inviter.lastName || ''}`.trim()
-      : 'Someone';
-
-    // Get organization details
-    const userWithOrg = await this.userRepository.findOne({
-      where: { id: savedUser.id },
-      relations: { organization: true },
+    this.eventEmitter.emit<UserInvitedEvent>({
+      eventName: EventName.USER_INVITED,
+      timestamp: new Date(),
+      userId: savedUser.id,
+      organizationId: command.organizationId,
+      invitedBy: command.invitedBy,
+      inviteLink,
+      triggeredBy: command.invitedBy,
     });
-
-    // TODO: Send invitation email (no credentials - user onboards themselves)
-    // For now, just log the invite link
-    this.logger.log(`Invite link for ${command.email}: ${inviteLink}`);
-    this.logger.log(
-      `Inviter: ${inviterName}, Organization: ${userWithOrg?.organization.name || 'Organization'}`,
-    );
 
     return {
       userId: savedUser.id,
       inviteLink,
-      emailSent: false,
+      emailSent: true,
     };
   }
 }
