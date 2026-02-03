@@ -7,3 +7,8 @@ export interface Role {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface RoleDropdown {
+  id: string;
+  name: string;
+}
