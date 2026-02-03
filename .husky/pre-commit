@@ -1,4 +1,4 @@
 npx lint-staged
 
-pnpm --filter frontend exec tsc --noEmit
-pnpm --filter backend exec tsc --noEmit
+npx pnpm --filter frontend exec tsc --noEmit
+npx pnpm --filter backend exec tsc --noEmit

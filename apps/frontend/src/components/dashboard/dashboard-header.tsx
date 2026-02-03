@@ -2,17 +2,30 @@
 
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/contexts/session-context';
+import { useImpersonation } from '@/hooks/use-impersonation';
 import { useTheme } from 'next-themes';
-import { usePathname } from 'next/navigation';
 import { SunIcon, MoonIcon } from '@heroicons/react/24/outline';
 
 export function DashboardHeader() {
   const { user, logout } = useSession();
-  const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+  const { isImpersonating, stopImpersonation } = useImpersonation();
 
   return (
     <header className="border-b border-border dark:border-border bg-white dark:bg-dark-background dark:text-dark-text">
+      {isImpersonating && (
+        <div className="flex items-center justify-between bg-amber-500 px-6 py-2 text-sm font-medium text-black">
+          <span>You are impersonating {user?.firstName || user?.email}</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={stopImpersonation}
+            className="h-7 border-black/30 bg-amber-400 text-black hover:bg-amber-300"
+          >
+            Exit Impersonation
+          </Button>
+        </div>
+      )}
       <div className="flex h-16 items-center justify-between px-6 shadow-sm">
         <div className="flex items-center space-x-2">
           <span className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">

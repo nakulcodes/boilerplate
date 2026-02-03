@@ -26,6 +26,7 @@ export interface JWTPayload {
   permissions: Permission[];
   firstName?: string;
   lastName?: string | null;
+  impersonatedBy?: string;
   exp?: number;
   iat?: number;
 }

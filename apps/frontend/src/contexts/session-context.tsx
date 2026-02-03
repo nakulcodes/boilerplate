@@ -8,6 +8,7 @@ import {
   setToken,
   setRefreshToken,
   clearTokens,
+  clearOriginalTokens,
 } from '@/utils/cookies';
 import { buildApiUrl, API_ROUTES } from '@/config/api-routes';
 import {
@@ -95,6 +96,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
     } finally {
       setUser(null);
       clearTokens();
+      clearOriginalTokens();
       router.push('/');
     }
   }, [router]);

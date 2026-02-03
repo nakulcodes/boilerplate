@@ -17,6 +17,7 @@
 - NEVER hardcode API URLs — use `API_ROUTES` from `src/config/api-routes.ts`
 - NEVER use raw `fetch` for authenticated API calls — use `fetchApi()` from `src/utils/api-client.ts`
 - NEVER read/write tokens directly — use `getToken()`, `setToken()`, etc. from `src/utils/cookies.ts`
+- NEVER use dynamic routes (e.g. `[id]` folders) — static export does not support them. Use query params instead (e.g. `/roles/edit?id=xxx` instead of `/roles/[id]/edit`)
 
 ## API Calls
 

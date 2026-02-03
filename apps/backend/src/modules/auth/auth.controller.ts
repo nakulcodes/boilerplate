@@ -9,9 +9,11 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 
+import { PERMISSIONS_ENUM } from '@boilerplate/core';
 import { ApiResponse } from '../shared/decorators/api-response.decorator';
 import { ApiCommonResponses } from '../shared/decorators/api-common-responses.decorator';
 import { RequireAuthentication } from '../shared/decorators/require-authentication.decorator';
+import { RequirePermissions } from '../shared/decorators/require-permissions.decorator';
 import { UserSession } from '../shared/decorators/user-session.decorator';
 import type { UserSessionData } from '../shared/decorators/user-session.decorator';
 
@@ -46,6 +48,9 @@ import { RefreshTokenCommand } from './usecases/refresh-token/refresh-token.comm
 import { RefreshToken } from './usecases/refresh-token/refresh-token.usecase';
 import { LogoutCommand } from './usecases/logout/logout.command';
 import { Logout } from './usecases/logout/logout.usecase';
+import { ImpersonateCommand } from './usecases/impersonate/impersonate.command';
+import { Impersonate } from './usecases/impersonate/impersonate.usecase';
+import { ImpersonateBodyDto } from './dtos/impersonate.dto';
 
 @Controller('/auth')
 @ApiTags('Auth')
@@ -59,6 +64,7 @@ export class AuthController {
     private readonly updatePasswordUsecase: UpdatePassword,
     private readonly refreshTokenUsecase: RefreshToken,
     private readonly logoutUsecase: Logout,
+    private readonly impersonateUsecase: Impersonate,
   ) {}
 
   @Post('/register')
@@ -171,6 +177,24 @@ export class AuthController {
         refreshToken: body.refreshToken,
         userId: user.userId,
         organizationId: user.organizationId,
+      }),
+    );
+  }
+
+  @Post('/impersonate')
+  @RequirePermissions(PERMISSIONS_ENUM.USER_IMPERSONATE)
+  @Header('Cache-Control', 'no-store')
+  @ApiOperation({ summary: 'Impersonate another user' })
+  @ApiResponse(LoginResponseDto)
+  async impersonate(
+    @UserSession() user: UserSessionData,
+    @Body() body: ImpersonateBodyDto,
+  ): Promise<LoginResponseDto> {
+    return await this.impersonateUsecase.execute(
+      ImpersonateCommand.create({
+        userId: user.userId,
+        organizationId: user.organizationId,
+        targetUserId: body.targetUserId,
       }),
     );
   }

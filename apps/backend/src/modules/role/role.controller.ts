@@ -72,7 +72,7 @@ export class RoleController {
     ) as any;
   }
 
-  @Post('list')
+  @Get('list')
   @RequirePermissions(PERMISSIONS_ENUM.ROLE_LIST_READ)
   @ApiOperation({
     summary: 'List all roles in the organization with pagination',

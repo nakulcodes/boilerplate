@@ -29,7 +29,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/lib/toast';
 import { EllipsisVerticalIcon } from '@heroicons/react/24/solid';
 import type { Role } from '@/types/role.type';
-import { PaginatedResponse } from '@/types/pagination.type';
 import {
   useReactTable,
   getCoreRowModel,
@@ -48,15 +47,9 @@ function RolesContent() {
 
   const loadRoles = useCallback(async () => {
     try {
-      const response = await fetchApi<PaginatedResponse<Role>>(
-        API_ROUTES.ROLES.LIST,
-        { method: 'POST', body: JSON.stringify({ page: 1, limit: 100 }) },
-      );
-      console.log('API Response:', response);
-      console.log('Response.data:', response?.data);
-      setRoles(response?.data || []);
+      const data = await fetchApi<Role[]>(API_ROUTES.ROLES.LIST);
+      setRoles(data || []);
     } catch (err: any) {
-      console.error('Error loading roles:', err);
       toast.error(err.message || 'Failed to load roles');
       setRoles([]);
     } finally {
@@ -129,7 +122,9 @@ function RolesContent() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href={`/dashboard/roles/edit?id=${row.original.id}`}>
+                  <Link
+                    href={`/dashboard/settings/roles/edit?id=${row.original.id}`}
+                  >
                     Edit
                   </Link>
                 </DropdownMenuItem>
@@ -168,10 +163,6 @@ function RolesContent() {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-32" />
-          <Skeleton className="h-9 w-28" />
-        </div>
         {Array.from({ length: 3 }).map((_, i) => (
           <Skeleton key={i} className="h-16 w-full" />
         ))}
@@ -183,13 +174,13 @@ function RolesContent() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Roles</h1>
+          <h2 className="text-lg font-medium">Roles</h2>
           <p className="text-sm text-muted-foreground">
             Manage roles and their permissions
           </p>
         </div>
         {hasPermission(PERMISSIONS_ENUM.ROLE_CREATE) && (
-          <Link href="/dashboard/roles/new">
+          <Link href="/dashboard/settings/roles/new">
             <Button>Create Role</Button>
           </Link>
         )}
@@ -225,7 +216,7 @@ function RolesContent() {
   );
 }
 
-export default function RolesPage() {
+export default function SettingsRolesPage() {
   return (
     <PermissionGuard
       permissions={PERMISSIONS_ENUM.ROLE_LIST_READ}

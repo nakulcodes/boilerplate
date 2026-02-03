@@ -5,7 +5,11 @@ import { fetchApi } from '@/utils/api-client';
 import { API_ROUTES } from '@/config/api-routes';
 import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
 import { usePermissions } from '@/hooks/use-permissions';
+import { useSession } from '@/contexts/session-context';
+import { useImpersonation } from '@/hooks/use-impersonation';
 import { PermissionGuard } from '@/components/auth/permission-guard';
+import { InviteUserDialog } from '@/components/users/invite-user-dialog';
+import { EditUserDialog } from '@/components/users/edit-user-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { InitialsAvatar } from '@/components/ui/initials-avatar';
@@ -18,7 +22,6 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/lib/toast';
 import { EllipsisVerticalIcon } from '@heroicons/react/24/solid';
-import { PaginatedResponse } from '@/types/pagination.type';
 import {
   useReactTable,
   getCoreRowModel,
@@ -61,8 +64,12 @@ const statusVariant: Record<
 function UsersContent() {
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<UserListItem | null>(null);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const { hasPermission } = usePermissions();
+  const { user: currentUser } = useSession();
+  const { startImpersonation } = useImpersonation();
 
   const loadUsers = useCallback(async () => {
     try {
@@ -177,9 +184,17 @@ function UsersContent() {
         header: '',
         size: 48,
         enableHiding: false,
-        cell: ({ row }) =>
-          hasPermission(PERMISSIONS_ENUM.USER_UPDATE_STATUS) ||
-          hasPermission(PERMISSIONS_ENUM.USER_CREATE) ? (
+        cell: ({ row }) => {
+          const user = row.original;
+          const showActions =
+            hasPermission(PERMISSIONS_ENUM.USER_UPDATE_STATUS) ||
+            hasPermission(PERMISSIONS_ENUM.USER_CREATE) ||
+            hasPermission(PERMISSIONS_ENUM.USER_UPDATE) ||
+            hasPermission(PERMISSIONS_ENUM.USER_IMPERSONATE);
+
+          if (!showActions) return null;
+
+          return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -187,37 +202,57 @@ function UsersContent() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {row.original.status === 'invited' &&
+                {hasPermission(PERMISSIONS_ENUM.USER_UPDATE) && (
+                  <DropdownMenuItem onClick={() => setEditTarget(user)}>
+                    Edit
+                  </DropdownMenuItem>
+                )}
+                {user.status === 'invited' &&
                   hasPermission(PERMISSIONS_ENUM.USER_CREATE) && (
                     <DropdownMenuItem
-                      onClick={() => handleResendInvite(row.original.id)}
+                      onClick={() => handleResendInvite(user.id)}
                     >
                       Resend Invite
                     </DropdownMenuItem>
                   )}
-                {row.original.status === 'active' &&
+                {user.status === 'active' &&
+                  user.id !== currentUser?.userId &&
+                  hasPermission(PERMISSIONS_ENUM.USER_IMPERSONATE) && (
+                    <DropdownMenuItem
+                      onClick={() => startImpersonation(user.id)}
+                    >
+                      Impersonate
+                    </DropdownMenuItem>
+                  )}
+                {user.status === 'active' &&
                   hasPermission(PERMISSIONS_ENUM.USER_UPDATE_STATUS) && (
                     <DropdownMenuItem
-                      onClick={() => handleBlock(row.original.id)}
+                      onClick={() => handleBlock(user.id)}
                       className="text-destructive"
                     >
                       Block
                     </DropdownMenuItem>
                   )}
-                {row.original.status === 'blocked' &&
+                {user.status === 'blocked' &&
                   hasPermission(PERMISSIONS_ENUM.USER_UPDATE_STATUS) && (
-                    <DropdownMenuItem
-                      onClick={() => handleUnblock(row.original.id)}
-                    >
+                    <DropdownMenuItem onClick={() => handleUnblock(user.id)}>
                       Unblock
                     </DropdownMenuItem>
                   )}
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : null,
+          );
+        },
       },
     ],
-    [hasPermission, handleBlock, handleUnblock, handleResendInvite],
+    [
+      hasPermission,
+      handleBlock,
+      handleUnblock,
+      handleResendInvite,
+      currentUser?.userId,
+      startImpersonation,
+    ],
   );
 
   const table = useReactTable({
@@ -239,9 +274,6 @@ function UsersContent() {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-32" />
-        </div>
         {Array.from({ length: 5 }).map((_, i) => (
           <Skeleton key={i} className="h-16 w-full" />
         ))}
@@ -253,11 +285,14 @@ function UsersContent() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Users</h1>
+          <h2 className="text-lg font-medium">Team Members</h2>
           <p className="text-sm text-muted-foreground">
             Manage team members and their roles
           </p>
         </div>
+        {hasPermission(PERMISSIONS_ENUM.USER_CREATE) && (
+          <Button onClick={() => setInviteOpen(true)}>Invite User</Button>
+        )}
       </div>
 
       <DataTable
@@ -267,11 +302,24 @@ function UsersContent() {
       />
 
       <DataTablePagination table={table} totalItems={users.length} />
+
+      <InviteUserDialog
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+        onSuccess={loadUsers}
+      />
+
+      <EditUserDialog
+        open={!!editTarget}
+        onOpenChange={(open) => !open && setEditTarget(null)}
+        onSuccess={loadUsers}
+        user={editTarget}
+      />
     </div>
   );
 }
 
-export default function UsersPage() {
+export default function SettingsUsersPage() {
   return (
     <PermissionGuard
       permissions={PERMISSIONS_ENUM.USER_LIST_READ}
