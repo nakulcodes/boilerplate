@@ -1,9 +1,18 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
-import { UserRepository, OrganizationRepository, RoleRepository } from '../src/database/repositories';
+import {
+  UserRepository,
+  OrganizationRepository,
+  RoleRepository,
+  SupportedIntegrationRepository,
+} from '../src/database/repositories';
 import { AuthService } from '../src/modules/auth/services/auth.service';
-import { UserStatus, OrganizationStatus } from '../src/database/enums';
+import {
+  UserStatus,
+  OrganizationStatus,
+  IntegrationCategory,
+} from '../src/database/enums';
 
 async function seed() {
   console.log('🌱 Starting database seed...\n');
@@ -33,7 +42,9 @@ async function seed() {
         status: OrganizationStatus.ACTIVE,
       });
       organization = await organizationRepo.save(organization);
-      console.log(`   ✓ Created organization: ${organization.name} (ID: ${organization.id})`);
+      console.log(
+        `   ✓ Created organization: ${organization.name} (ID: ${organization.id})`,
+      );
     } else {
       console.log(`   ℹ Organization already exists: ${existingOrg.name}`);
     }
@@ -47,7 +58,13 @@ async function seed() {
     const rolesToCreate = [
       {
         name: 'Admin',
-        permissions: ['read', 'write', 'delete', 'manage_users', 'manage_roles'],
+        permissions: [
+          'read',
+          'write',
+          'delete',
+          'manage_users',
+          'manage_roles',
+        ],
         isDefault: false,
       },
       {
@@ -122,7 +139,9 @@ async function seed() {
       });
 
       if (!existingUser) {
-        const hashedPassword = await authService.hashPassword(userData.password);
+        const hashedPassword = await authService.hashPassword(
+          userData.password,
+        );
         const user = userRepo.create({
           email: userData.email,
           password: hashedPassword,
@@ -135,10 +154,75 @@ async function seed() {
           onboarded: userData.onboarded,
         });
         const savedUser = await userRepo.save(user);
-        console.log(`   ✓ Created user: ${savedUser.email} (Role: ${userData.role?.name || 'None'})`);
+        console.log(
+          `   ✓ Created user: ${savedUser.email} (Role: ${userData.role?.name || 'None'})`,
+        );
         console.log(`     Password: ${userData.password}`);
       } else {
         console.log(`   ℹ User already exists: ${existingUser.email}`);
+      }
+    }
+
+    // 4. Seed Supported Integrations
+    console.log('\n🔌 Creating supported integrations...');
+    const supportedIntegrationRepo = app.get(SupportedIntegrationRepository);
+
+    const integrationsToCreate = [
+      {
+        provider: 'google_calendar',
+        name: 'Google Calendar',
+        description: 'Sync events and manage your Google Calendar',
+        iconUrl: '/integrations/google-calendar.svg',
+        category: IntegrationCategory.CALENDAR,
+        isActive: true,
+        sortOrder: 1,
+      },
+      {
+        provider: 'zoom',
+        name: 'Zoom',
+        description: 'Create and manage Zoom meetings',
+        iconUrl: '/integrations/zoom.svg',
+        category: IntegrationCategory.VIDEO_CONFERENCING,
+        isActive: true,
+        sortOrder: 2,
+      },
+      {
+        provider: 'slack',
+        name: 'Slack',
+        description: 'Send notifications and messages to Slack channels',
+        iconUrl: '/integrations/slack.svg',
+        category: IntegrationCategory.MESSAGING,
+        isActive: true,
+        sortOrder: 3,
+      },
+      {
+        provider: 'microsoft_teams',
+        name: 'Microsoft Teams',
+        description: 'Integrate with Microsoft Teams for collaboration',
+        iconUrl: '/integrations/microsoft-teams.svg',
+        category: IntegrationCategory.MESSAGING,
+        isActive: true,
+        sortOrder: 4,
+      },
+    ];
+
+    let integrationsCreated = 0;
+    for (const integrationData of integrationsToCreate) {
+      const existingIntegration = await supportedIntegrationRepo.findOne({
+        where: { provider: integrationData.provider },
+      });
+
+      if (!existingIntegration) {
+        const integration = supportedIntegrationRepo.create(integrationData);
+        await supportedIntegrationRepo.save(integration);
+        integrationsCreated++;
+        console.log(`   ✓ Created integration: ${integration.name}`);
+      } else {
+        await supportedIntegrationRepo.update(
+          { id: existingIntegration.id },
+          integrationData,
+        );
+        console.log(`   ℹ Updated integration: ${existingIntegration.name}`);
       }
     }
 
@@ -146,6 +230,7 @@ async function seed() {
     console.log('📝 Summary:');
     console.log(`   Organization: ${organization.name}`);
     console.log(`   Roles: ${roles.length}`);
+    console.log(`   Integrations: ${integrationsToCreate.length}`);
     console.log('\n🔐 Test Credentials:');
     console.log('   Admin: admin@acme-corp.local / Admin@123');
     console.log('   User: john.doe@acme-corp.local / User@123\n');

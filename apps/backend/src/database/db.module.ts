@@ -6,20 +6,33 @@ import {
   OrganizationEntity,
   RoleEntity,
   AuditLogEntity,
+  SupportedIntegrationEntity,
+  OrganizationIntegrationEntity,
 } from './entities';
 import {
   UserRepository,
   OrganizationRepository,
   RoleRepository,
   AuditLogRepository,
+  SupportedIntegrationRepository,
+  OrganizationIntegrationRepository,
 } from './repositories';
 
-const entities = [UserEntity, OrganizationEntity, RoleEntity, AuditLogEntity];
+const entities = [
+  UserEntity,
+  OrganizationEntity,
+  RoleEntity,
+  AuditLogEntity,
+  SupportedIntegrationEntity,
+  OrganizationIntegrationEntity,
+];
 const repositories = [
   UserRepository,
   OrganizationRepository,
   RoleRepository,
   AuditLogRepository,
+  SupportedIntegrationRepository,
+  OrganizationIntegrationRepository,
 ];
 
 @Global()

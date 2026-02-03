@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { User, Users, ShieldCheck, ClipboardList } from 'lucide-react';
+import { User, Users, ShieldCheck, ClipboardList, Plug2 } from 'lucide-react';
 import { usePermissions } from '@/hooks/use-permissions';
 import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
 import {
@@ -46,6 +46,13 @@ const settingsCards: SettingsCard[] = [
     description: 'Track all actions in your organization',
     icon: ClipboardList,
     permission: PERMISSIONS_ENUM.AUDIT_LIST_READ,
+  },
+  {
+    href: '/dashboard/settings/integrations',
+    title: 'Integrations',
+    description: 'Connect third-party services',
+    icon: Plug2,
+    permission: PERMISSIONS_ENUM.INTEGRATION_LIST_READ,
   },
 ];
 

@@ -10,6 +10,7 @@ import { UserModule } from './modules/user/user.module';
 import { RoleModule } from './modules/role/role.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { StorageModule } from './modules/storage/storage.module';
+import { IntegrationModule } from './modules/integration/integration.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { StorageModule } from './modules/storage/storage.module';
     RoleModule,
     AuditModule,
     StorageModule,
+    IntegrationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
