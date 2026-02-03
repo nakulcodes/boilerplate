@@ -9,6 +9,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { RoleModule } from './modules/role/role.module';
 import { AuditModule } from './modules/audit/audit.module';
+import { StorageModule } from './modules/storage/storage.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { AuditModule } from './modules/audit/audit.module';
     UserModule,
     RoleModule,
     AuditModule,
+    StorageModule,
   ],
   controllers: [AppController],
   providers: [AppService],
