@@ -5,11 +5,16 @@ import {
 } from '@nestjs/common';
 import { UserRepository } from '../../../../database/repositories';
 import { UserStatus } from '../../../../database/enums';
+import { EventName, UserBlockedEvent } from '@boilerplate/core';
+import { AppEventEmitter } from '../../../events/services/event-emitter.service';
 import { BlockUserCommand } from './block-user.command';
 
 @Injectable()
 export class BlockUser {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly eventEmitter: AppEventEmitter,
+  ) {}
 
   async execute(command: BlockUserCommand) {
     // Cannot block self
@@ -31,6 +36,15 @@ export class BlockUser {
     user.isActive = false;
 
     await this.userRepository.save(user);
+
+    this.eventEmitter.emit<UserBlockedEvent>({
+      eventName: EventName.USER_BLOCKED,
+      timestamp: new Date(),
+      userId: user.id,
+      organizationId: command.organizationId,
+      blockedBy: command.currentUserId,
+      triggeredBy: command.currentUserId,
+    });
 
     return { success: true };
   }

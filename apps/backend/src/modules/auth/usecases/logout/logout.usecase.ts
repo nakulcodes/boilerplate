@@ -1,11 +1,16 @@
 import { Injectable } from '@nestjs/common';
+import { EventName, UserLoggedOutEvent } from '@boilerplate/core';
 import { UserRepository } from '../../../../database/repositories';
+import { AppEventEmitter } from '../../../events/services/event-emitter.service';
 import { LogoutCommand } from './logout.command';
 import { LogoutResponseDto } from '../../dtos/logout.dto';
 
 @Injectable()
 export class Logout {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly eventEmitter: AppEventEmitter,
+  ) {}
 
   async execute(command: LogoutCommand): Promise<LogoutResponseDto> {
     // If refresh token is provided, invalidate it by clearing from database
@@ -39,6 +44,16 @@ export class Logout {
         user.refreshTokenExpires = null;
         await this.userRepository.save(user);
       }
+    }
+
+    if (command.userId && command.organizationId) {
+      this.eventEmitter.emit<UserLoggedOutEvent>({
+        eventName: EventName.USER_LOGGED_OUT,
+        timestamp: new Date(),
+        userId: command.userId,
+        organizationId: command.organizationId,
+        triggeredBy: command.userId,
+      });
     }
 
     return {

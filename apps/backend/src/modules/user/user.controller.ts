@@ -235,6 +235,7 @@ export class UserController {
       UnblockUserCommand.create({
         userId,
         organizationId: user.organizationId,
+        currentUserId: user.userId,
       }),
     );
   }
