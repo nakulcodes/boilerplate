@@ -10,6 +10,7 @@ import {
 
 // Interceptors & Middleware
 import { ResponseInterceptor } from './framework/response.interceptor';
+import { AuditInterceptor } from './framework/audit.interceptor';
 import { RequestIdMiddleware } from './middleware/request-id.middleware';
 
 // Filters
@@ -21,6 +22,7 @@ const SHARED_PROVIDERS = [
   cacheManagerProvider,
   redisCacheService,
   ResponseInterceptor,
+  AuditInterceptor,
   RequestIdMiddleware,
   GlobalExceptionFilter,
   PermissionsGuard,

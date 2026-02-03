@@ -7,6 +7,7 @@ import { SharedModule } from './modules/shared/shared.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { RoleModule } from './modules/role/role.module';
+import { AuditModule } from './modules/audit/audit.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { RoleModule } from './modules/role/role.module';
     AuthModule,
     UserModule,
     RoleModule,
+    AuditModule,
   ],
   controllers: [AppController],
   providers: [AppService],

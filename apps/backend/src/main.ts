@@ -5,6 +5,7 @@ import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ResponseInterceptor } from './modules/shared/framework/response.interceptor';
 import { LoggingInterceptor } from './modules/shared/framework/logging.interceptor';
+import { AuditInterceptor } from './modules/shared/framework/audit.interceptor';
 import { GlobalExceptionFilter } from './modules/shared/filters/global-exception.filter';
 
 async function bootstrap() {
@@ -41,9 +42,11 @@ async function bootstrap() {
   );
 
   // Register global interceptors and filters
+  const auditInterceptor = app.get(AuditInterceptor);
   app.useGlobalInterceptors(
     new LoggingInterceptor(),
     new ResponseInterceptor(),
+    auditInterceptor,
   );
   app.useGlobalFilters(new GlobalExceptionFilter());
 
