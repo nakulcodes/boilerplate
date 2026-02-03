@@ -98,13 +98,18 @@ function AuditLogsContent() {
 
   const [actionFilter, setActionFilter] = useState<string>('');
   const [methodFilter, setMethodFilter] = useState<string>('all');
+  const [appliedFilters, setAppliedFilters] = useState<{
+    action: string;
+    method: string;
+  }>({ action: '', method: 'all' });
 
   const loadLogs = useCallback(async () => {
     setIsLoading(true);
     try {
       const body: Record<string, unknown> = { page, limit };
-      if (actionFilter) body.action = actionFilter;
-      if (methodFilter && methodFilter !== 'all') body.method = methodFilter;
+      if (appliedFilters.action) body.action = appliedFilters.action;
+      if (appliedFilters.method && appliedFilters.method !== 'all')
+        body.method = appliedFilters.method;
 
       const response = await fetchApi<PaginatedResponse>(
         API_ROUTES.AUDIT.LIST,
@@ -124,20 +129,21 @@ function AuditLogsContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, actionFilter, methodFilter]);
+  }, [page, limit, appliedFilters]);
 
   useEffect(() => {
     loadLogs();
   }, [loadLogs]);
 
   const handleSearch = () => {
+    setAppliedFilters({ action: actionFilter, method: methodFilter });
     setPage(0);
-    loadLogs();
   };
 
   const clearFilters = () => {
     setActionFilter('');
     setMethodFilter('all');
+    setAppliedFilters({ action: '', method: 'all' });
     setPage(0);
   };
 
@@ -236,7 +242,9 @@ function AuditLogsContent() {
     pageCount: totalPages,
   });
 
-  const hasFilters = actionFilter || (methodFilter && methodFilter !== 'all');
+  const hasFilters =
+    appliedFilters.action ||
+    (appliedFilters.method && appliedFilters.method !== 'all');
 
   if (isLoading && logs.length === 0) {
     return (

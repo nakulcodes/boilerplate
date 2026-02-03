@@ -42,8 +42,8 @@ export class ListAuditLogs {
     }
 
     if (command.action) {
-      queryBuilder.andWhere('audit.action = :action', {
-        action: command.action,
+      queryBuilder.andWhere('audit.action ILIKE :action', {
+        action: `%${command.action}%`,
       });
     }
 

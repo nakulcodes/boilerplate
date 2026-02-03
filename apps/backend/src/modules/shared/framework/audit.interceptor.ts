@@ -15,18 +15,18 @@ interface RequestUser {
   organizationId?: string;
 }
 
-const SENSITIVE_FIELDS = [
+const SENSITIVE_FIELDS = new Set([
   'password',
-  'currentPassword',
-  'newPassword',
-  'confirmPassword',
+  'currentpassword',
+  'newpassword',
+  'confirmpassword',
   'token',
-  'refreshToken',
-  'inviteToken',
-  'accessToken',
+  'refreshtoken',
+  'invitetoken',
+  'accesstoken',
   'secret',
-  'apiKey',
-];
+  'apikey',
+]);
 
 const SKIP_METHODS = ['GET', 'OPTIONS', 'HEAD'];
 
@@ -145,7 +145,7 @@ export class AuditInterceptor implements NestInterceptor {
     const sanitized: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(body)) {
-      if (SENSITIVE_FIELDS.includes(key.toLowerCase())) {
+      if (SENSITIVE_FIELDS.has(key.toLowerCase())) {
         sanitized[key] = '[REDACTED]';
       } else if (typeof value === 'object' && value !== null) {
         sanitized[key] = this.sanitizeBody(value);
