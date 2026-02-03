@@ -1,18 +1,11 @@
-import {
-  Injectable,
-  ConflictException,
-  BadRequestException,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 
 import {
-  OrganizationRepository,
   UserRepository,
   RoleRepository,
 } from '../../../../database/repositories';
 import { UserStatus } from '../../../../database/enums';
-import { validateEmailDomain } from '@boilerplate/core';
 import { AuthService } from '../../../auth/services/auth.service';
 
 import { CreateUserCommand } from './create-user.command';
@@ -29,34 +22,11 @@ export interface CreateUserResult {
 export class CreateUser {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly organizationRepository: OrganizationRepository,
     private readonly roleRepository: RoleRepository,
     private readonly authService: AuthService,
-    private readonly configService: ConfigService,
   ) {}
 
   async execute(command: CreateUserCommand): Promise<CreateUserResult> {
-    const organization = await this.organizationRepository.findById(
-      command.organizationId,
-    );
-    if (!organization) {
-      throw new BadRequestException('Organization not found');
-    }
-
-    const isValidDomain = validateEmailDomain(
-      command.email,
-      organization.domain,
-    );
-
-    if (
-      !isValidDomain &&
-      this.configService.get<string>('NODE_ENV') !== 'development'
-    ) {
-      throw new BadRequestException(
-        `Email domain must match organization domain: ${organization.domain}`,
-      );
-    }
-
     const existingUser = await this.userRepository.findOne({
       where: {
         email: command.email.toLowerCase(),
@@ -74,7 +44,7 @@ export class CreateUser {
         where: { id: command.roleId, organizationId: command.organizationId },
       });
       if (!role) {
-        throw new BadRequestException('Role not found in this organization');
+        throw new ConflictException('Role not found in this organization');
       }
     }
 

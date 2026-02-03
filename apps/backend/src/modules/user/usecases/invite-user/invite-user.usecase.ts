@@ -1,23 +1,12 @@
-import {
-  Injectable,
-  ConflictException,
-  Logger,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, ConflictException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import {
-  OrganizationRepository,
   UserRepository,
   RoleRepository,
 } from '../../../../database/repositories';
 import { UserStatus } from '../../../../database/enums';
-import {
-  buildUrl,
-  validateEmailDomain,
-  generateInviteToken,
-  addHours,
-} from '@boilerplate/core';
+import { buildUrl, generateInviteToken, addHours } from '@boilerplate/core';
 
 import { InviteUserCommand } from './invite-user.command';
 
@@ -33,36 +22,11 @@ export class InviteUser {
 
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly organizationRepository: OrganizationRepository,
     private readonly roleRepository: RoleRepository,
     private readonly configService: ConfigService,
   ) {}
 
   async execute(command: InviteUserCommand): Promise<InviteUserResult> {
-    // Fetch organization to validate domain
-    const organization = await this.organizationRepository.findById(
-      command.organizationId,
-    );
-    if (!organization) {
-      throw new BadRequestException('Organization not found');
-    }
-
-    // Validate email domain matches organization domain
-    const isValidDomain = validateEmailDomain(
-      command.email,
-      organization.domain,
-    );
-
-    if (
-      !isValidDomain &&
-      this.configService.get<string>('NODE_ENV') !== 'development'
-    ) {
-      throw new BadRequestException(
-        `Email domain must match organization domain: ${organization.domain}`,
-      );
-    }
-
-    // Check if user already exists in this organization
     const existingUser = await this.userRepository.findOne({
       where: {
         email: command.email.toLowerCase(),
@@ -75,13 +39,12 @@ export class InviteUser {
       );
     }
 
-    // Validate roleId if provided
     if (command.roleId) {
       const role = await this.roleRepository.findOne({
         where: { id: command.roleId, organizationId: command.organizationId },
       });
       if (!role) {
-        throw new BadRequestException('Role not found in this organization');
+        throw new ConflictException('Role not found in this organization');
       }
     }
 
