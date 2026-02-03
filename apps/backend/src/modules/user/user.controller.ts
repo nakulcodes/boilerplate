@@ -36,6 +36,9 @@ import { ListUsersCommand } from './usecases/list-users/list-users.command';
 import { UpdateProfile } from './usecases/update-profile/update-profile.usecase';
 import { UpdateProfileCommand } from './usecases/update-profile/update-profile.command';
 import { UpdateProfileDto } from './dtos/update-profile.dto';
+import { CreateUser } from './usecases/create-user/create-user.usecase';
+import { CreateUserCommand } from './usecases/create-user/create-user.command';
+import { CreateUserDto } from './dtos/create-user.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -50,6 +53,7 @@ export class UserController {
     private readonly getCurrentUser: GetCurrentUser,
     private readonly listUsers: ListUsers,
     private readonly updateProfile: UpdateProfile,
+    private readonly createUser: CreateUser,
   ) {}
 
   @Post('invite')
@@ -67,6 +71,30 @@ export class UserController {
         lastName: dto.lastName,
         organizationId: user.organizationId,
         invitedBy: user.userId,
+        roleId: dto.roleId,
+      }),
+    );
+  }
+
+  @Post('create')
+  @RequirePermissions(PERMISSIONS_ENUM.USER_CREATE)
+  @ApiOperation({
+    summary: 'Directly create a user (immediately active with password)',
+  })
+  @ApiResponse({ status: 201 })
+  async create(
+    @UserSession() user: UserSessionData,
+    @Body() dto: CreateUserDto,
+  ) {
+    return this.createUser.execute(
+      CreateUserCommand.create({
+        email: dto.email,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        organizationId: user.organizationId,
+        createdBy: user.userId,
+        roleId: dto.roleId,
+        password: dto.password,
       }),
     );
   }
@@ -131,7 +159,7 @@ export class UserController {
   }
 
   @Post('list')
-  @RequirePermissions(PERMISSIONS_ENUM.USER_LIST_READ)
+  @RequirePermissions('user:list:read')
   @ApiOperation({
     summary: 'List users in organization with pagination and filters',
   })
@@ -149,12 +177,14 @@ export class UserController {
         invitedBy: dto.invitedBy,
         page: dto.page,
         limit: dto.limit,
+        permissions: user.permissions,
+        userRoleId: user.roleId,
       }),
     );
   }
 
   @Put(':id')
-  @RequirePermissions(PERMISSIONS_ENUM.USER_UPDATE)
+  @RequirePermissions('user:update')
   @ApiOperation({ summary: 'Update user details (firstName, lastName)' })
   @ApiResponse({ status: 200 })
   async update(
@@ -166,6 +196,9 @@ export class UserController {
       UpdateUserCommand.create({
         userId,
         organizationId: user.organizationId,
+        currentUserId: user.userId,
+        currentUserRoleId: user.roleId,
+        permissions: user.permissions,
         firstName: dto.firstName,
         lastName: dto.lastName,
         roleId: dto.roleId,

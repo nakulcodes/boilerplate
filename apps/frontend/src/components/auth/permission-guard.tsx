@@ -7,7 +7,7 @@ import { Permission } from '@/types/permissions.type';
 
 interface PermissionGuardProps {
   children: ReactNode;
-  permissions: Permission | Permission[];
+  permissions: Permission | Permission[] | string | string[];
   requireAll?: boolean;
   fallback?: ReactNode;
 }

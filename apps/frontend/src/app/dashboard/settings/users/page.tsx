@@ -189,7 +189,7 @@ function UsersContent() {
           const showActions =
             hasPermission(PERMISSIONS_ENUM.USER_UPDATE_STATUS) ||
             hasPermission(PERMISSIONS_ENUM.USER_CREATE) ||
-            hasPermission(PERMISSIONS_ENUM.USER_UPDATE) ||
+            hasPermission('user:update') ||
             hasPermission(PERMISSIONS_ENUM.USER_IMPERSONATE);
 
           if (!showActions) return null;
@@ -202,7 +202,7 @@ function UsersContent() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {hasPermission(PERMISSIONS_ENUM.USER_UPDATE) && (
+                {hasPermission('user:update') && (
                   <DropdownMenuItem onClick={() => setEditTarget(user)}>
                     Edit
                   </DropdownMenuItem>
@@ -322,7 +322,7 @@ function UsersContent() {
 export default function SettingsUsersPage() {
   return (
     <PermissionGuard
-      permissions={PERMISSIONS_ENUM.USER_LIST_READ}
+      permissions="user:list:read"
       fallback={
         <div className="flex items-center justify-center h-64 text-muted-foreground">
           You don&apos;t have permission to view users

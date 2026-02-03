@@ -1,8 +1,14 @@
 export enum PERMISSIONS_ENUM {
   USER_CREATE = 'user:create',
-  USER_LIST_READ = 'user:list:read',
-  USER_READ = 'user:read',
-  USER_UPDATE = 'user:update',
+  USER_LIST_READ_OWN = 'user:list:read:own',
+  USER_LIST_READ_TEAM = 'user:list:read:team',
+  USER_LIST_READ_ALL = 'user:list:read:all',
+  USER_READ_OWN = 'user:read:own',
+  USER_READ_TEAM = 'user:read:team',
+  USER_READ_ALL = 'user:read:all',
+  USER_UPDATE_OWN = 'user:update:own',
+  USER_UPDATE_TEAM = 'user:update:team',
+  USER_UPDATE_ALL = 'user:update:all',
   USER_UPDATE_STATUS = 'user:update-status',
   USER_IMPERSONATE = 'user:impersonate',
 
@@ -19,6 +25,27 @@ export enum PERMISSIONS_ENUM {
 
 export const ALL_PERMISSIONS = Object.values(PERMISSIONS_ENUM);
 
+export type PermissionScope = 'own' | 'team' | 'all';
+
+export function getPermissionScope(
+  permissions: string[],
+  basePermission: string,
+): PermissionScope | null {
+  if (
+    permissions.includes(`${basePermission}:all`) ||
+    permissions.includes(basePermission)
+  ) {
+    return 'all';
+  }
+  if (permissions.includes(`${basePermission}:team`)) {
+    return 'team';
+  }
+  if (permissions.includes(`${basePermission}:own`)) {
+    return 'own';
+  }
+  return null;
+}
+
 export const PERMISSION_GROUPS: Record<
   string,
   { label: string; permissions: PERMISSIONS_ENUM[] }
@@ -27,9 +54,15 @@ export const PERMISSION_GROUPS: Record<
     label: 'Users',
     permissions: [
       PERMISSIONS_ENUM.USER_CREATE,
-      PERMISSIONS_ENUM.USER_LIST_READ,
-      PERMISSIONS_ENUM.USER_READ,
-      PERMISSIONS_ENUM.USER_UPDATE,
+      PERMISSIONS_ENUM.USER_LIST_READ_OWN,
+      PERMISSIONS_ENUM.USER_LIST_READ_TEAM,
+      PERMISSIONS_ENUM.USER_LIST_READ_ALL,
+      PERMISSIONS_ENUM.USER_READ_OWN,
+      PERMISSIONS_ENUM.USER_READ_TEAM,
+      PERMISSIONS_ENUM.USER_READ_ALL,
+      PERMISSIONS_ENUM.USER_UPDATE_OWN,
+      PERMISSIONS_ENUM.USER_UPDATE_TEAM,
+      PERMISSIONS_ENUM.USER_UPDATE_ALL,
       PERMISSIONS_ENUM.USER_UPDATE_STATUS,
       PERMISSIONS_ENUM.USER_IMPERSONATE,
     ],

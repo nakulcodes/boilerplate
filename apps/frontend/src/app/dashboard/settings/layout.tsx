@@ -23,7 +23,7 @@ const tabs: SettingsTab[] = [
     href: '/dashboard/settings/users',
     label: 'Users',
     match: (p) => p.startsWith('/dashboard/settings/users'),
-    permission: PERMISSIONS_ENUM.USER_LIST_READ,
+    permission: 'user:list:read',
   },
   {
     href: '/dashboard/settings/roles',

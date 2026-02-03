@@ -7,6 +7,7 @@ import {
   buildUrl,
   calculateSkip,
   calculatePaginationMetadata,
+  getPermissionScope,
 } from '@boilerplate/core';
 
 import { ListUsersCommand } from './list-users.command';
@@ -72,6 +73,21 @@ export class ListUsers {
       queryBuilder.andWhere('user.invitedBy = :invitedBy', {
         invitedBy: command.invitedBy,
       });
+    }
+
+    // Apply scope filtering based on permissions
+    if (command.permissions) {
+      const scope = getPermissionScope(command.permissions, 'user:list:read');
+      if (scope === 'own') {
+        queryBuilder.andWhere('user.invitedBy = :currentUserId', {
+          currentUserId: command.userId,
+        });
+      } else if (scope === 'team' && command.userRoleId) {
+        queryBuilder.andWhere('user.roleId = :userRoleId', {
+          userRoleId: command.userRoleId,
+        });
+      }
+      // scope === 'all' or null means no additional filtering
     }
 
     // Pagination
