@@ -89,7 +89,7 @@ export class RoleController {
 
 - Use `@RequirePermissions(PERMISSIONS_ENUM.X)` for permission-gated endpoints
 - Use `@RequireAuthentication()` for auth-only endpoints (no specific permission)
-- Use `@UserSession()` to extract `{ userId, email, organizationId, permissions }` from JWT
+- Use `@UserSession()` to extract `{ userId, email, organizationId, permissions, roleId }` from JWT
 - Use `@Body()` with DTO classes for request validation
 - Controller methods just bridge HTTP to command/usecase — no logic
 
@@ -132,7 +132,7 @@ export class RoleController {
 ## Authentication
 
 **Access Token** (1h expiry):
-- Payload: `{ userId, email, organizationId, permissions[], firstName, lastName }`
+- Payload: `{ userId, email, organizationId, permissions[], firstName, lastName, roleId }`
 - Sent as `Authorization: Bearer <token>`
 - Validated by `JwtAuthGuard` on every protected request
 
@@ -169,44 +169,50 @@ export class RoleController {
 - `formatUserName(user)` — full name or email fallback
 - `escapeRegExp(text)`
 
-## API Endpoints
+## Modules Overview
 
-### Auth (`/api/v1/auth`)
+### Auth (`src/modules/auth/`)
+Handles authentication, registration, password management, and user impersonation.
+- Login/logout with JWT access + refresh token rotation
+- User registration (creates org + default admin role)
+- Password reset flow with email tokens
+- Admin impersonation of other users
 
-- `POST /register` — public, creates user + org + default admin role
-- `POST /login` — public, returns `{ accessToken, refreshToken, user, organization }`
-- `POST /refresh` — RefreshJwtGuard, body: `{ refreshToken }`, returns new token pair
-- `POST /logout` — authenticated, body: `{ refreshToken }`, invalidates refresh token
-- `POST /update-password` — authenticated, body: `{ currentPassword, newPassword, confirmPassword }`
-- `POST /reset/request` — public, body: `{ email }`, sends password reset email
-- `POST /reset` — public, body: `{ password, token }`, resets password
+### User (`src/modules/user/`)
+User management within an organization.
+- Invite users (sends invite link, optional role assignment)
+- Direct user creation (immediately active with password)
+- User profile management
+- Block/unblock users
+- Paginated user listing with scoped permissions (own/team/all)
 
-### Users (`/api/v1/users`)
+### Role (`src/modules/role/`)
+Role-based access control management.
+- CRUD for roles within an organization
+- Permission assignment to roles
+- Default role designation
 
-- `POST /list` — **paginated**, permission: `USER_LIST_READ`
-  - Body: `{ page, limit, status?, search?, invitedBy? }`
-  - Page is 0-indexed, limit default 10 (max 100)
-  - Response: `{ data: User[], page, limit, total, totalPages, hasNextPage, hasPreviousPage }`
-- `POST /invite` — permission: `USER_CREATE`, body: `{ email, firstName, lastName }`
-- `POST /resend-invite` — permission: `USER_CREATE`, body: `{ userId }`
-- `POST /accept-invite` — public, body: `{ inviteToken, firstName, lastName, password }`
-- `GET /me` — authenticated, returns current user with role and org
-- `PUT /profile` — authenticated, body: `{ firstName, lastName }`
-- `PUT /:id` — permission: `USER_UPDATE`, body: `{ firstName, lastName }`
-- `POST /:id/block` — permission: `USER_UPDATE_STATUS`
-- `POST /:id/unblock` — permission: `USER_UPDATE_STATUS`
+### Shared (`src/modules/shared/`)
+Common utilities, decorators, guards, and DTOs used across modules.
+- Permission decorators and guards
+- Response interceptors
+- Pagination helpers
+- Validation decorators
 
-### Roles (`/api/v1/roles`)
+## Scoped Permissions
 
-- `GET /` — **not paginated** (returns all), permission: `ROLE_LIST_READ`
-- `POST /` — permission: `ROLE_CREATE`, body: `{ name, permissions }`
-- `GET /:id` — permission: `ROLE_READ`
-- `PUT /:id` — permission: `ROLE_UPDATE`, body: `{ name, permissions }`
-- `DELETE /:id` — permission: `ROLE_UPDATE`
+User-related permissions support three scope levels:
+- `:own` — can only access users they invited
+- `:team` — can access users with the same role
+- `:all` — can access all users in the organization
 
-### Pagination Pattern
+Example: `user:list:read:own`, `user:list:read:team`, `user:list:read:all`
 
-User list uses POST with pagination. Roles return all items via GET. When adding a new paginated endpoint:
+The `PermissionsGuard` uses prefix matching — checking for `user:list:read` will match any of the scoped variants.
+
+## Pagination Pattern
+
+For paginated endpoints (like user list):
 
 1. Create command extending `BasePaginatedCommand` (provides `page`, `limit`)
 2. Create DTO extending `ListPaginationDto` (provides `page`, `limit` with validation)
@@ -214,7 +220,7 @@ User list uses POST with pagination. Roles return all items via GET. When adding
 4. Use `@ApiOkPaginatedResponse(YourDto)` on the controller method
 5. Response shape: `{ data: T[], page, limit, total, totalPages, hasNextPage, hasPreviousPage }`
 
-For simple lists that don't need pagination (like roles), just return the array directly — ResponseInterceptor wraps it in `{ data: T[] }`.
+For simple lists (like roles), return the array directly — ResponseInterceptor wraps it in `{ data: T[] }`.
 
 ## Response Format
 
