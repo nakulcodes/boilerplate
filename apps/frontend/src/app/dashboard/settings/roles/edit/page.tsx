@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { roleSchema, RoleFormData } from '@/schemas/role.schema';
@@ -22,8 +22,8 @@ import type { Role } from '@/types/role.type';
 
 function EditRoleContent() {
   const router = useRouter();
-  const params = useParams();
-  const roleId = params.id as string;
+  const searchParams = useSearchParams();
+  const roleId = searchParams.get('id');
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -39,11 +39,18 @@ function EditRoleContent() {
   });
 
   const loadRole = useCallback(async () => {
+    if (!roleId) {
+      toast.error('Role ID is required');
+      router.push('/dashboard/settings/roles');
+      return;
+    }
     try {
       const data = await fetchApi<Role>(API_ROUTES.ROLES.GET(roleId));
       reset({ name: data.name, permissions: [...data.permissions] });
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to load role');
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to load role';
+      toast.error(message);
       router.push('/dashboard/settings/roles');
     } finally {
       setIsLoading(false);
@@ -55,6 +62,7 @@ function EditRoleContent() {
   }, [loadRole]);
 
   const onSubmit = async (formData: RoleFormData) => {
+    if (!roleId) return;
     try {
       await fetchApi(API_ROUTES.ROLES.UPDATE(roleId), {
         method: 'PUT',
@@ -62,8 +70,10 @@ function EditRoleContent() {
       });
       toast.success('Role updated');
       router.push('/dashboard/settings/roles');
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to update role');
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to update role';
+      toast.error(message);
     }
   };
 

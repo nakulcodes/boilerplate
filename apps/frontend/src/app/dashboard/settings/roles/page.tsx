@@ -123,7 +123,7 @@ function RolesContent() {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
                   <Link
-                    href={`/dashboard/settings/roles/${row.original.id}/edit`}
+                    href={`/dashboard/settings/roles/edit?id=${row.original.id}`}
                   >
                     Edit
                   </Link>
