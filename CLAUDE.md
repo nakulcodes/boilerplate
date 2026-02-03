@@ -207,3 +207,111 @@ docker compose -f docker-compose.dev.yml up
 - Backend: http://localhost:4000
 - Swagger: http://localhost:4000/api/docs
 - Postgres: localhost:5432 (user/password/boilerplate)
+
+---
+
+## Agent Workflow
+
+Use specialized agents for complex tasks. Run them in sequence for best results.
+
+### 1. Codebase Analyzer Agent
+
+**When to use**: At the START of any feature or bug fix to understand where to work.
+
+**What it does**:
+- Identifies relevant files, patterns, and dependencies
+- Maps out which modules/components need changes
+- Finds existing utilities, hooks, types to reuse
+- Reports file paths and line numbers for the main Claude to act on
+
+**Prompt template**:
+```
+Analyze the codebase to implement [FEATURE/FIX]. Find:
+1. Which files need modification (full paths)
+2. Existing patterns/utilities to reuse
+3. Related types, DTOs, entities involved
+4. Dependencies between frontend and backend changes
+Return a structured report with file paths and what to do in each.
+```
+
+### 2. Backend Implementation Agent
+
+**When to use**: After analysis, for backend-specific work.
+
+**What it does**:
+- Creates/modifies entities, repositories, DTOs
+- Implements command/usecase following project patterns
+- Updates controllers with proper decorators
+- Ensures TypeORM and validation are correct
+
+**Key files it works with**:
+- `apps/backend/src/modules/<feature>/` — usecases, DTOs, controller
+- `apps/backend/src/database/entities/` — entities
+- `apps/backend/src/database/repositories/` — repositories
+- `packages/shared/src/permissions.ts` — new permissions
+
+### 3. Frontend Implementation Agent
+
+**When to use**: After backend is ready, for frontend work.
+
+**What it does**:
+- Creates pages under `apps/frontend/src/app/`
+- Builds components following shadcn/ui patterns
+- Implements forms with react-hook-form + zod
+- Adds API routes and types
+- Wires up hooks and contexts
+
+**Key files it works with**:
+- `apps/frontend/src/app/dashboard/` — pages
+- `apps/frontend/src/components/` — UI components
+- `apps/frontend/src/schemas/` — zod schemas
+- `apps/frontend/src/config/api-routes.ts` — API endpoints
+- `apps/frontend/src/types/` — TypeScript types
+
+### 4. Code Reviewer Agent
+
+**When to use**: AFTER implementation is complete, before committing.
+
+**What it does**:
+- Reviews all changed files for issues
+- Checks for security vulnerabilities (XSS, injection, etc.)
+- Verifies patterns match existing codebase conventions
+- Catches missing error handling, type mismatches
+- Validates frontend-backend type alignment
+- Suggests improvements without over-engineering
+
+**Prompt template**:
+```
+Review the following changes for issues:
+[LIST OF CHANGED FILES]
+
+Check for:
+1. Security issues (injection, XSS, auth bypass)
+2. Pattern violations (see CLAUDE.md conventions)
+3. Missing error handling
+4. Type mismatches between frontend and backend
+5. Unused imports or dead code
+6. Performance concerns
+Return a list of issues with file:line references and suggested fixes.
+```
+
+### Agent Execution Order
+
+For a typical feature:
+
+1. **Codebase Analyzer** → understand scope, find files
+2. **Backend Agent** → implement API, entities, logic
+3. **Frontend Agent** → implement UI, forms, API calls
+4. **Code Reviewer** → catch issues before commit
+5. **TypeScript check** → `pnpm --filter backend exec tsc --noEmit && pnpm --filter frontend exec tsc --noEmit`
+6. **Commit** → with conventional commit message
+
+### Agent Communication
+
+Agents report back to the main Claude with:
+- File paths that need work (absolute paths)
+- Line numbers for modifications
+- Code snippets to add/change
+- Issues found with severity (error/warning/info)
+
+Main Claude then executes the actual file edits based on agent reports.
