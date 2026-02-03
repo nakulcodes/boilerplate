@@ -35,6 +35,10 @@ export const API_ROUTES = {
     UPDATE: (id: string) => `/roles/${id}` as const,
     DELETE: (id: string) => `/roles/${id}` as const,
   },
+  AUDIT: {
+    LIST: '/audit/list',
+    GET: (id: string) => `/audit/${id}` as const,
+  },
 } as const;
 
 export function buildApiUrl(route: string): string {

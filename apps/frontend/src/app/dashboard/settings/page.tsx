@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { User, Users, ShieldCheck } from 'lucide-react';
+import { User, Users, ShieldCheck, ClipboardList } from 'lucide-react';
 import { usePermissions } from '@/hooks/use-permissions';
 import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
 import {
@@ -39,6 +39,13 @@ const settingsCards: SettingsCard[] = [
     description: 'Configure roles and permissions',
     icon: ShieldCheck,
     permission: PERMISSIONS_ENUM.ROLE_LIST_READ,
+  },
+  {
+    href: '/dashboard/settings/audit',
+    title: 'Audit Logs',
+    description: 'Track all actions in your organization',
+    icon: ClipboardList,
+    permission: PERMISSIONS_ENUM.AUDIT_LIST_READ,
   },
 ];
 

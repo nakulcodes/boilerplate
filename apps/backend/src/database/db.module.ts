@@ -1,15 +1,26 @@
 import { Global, Module } from '@nestjs/common';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-import { UserEntity, OrganizationEntity, RoleEntity } from './entities';
+import {
+  UserEntity,
+  OrganizationEntity,
+  RoleEntity,
+  AuditLogEntity,
+} from './entities';
 import {
   UserRepository,
   OrganizationRepository,
   RoleRepository,
+  AuditLogRepository,
 } from './repositories';
 
-const entities = [UserEntity, OrganizationEntity, RoleEntity];
-const repositories = [UserRepository, OrganizationRepository, RoleRepository];
+const entities = [UserEntity, OrganizationEntity, RoleEntity, AuditLogEntity];
+const repositories = [
+  UserRepository,
+  OrganizationRepository,
+  RoleRepository,
+  AuditLogRepository,
+];
 
 @Global()
 @Module({

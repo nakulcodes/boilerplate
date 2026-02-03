@@ -3,7 +3,7 @@ import { BaseAuthenticatedCommand } from './base-authenticated.command';
 
 export abstract class BasePaginatedCommand extends BaseAuthenticatedCommand {
   @IsInt()
-  @Min(0)
+  @Min(1)
   page!: number;
 
   @IsInt()

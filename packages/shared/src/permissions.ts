@@ -21,6 +21,9 @@ export enum PERMISSIONS_ENUM {
   ORGANIZATION_READ = 'organization:read',
   ORGANIZATION_UPDATE = 'organization:update',
   ORGANIZATION_SETTINGS = 'organization:settings',
+
+  AUDIT_LIST_READ = 'audit:list:read',
+  AUDIT_READ = 'audit:read',
 }
 
 export const ALL_PERMISSIONS = Object.values(PERMISSIONS_ENUM);
@@ -83,6 +86,13 @@ export const PERMISSION_GROUPS: Record<
       PERMISSIONS_ENUM.ORGANIZATION_READ,
       PERMISSIONS_ENUM.ORGANIZATION_UPDATE,
       PERMISSIONS_ENUM.ORGANIZATION_SETTINGS,
+    ],
+  },
+  audit: {
+    label: 'Audit Logs',
+    permissions: [
+      PERMISSIONS_ENUM.AUDIT_LIST_READ,
+      PERMISSIONS_ENUM.AUDIT_READ,
     ],
   },
 };

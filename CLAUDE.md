@@ -145,6 +145,7 @@ Used by both frontend and backend. Contains no NestJS dependencies.
 - `addHours()`, `addDays()` — date math
 - `generateSecureToken()`, `generateInviteToken()`, `generatePasswordResetToken()` — token generators
 - `createPaginationMetadata()`, `calculateSkip()` — pagination helpers
+- `EventName` enum, `BaseEvent`, and typed event interfaces (user, organization, role events)
 
 ### @boilerplate/core — Backend-Only Package
 
@@ -152,7 +153,8 @@ Re-exports everything from `@boilerplate/shared` plus:
 
 - `BaseCommand`, `BaseAuthenticatedCommand`, `BasePaginatedCommand` — command base classes
 - `CommandValidationException` — thrown on validation failure
-- Mail, Storage, Cache, AI services
+- `MailService`, `buildUserInviteEmail()`, `buildWelcomeEmail()`, `buildPasswordResetEmail()` — email services and templates
+- Storage, Cache, AI services
 
 ---
 

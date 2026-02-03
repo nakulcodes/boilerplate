@@ -185,7 +185,7 @@ export class RoleController {
 
 - `POST /list` — **paginated**, permission: `USER_LIST_READ`
   - Body: `{ page, limit, status?, search?, invitedBy? }`
-  - Page is 0-indexed, limit default 10 (max 100)
+  - Page is 1-indexed (first page = 1), limit default 10 (max 100)
   - Response: `{ data: User[], page, limit, total, totalPages, hasNextPage, hasPreviousPage }`
 - `POST /invite` — permission: `USER_CREATE`, body: `{ email, firstName, lastName }`
 - `POST /resend-invite` — permission: `USER_CREATE`, body: `{ userId }`
@@ -204,6 +204,12 @@ export class RoleController {
 - `PUT /:id` — permission: `ROLE_UPDATE`, body: `{ name, permissions }`
 - `DELETE /:id` — permission: `ROLE_UPDATE`
 
+### Audit (`/api/v1/audit`)
+
+- `POST /list` — **paginated**, permission: `AUDIT_LIST_READ`
+  - Body: `{ page, limit, actorId?, action?, method?, startDate?, endDate? }`
+- `GET /:id` — permission: `AUDIT_READ`
+
 ### Pagination Pattern
 
 User list uses POST with pagination. Roles return all items via GET. When adding a new paginated endpoint:
@@ -215,6 +221,57 @@ User list uses POST with pagination. Roles return all items via GET. When adding
 5. Response shape: `{ data: T[], page, limit, total, totalPages, hasNextPage, hasPreviousPage }`
 
 For simple lists that don't need pagination (like roles), just return the array directly — ResponseInterceptor wraps it in `{ data: T[] }`.
+
+## Pagination Rules
+
+**ALL pagination MUST use 1-indexed page numbers. This is non-negotiable.**
+
+### Backend Requirements:
+
+1. **Commands** extending `BasePaginatedCommand`:
+   - page is validated with `@Min(1)` (already enforced in base class)
+   - DO NOT override with `@Min(0)`
+
+2. **DTOs** extending `ListPaginationDto`:
+   - Default page is 1 (already enforced)
+   - DO NOT change default to 0
+
+3. **Usecases**:
+   - Use `calculateSkip(page, limit)` for database offset
+   - This function expects 1-indexed pages (page 1 = skip 0)
+   - Use `createPaginationMetadata(page, limit, total)` for response
+
+4. **Response shape**:
+   ```typescript
+   {
+     data: T[],
+     page: number,        // 1-indexed
+     limit: number,
+     total: number,
+     totalPages: number,
+     hasNextPage: boolean,
+     hasPreviousPage: boolean
+   }
+   ```
+
+### Why 1-indexed:
+
+- Standard REST API convention (first page is "page 1")
+- Matches `calculateSkip()` implementation
+- User-friendly (no confusion about "page 0")
+- Database offset is calculated as `(page - 1) * limit`
+
+### Common Mistakes:
+
+❌ `@Min(0)` on page field
+❌ `page: number = 0` as default
+❌ Frontend `useState(0)` for page
+❌ Sending `{ page: 0 }` in API requests
+
+✅ `@Min(1)` on page field
+✅ `page: number = 1` as default
+✅ Frontend `useState(1)` for page
+✅ Sending `{ page: 1 }` in API requests
 
 ## Response Format
 
@@ -239,6 +296,130 @@ For simple lists that don't need pagination (like roles), just return the array 
 - Included in JWT access token payload
 - Checked per-endpoint via `@RequirePermissions()` decorator
 - `PermissionsGuard` skips checks when `NODE_ENV=development` (logs warning)
+
+## Event System
+
+The app uses `@nestjs/event-emitter` for decoupled event-driven architecture. Events are defined in `@boilerplate/shared` and emitted from usecases.
+
+### Architecture
+
+- **EventsModule** (`src/modules/events/`) — global module that configures event emitter and registers listeners
+- **AppEventEmitter** — wrapper service for emitting typed events
+- **Listeners** — handle events asynchronously (e.g., send emails)
+
+### Emitting Events
+
+Inject `AppEventEmitter` and emit typed events from usecases:
+
+```typescript
+import { AppEventEmitter, EventName, UserInvitedEvent } from '@boilerplate/core';
+
+@Injectable()
+export class InviteUser {
+  constructor(private readonly eventEmitter: AppEventEmitter) {}
+
+  async execute(command: InviteUserCommand) {
+    // ... create user
+    this.eventEmitter.emit<UserInvitedEvent>({
+      eventName: EventName.USER_INVITED,
+      userId: user.id,
+      organizationId: command.organizationId,
+      invitedBy: command.userId,
+      inviteLink: inviteUrl,
+      timestamp: new Date(),
+    });
+  }
+}
+```
+
+### Event Names
+
+Defined in `@boilerplate/shared` (`EventName` enum):
+
+- **User events**: `USER_REGISTERED`, `USER_INVITED`, `USER_INVITE_RESENT`, `USER_INVITE_ACCEPTED`, `USER_CREATED`, `USER_BLOCKED`, `USER_UNBLOCKED`, `USER_PASSWORD_RESET_REQUESTED`, `USER_PASSWORD_RESET`, `USER_PASSWORD_UPDATED`, `USER_LOGGED_IN`, `USER_LOGGED_OUT`
+- **Organization events**: `ORGANIZATION_CREATED`
+- **Role events**: `ROLE_CREATED`, `ROLE_UPDATED`, `ROLE_DELETED`
+
+### Listeners
+
+Listeners are in `src/modules/events/listeners/`. Use `@OnEvent()` decorator:
+
+```typescript
+@Injectable()
+export class UserEmailListener {
+  @OnEvent(EventName.USER_INVITED, { async: true })
+  async handleUserInvited(event: UserInvitedEvent): Promise<void> {
+    // send invitation email
+  }
+}
+```
+
+Current listeners:
+- **UserEmailListener** — sends invitation, welcome, and password reset emails
+
+### Adding a New Event
+
+1. Add event name to `EventName` enum in `packages/shared/src/events/event-names.ts`
+2. Create event interface in appropriate file (`user.events.ts`, `role.events.ts`, etc.)
+3. Export from `packages/shared/src/events/index.ts`
+4. Emit from usecase using `AppEventEmitter.emit<YourEvent>(...)`
+5. Create listener if needed in `src/modules/events/listeners/`
+
+## Mail Module
+
+The mail module (`src/modules/mail/`) provides email sending capabilities via `@boilerplate/core` MailService.
+
+### Email Templates
+
+Templates are in `@boilerplate/core` (`packages/core/src/services/mail/templates/`):
+- `buildUserInviteEmail()` — invitation email with invite link
+- `buildWelcomeEmail()` — welcome email after registration/invite acceptance
+- `buildPasswordResetEmail()` — password reset link email
+
+### Sending Emails
+
+Emails are sent reactively via event listeners (see Event System above). The `UserEmailListener` handles:
+- `USER_INVITED` → sends invitation email
+- `USER_INVITE_RESENT` → resends invitation email
+- `USER_INVITE_ACCEPTED` → sends welcome email
+- `USER_REGISTERED` → sends welcome email
+- `USER_PASSWORD_RESET_REQUESTED` → sends password reset email
+
+## Audit Module
+
+The audit module automatically logs all POST/PUT/PATCH/DELETE requests via `AuditInterceptor`. GET requests are not logged.
+
+### How It Works
+
+- **AuditInterceptor** (`src/modules/shared/framework/audit.interceptor.ts`) — global interceptor registered in `main.ts`
+- Captures: method, path, action, actor, organization, IP, user agent, request body (sanitized), status code, duration
+- Saves asynchronously (fire-and-forget) to not block responses
+- Sensitive fields (password, token, etc.) are automatically redacted from metadata
+
+### AuditLogEntity
+
+- `organizationId` — tenant isolation
+- `actorId` — user who performed the action (nullable for unauthenticated requests)
+- `method` — HTTP method (POST, PUT, PATCH, DELETE)
+- `path` — actual URL with IDs (e.g., `/api/v1/users/abc-123/block`)
+- `action` — semantic action name (e.g., `users.block`, `roles.update`)
+- `statusCode` — HTTP response status
+- `metadata` — `{ params: {...}, body: {...} }` with sensitive fields redacted
+- `ipAddress`, `userAgent`, `duration`
+
+### API Endpoints (`/api/v1/audit`)
+
+- `POST /list` — **paginated**, permission: `AUDIT_LIST_READ`
+  - Body: `{ page, limit, actorId?, action?, method?, startDate?, endDate? }`
+- `GET /:id` — permission: `AUDIT_READ`
+
+### Action Naming Convention
+
+Derived from route path:
+- `POST /users/invite` → `users.invite`
+- `PUT /roles/:id` → `roles.update`
+- `DELETE /roles/:id` → `roles.delete`
+- `POST /auth/login` → `auth.login`
 
 ## Linting
 
