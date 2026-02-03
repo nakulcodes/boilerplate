@@ -26,10 +26,11 @@ import { toast } from '@/lib/toast';
 import {
   useReactTable,
   getCoreRowModel,
+  getPaginationRowModel,
   ColumnDef,
 } from '@tanstack/react-table';
-import { DataTable } from '@/components/common/data-table';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { DataTable, DataTablePagination } from '@/components/common/data-table';
+import { X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface AuditLogActor {
@@ -90,8 +91,10 @@ function getActorName(actor?: AuditLogActor | null): string {
 function AuditLogsContent() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
@@ -106,7 +109,10 @@ function AuditLogsContent() {
   const loadLogs = useCallback(async () => {
     setIsLoading(true);
     try {
-      const body: Record<string, unknown> = { page, limit };
+      const body: Record<string, unknown> = {
+        page: pagination.pageIndex + 1,
+        limit: pagination.pageSize,
+      };
       if (appliedFilters.action) body.action = appliedFilters.action;
       if (appliedFilters.method && appliedFilters.method !== 'all')
         body.method = appliedFilters.method;
@@ -129,7 +135,7 @@ function AuditLogsContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, appliedFilters]);
+  }, [pagination.pageIndex, pagination.pageSize, appliedFilters]);
 
   useEffect(() => {
     loadLogs();
@@ -137,14 +143,14 @@ function AuditLogsContent() {
 
   const handleSearch = () => {
     setAppliedFilters({ action: actionFilter, method: methodFilter });
-    setPage(1);
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
   };
 
   const clearFilters = () => {
     setActionFilter('');
     setMethodFilter('all');
     setAppliedFilters({ action: '', method: 'all' });
-    setPage(1);
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
   };
 
   const columns = useMemo<ColumnDef<AuditLog>[]>(
@@ -238,8 +244,13 @@ function AuditLogsContent() {
     data: logs,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     manualPagination: true,
     pageCount: totalPages,
+    state: {
+      pagination,
+    },
+    onPaginationChange: setPagination,
   });
 
   const hasFilters =
@@ -303,34 +314,7 @@ function AuditLogsContent() {
         onRowClick={(row) => setSelectedLog(row)}
       />
 
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          Showing {logs.length} of {total} logs
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="h-8 w-8"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm text-muted-foreground min-w-[100px] text-center">
-            Page {page} of {totalPages || 1}
-          </span>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setPage((p) => p + 1)}
-            disabled={page >= totalPages}
-            className="h-8 w-8"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      <DataTablePagination table={table} totalItems={total} />
 
       <Dialog
         open={!!selectedLog}
