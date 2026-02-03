@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { calculateSkip, calculatePaginationMetadata } from '@boilerplate/core';
+import { calculateSkip, createPaginationMetadata } from '@boilerplate/core';
 import { AuditLogRepository } from '../../../../database/repositories';
 import { ListAuditLogsCommand } from './list-audit-logs.command';
 
@@ -74,7 +74,7 @@ export class ListAuditLogs {
 
     return {
       data: logs,
-      ...calculatePaginationMetadata(command.page, command.limit, total),
+      ...createPaginationMetadata(command.page, command.limit, total),
     };
   }
 }

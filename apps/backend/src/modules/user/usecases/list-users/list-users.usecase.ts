@@ -6,7 +6,7 @@ import { UserStatus } from '../../../../database/enums';
 import {
   buildUrl,
   calculateSkip,
-  calculatePaginationMetadata,
+  createPaginationMetadata,
   getPermissionScope,
 } from '@boilerplate/core';
 
@@ -117,7 +117,7 @@ export class ListUsers {
 
     return {
       data: usersWithInviteLinks,
-      ...calculatePaginationMetadata(command.page, command.limit, total),
+      ...createPaginationMetadata(command.page, command.limit, total),
     };
   }
 }
