@@ -2,12 +2,13 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
-  Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UserRepository } from '../../../../database/repositories';
 import { UserStatus } from '../../../../database/enums';
 import { buildUrl } from '@boilerplate/core';
+import { EventName, UserInviteResentEvent } from '@boilerplate/core';
+import { AppEventEmitter } from '../../../events/services/event-emitter.service';
 import { ResendInviteCommand } from './resend-invite.command';
 
 export interface ResendInviteResult {
@@ -17,11 +18,10 @@ export interface ResendInviteResult {
 
 @Injectable()
 export class ResendInvite {
-  private readonly logger = new Logger(ResendInvite.name);
-
   constructor(
     private readonly userRepository: UserRepository,
     private readonly configService: ConfigService,
+    private readonly eventEmitter: AppEventEmitter,
   ) {}
 
   async execute(command: ResendInviteCommand): Promise<ResendInviteResult> {
@@ -46,29 +46,24 @@ export class ResendInvite {
 
     await this.userRepository.save(user);
 
-    // Build invite link (using existing token)
     const frontendBaseUrl = this.configService.get<string>('FRONTEND_BASE_URL');
     const inviteLink = buildUrl(
       frontendBaseUrl,
       `/accept-invite?token=${user.inviteToken}`,
     );
 
-    // Get inviter details
-    const inviter = await this.userRepository.findById(command.currentUserId);
-    const inviterName = inviter
-      ? `${inviter.firstName} ${inviter.lastName || ''}`.trim()
-      : 'Someone';
-
-    // TODO: Resend invitation email (no password)
-    // For now, just log the invite link
-    this.logger.log(`Resend invite link for ${user.email}: ${inviteLink}`);
-    this.logger.log(
-      `Inviter: ${inviterName}, Organization: ${user.organization.name}`,
-    );
+    this.eventEmitter.emit<UserInviteResentEvent>({
+      eventName: EventName.USER_INVITE_RESENT,
+      timestamp: new Date(),
+      userId: user.id,
+      organizationId: command.organizationId,
+      inviteLink,
+      triggeredBy: command.currentUserId,
+    });
 
     return {
       inviteLink,
-      emailSent: false,
+      emailSent: true,
     };
   }
 }

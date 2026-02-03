@@ -1,17 +1,19 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { buildUrl } from '@boilerplate/core';
+import { EventName, UserPasswordResetRequestedEvent } from '@boilerplate/core';
 import { UserRepository } from '../../../../database/repositories';
 import { AuthService } from '../../services/auth.service';
+import { AppEventEmitter } from '../../../events/services/event-emitter.service';
 import { PasswordResetRequestCommand } from './password-reset-request.command';
 
 @Injectable()
 export class PasswordResetRequest {
-  private readonly logger = new Logger(PasswordResetRequest.name);
-
   constructor(
     private readonly userRepository: UserRepository,
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
+    private readonly eventEmitter: AppEventEmitter,
   ) {}
 
   async execute(
@@ -33,16 +35,23 @@ export class PasswordResetRequest {
     const token = this.authService.generatePasswordResetToken();
     const expiry = this.authService.getPasswordResetExpiry();
 
-    // Save token to user
     user.passwordResetToken = token;
     user.passwordResetExpires = expiry;
     await this.userRepository.save(user);
 
-    // TODO: Send password reset email
-    // For now, just log the token (in production, send via email)
-    this.logger.log(`Password reset token for ${user.email}: ${token}`);
+    const frontendBaseUrl = this.configService.get<string>('FRONTEND_BASE_URL');
+    const resetLink = buildUrl(
+      frontendBaseUrl,
+      `/reset-password?token=${token}`,
+    );
 
-    // Always return success to prevent email enumeration
+    this.eventEmitter.emit<UserPasswordResetRequestedEvent>({
+      eventName: EventName.USER_PASSWORD_RESET_REQUESTED,
+      timestamp: new Date(),
+      userId: user.id,
+      resetLink,
+    });
+
     return { success: true };
   }
 }

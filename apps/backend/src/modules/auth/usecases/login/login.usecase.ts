@@ -1,6 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { EventName, UserLoggedInEvent } from '@boilerplate/core';
 import { UserRepository } from '../../../../database/repositories';
 import { AuthService } from '../../services/auth.service';
+import { AppEventEmitter } from '../../../events/services/event-emitter.service';
 import { LoginCommand } from './login.command';
 import { LoginResponseDto } from '../../dtos/auth-response.dto';
 
@@ -9,6 +11,7 @@ export class Login {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly authService: AuthService,
+    private readonly eventEmitter: AppEventEmitter,
   ) {}
 
   async execute(command: LoginCommand): Promise<LoginResponseDto> {
@@ -45,10 +48,17 @@ export class Login {
     const refreshToken = this.authService.generateRefreshToken(user);
     const refreshTokenExpires = this.authService.getRefreshTokenExpiry();
 
-    // Store refresh token in database
     user.refreshToken = refreshToken;
     user.refreshTokenExpires = refreshTokenExpires;
     await this.userRepository.save(user);
+
+    this.eventEmitter.emit<UserLoggedInEvent>({
+      eventName: EventName.USER_LOGGED_IN,
+      timestamp: new Date(),
+      userId: user.id,
+      organizationId: user.organizationId,
+      triggeredBy: user.id,
+    });
 
     return {
       accessToken,

@@ -26,4 +26,14 @@ export class RoleRepository extends Repository<RoleEntity> {
   async findDefaultRole(organizationId: string): Promise<RoleEntity | null> {
     return this.findOne({ where: { organizationId, isDefault: true } });
   }
+
+  async findDropdownByOrganizationId(
+    organizationId: string,
+  ): Promise<Array<{ id: string; name: string }>> {
+    return this.find({
+      where: { organizationId },
+      select: ['id', 'name'],
+      order: { name: 'ASC' },
+    });
+  }
 }

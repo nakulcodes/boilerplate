@@ -1,6 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { EventName, UserPasswordResetEvent } from '@boilerplate/core';
 import { UserRepository } from '../../../../database/repositories';
 import { AuthService } from '../../services/auth.service';
+import { AppEventEmitter } from '../../../events/services/event-emitter.service';
 import { PasswordResetCommand } from './password-reset.command';
 
 @Injectable()
@@ -8,6 +10,7 @@ export class PasswordReset {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly authService: AuthService,
+    private readonly eventEmitter: AppEventEmitter,
   ) {}
 
   async execute(command: PasswordResetCommand): Promise<{ token: string }> {
@@ -28,13 +31,18 @@ export class PasswordReset {
     // Hash new password
     const passwordHash = await this.authService.hashPassword(command.password);
 
-    // Update user password and clear reset token
     user.password = passwordHash;
     user.passwordResetToken = null;
     user.passwordResetExpires = null;
     await this.userRepository.save(user);
 
-    // Generate new JWT token
+    this.eventEmitter.emit<UserPasswordResetEvent>({
+      eventName: EventName.USER_PASSWORD_RESET,
+      timestamp: new Date(),
+      userId: user.id,
+      triggeredBy: user.id,
+    });
+
     const token = this.authService.generateJwtToken(user);
 
     return { token };

@@ -1,5 +1,16 @@
-import { BaseAuthenticatedCommand } from '@boilerplate/core';
+import { BaseCommand } from '@boilerplate/core';
+import { IsNotEmpty, IsUUID } from 'class-validator';
 
-export class UnblockUserCommand extends BaseAuthenticatedCommand {
-  // userId and organizationId inherited from BaseAuthenticatedCommand
+export class UnblockUserCommand extends BaseCommand {
+  @IsUUID()
+  @IsNotEmpty()
+  userId!: string;
+
+  @IsUUID()
+  @IsNotEmpty()
+  organizationId!: string;
+
+  @IsUUID()
+  @IsNotEmpty()
+  currentUserId!: string;
 }

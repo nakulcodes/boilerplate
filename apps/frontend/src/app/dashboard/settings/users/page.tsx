@@ -8,7 +8,7 @@ import { usePermissions } from '@/hooks/use-permissions';
 import { useSession } from '@/contexts/session-context';
 import { useImpersonation } from '@/hooks/use-impersonation';
 import { PermissionGuard } from '@/components/auth/permission-guard';
-import { InviteUserDialog } from '@/components/users/invite-user-dialog';
+import { CreateUserDialog } from '@/components/users/create-user-dialog';
 import { EditUserDialog } from '@/components/users/edit-user-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -64,7 +64,7 @@ const statusVariant: Record<
 function UsersContent() {
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [inviteOpen, setInviteOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<UserListItem | null>(null);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const { hasPermission } = usePermissions();
@@ -291,7 +291,7 @@ function UsersContent() {
           </p>
         </div>
         {hasPermission(PERMISSIONS_ENUM.USER_CREATE) && (
-          <Button onClick={() => setInviteOpen(true)}>Invite User</Button>
+          <Button onClick={() => setCreateOpen(true)}>Create User</Button>
         )}
       </div>
 
@@ -303,9 +303,9 @@ function UsersContent() {
 
       <DataTablePagination table={table} totalItems={users.length} />
 
-      <InviteUserDialog
-        open={inviteOpen}
-        onOpenChange={setInviteOpen}
+      <CreateUserDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
         onSuccess={loadUsers}
       />
 

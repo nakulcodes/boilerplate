@@ -15,9 +15,8 @@ import {
   type UserSessionData,
 } from '../shared/decorators/user-session.decorator';
 import { RequirePermissions } from '../shared/decorators/require-permissions.decorator';
-import { ApiOkPaginatedResponse } from '../shared/decorators/api-ok-paginated-response.decorator';
-import { PaginatedResponseDto } from '../shared/dtos/pagination-response';
 import { RoleResponseDto } from './dtos/role-response.dto';
+import { RoleDropdownDto } from './dtos/role-dropdown.dto';
 import { CreateRoleDto } from './dtos/create-role.dto';
 import { UpdateRoleDto } from './dtos/update-role.dto';
 import { CreateRole } from './usecases/create-role/create-role.usecase';
@@ -26,6 +25,8 @@ import { UpdateRole } from './usecases/update-role/update-role.usecase';
 import { UpdateRoleCommand } from './usecases/update-role/update-role.command';
 import { ListRoles } from './usecases/list-roles/list-roles.usecase';
 import { ListRolesCommand } from './usecases/list-roles/list-roles.command';
+import { ListRolesDropdown } from './usecases/list-roles-dropdown/list-roles-dropdown.usecase';
+import { ListRolesDropdownCommand } from './usecases/list-roles-dropdown/list-roles-dropdown.command';
 import { GetRole } from './usecases/get-role/get-role.usecase';
 import { DeleteRole } from './usecases/delete-role/delete-role.usecase';
 import { DeleteRoleCommand } from './usecases/delete-role/delete-role.command';
@@ -37,6 +38,7 @@ export class RoleController {
     private readonly createRole: CreateRole,
     private readonly updateRole: UpdateRole,
     private readonly listRoles: ListRoles,
+    private readonly listRolesDropdown: ListRolesDropdown,
     private readonly getRole: GetRole,
     private readonly deleteRole: DeleteRole,
   ) {}
@@ -61,42 +63,32 @@ export class RoleController {
 
   @Get()
   @RequirePermissions(PERMISSIONS_ENUM.ROLE_LIST_READ)
-  @ApiOperation({ summary: 'List all roles in the organization' })
-  @ApiResponse({ status: 200, type: [RoleResponseDto] })
-  async list(@UserSession() user: UserSessionData): Promise<RoleResponseDto[]> {
-    return this.listRoles.execute(
-      ListRolesCommand.create({
+  @ApiOperation({ summary: 'List roles for dropdown (id and name only)' })
+  @ApiResponse({ status: 200, type: [RoleDropdownDto] })
+  async list(@UserSession() user: UserSessionData): Promise<RoleDropdownDto[]> {
+    return this.listRolesDropdown.execute(
+      ListRolesDropdownCommand.create({
         userId: user.userId,
         organizationId: user.organizationId,
       }),
     ) as any;
   }
 
-  @Get('list')
+  @Post('list')
   @RequirePermissions(PERMISSIONS_ENUM.ROLE_LIST_READ)
   @ApiOperation({
-    summary: 'List all roles in the organization with pagination',
+    summary: 'List all roles in the organization with full data',
   })
-  @ApiOkPaginatedResponse(RoleResponseDto)
-  async listPaginated(
+  @ApiResponse({ status: 200, type: [RoleResponseDto] })
+  async listFull(
     @UserSession() user: UserSessionData,
-  ): Promise<PaginatedResponseDto<RoleResponseDto>> {
-    const roles = (await this.listRoles.execute(
+  ): Promise<RoleResponseDto[]> {
+    return this.listRoles.execute(
       ListRolesCommand.create({
         userId: user.userId,
         organizationId: user.organizationId,
       }),
-    )) as any;
-
-    return {
-      data: roles,
-      page: 1,
-      limit: roles.length,
-      total: roles.length,
-      totalPages: 1,
-      hasNextPage: false,
-      hasPreviousPage: false,
-    };
+    ) as any;
   }
 
   @Get(':id')

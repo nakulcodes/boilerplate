@@ -47,7 +47,9 @@ function RolesContent() {
 
   const loadRoles = useCallback(async () => {
     try {
-      const data = await fetchApi<Role[]>(API_ROUTES.ROLES.LIST);
+      const data = await fetchApi<Role[]>(API_ROUTES.ROLES.LIST_FULL, {
+        method: 'POST',
+      });
       setRoles(data || []);
     } catch (err: any) {
       toast.error(err.message || 'Failed to load roles');
