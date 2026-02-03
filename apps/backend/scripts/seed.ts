@@ -6,14 +6,12 @@ import {
   OrganizationRepository,
   RoleRepository,
   SupportedIntegrationRepository,
-  OrganizationIntegrationRepository,
 } from '../src/database/repositories';
 import { AuthService } from '../src/modules/auth/services/auth.service';
 import {
   UserStatus,
   OrganizationStatus,
   IntegrationCategory,
-  OrganizationIntegrationStatus,
 } from '../src/database/enums';
 
 async function seed() {
@@ -228,58 +226,11 @@ async function seed() {
       }
     }
 
-    // 5. Seed Organization Integration for Google Calendar (test data)
-    console.log('\n🔗 Creating organization integrations...');
-    const orgIntegrationRepo = app.get(OrganizationIntegrationRepository);
-    const adminUser = await userRepo.findOne({
-      where: {
-        email: 'admin@acme-corp.local',
-        organizationId: organization.id,
-      },
-    });
-
-    const googleCalendarIntegration = await supportedIntegrationRepo.findOne({
-      where: { provider: 'google_calendar' },
-    });
-
-    if (googleCalendarIntegration && adminUser) {
-      const existingOrgIntegration = await orgIntegrationRepo.findOne({
-        where: {
-          organizationId: organization.id,
-          supportedIntegrationId: googleCalendarIntegration.id,
-        },
-      });
-
-      if (!existingOrgIntegration) {
-        const orgIntegration = orgIntegrationRepo.create({
-          organizationId: organization.id,
-          supportedIntegrationId: googleCalendarIntegration.id,
-          status: OrganizationIntegrationStatus.CONNECTED,
-          encryptedTokens: JSON.stringify({
-            accessToken: 'mock_access_token_for_testing',
-            refreshToken: 'mock_refresh_token_for_testing',
-            expiresIn: 3600,
-          }),
-          tokenExpiresAt: new Date(Date.now() + 3600 * 1000),
-          connectedBy: adminUser.id,
-          accountEmail: 'admin@acme-corp.local',
-          accountName: 'Admin User',
-        });
-        await orgIntegrationRepo.save(orgIntegration);
-        console.log('   ✓ Created Google Calendar integration for Acme Corp');
-      } else {
-        console.log(
-          '   ℹ Google Calendar integration already exists for Acme Corp',
-        );
-      }
-    }
-
     console.log('\n✅ Database seed completed successfully!\n');
     console.log('📝 Summary:');
     console.log(`   Organization: ${organization.name}`);
     console.log(`   Roles: ${roles.length}`);
-    console.log(`   Integrations: ${integrationsToCreate.length}`);
-    console.log('   Org Integrations: Google Calendar (connected)');
+    console.log(`   Supported Integrations: ${integrationsToCreate.length}`);
     console.log('\n🔐 Test Credentials:');
     console.log('   Admin: admin@acme-corp.local / Admin@123');
     console.log('   User: john.doe@acme-corp.local / User@123\n');

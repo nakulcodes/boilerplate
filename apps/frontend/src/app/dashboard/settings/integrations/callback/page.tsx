@@ -14,6 +14,20 @@ function CallbackContent() {
     const provider = searchParams.get('provider');
     const error = searchParams.get('error');
 
+    if (window.opener) {
+      window.opener.postMessage(
+        {
+          type: 'oauth-callback',
+          success: success === 'true',
+          provider,
+          error,
+        },
+        window.location.origin,
+      );
+      window.close();
+      return;
+    }
+
     if (success === 'true' && provider) {
       const providerName = provider.replace(/_/g, ' ');
       toast.success(

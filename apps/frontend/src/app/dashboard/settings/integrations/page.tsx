@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchApi } from '@/utils/api-client';
 import { API_ROUTES } from '@/config/api-routes';
 import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
@@ -166,6 +166,8 @@ function IntegrationsContent() {
   const [connecting, setConnecting] = useState<string | null>(null);
   const [disconnectTarget, setDisconnectTarget] =
     useState<IntegrationListItem | null>(null);
+  const popupRef = useRef<Window | null>(null);
+  const popupCheckInterval = useRef<NodeJS.Timeout | null>(null);
 
   const loadIntegrations = useCallback(async () => {
     try {
@@ -187,6 +189,45 @@ function IntegrationsContent() {
     loadIntegrations();
   }, [loadIntegrations]);
 
+  useEffect(() => {
+    const handleOAuthMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+
+      if (event.data?.type === 'oauth-callback') {
+        const { success, provider, error } = event.data;
+
+        if (popupCheckInterval.current) {
+          clearInterval(popupCheckInterval.current);
+          popupCheckInterval.current = null;
+        }
+
+        if (popupRef.current && !popupRef.current.closed) {
+          popupRef.current.close();
+        }
+        popupRef.current = null;
+        setConnecting(null);
+
+        if (success && provider) {
+          const providerName = provider.replace(/_/g, ' ');
+          toast.success(
+            `${providerName.charAt(0).toUpperCase() + providerName.slice(1)} connected successfully`,
+          );
+          loadIntegrations();
+        } else if (error) {
+          toast.error(`Failed to connect: ${error}`);
+        }
+      }
+    };
+
+    window.addEventListener('message', handleOAuthMessage);
+    return () => {
+      window.removeEventListener('message', handleOAuthMessage);
+      if (popupCheckInterval.current) {
+        clearInterval(popupCheckInterval.current);
+      }
+    };
+  }, [loadIntegrations]);
+
   const handleConnect = async (provider: string) => {
     setConnecting(provider);
     try {
@@ -194,7 +235,33 @@ function IntegrationsContent() {
         API_ROUTES.INTEGRATIONS.CONNECT(provider),
         { method: 'POST' },
       );
-      window.location.href = authUrl;
+
+      const width = 600;
+      const height = 700;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
+
+      popupRef.current = window.open(
+        authUrl,
+        'oauth-popup',
+        `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`,
+      );
+
+      if (!popupRef.current) {
+        toast.error('Please allow popups to connect integrations');
+        setConnecting(null);
+        return;
+      }
+
+      popupCheckInterval.current = setInterval(() => {
+        if (popupRef.current?.closed) {
+          if (popupCheckInterval.current) {
+            clearInterval(popupCheckInterval.current);
+            popupCheckInterval.current = null;
+          }
+          setConnecting(null);
+        }
+      }, 500);
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Failed to initiate connection';
