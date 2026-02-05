@@ -2,6 +2,7 @@
 
 import './globals.css';
 import { SessionProvider } from '@/contexts/session-context';
+import { ApolloProvider } from '@/providers/apollo-provider';
 import { DM_Sans } from 'next/font/google';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
@@ -27,7 +28,9 @@ export default function RootLayout({
         className={`${dmSans.variable} dark:text-dark-text antialiased font-dmSans`}
       >
         <ThemeProvider>
-          <SessionProvider>{children}</SessionProvider>
+          <ApolloProvider>
+            <SessionProvider>{children}</SessionProvider>
+          </ApolloProvider>
           <Toaster />
         </ThemeProvider>
       </body>

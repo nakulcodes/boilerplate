@@ -1,0 +1,38 @@
+fragment RoleBasic on Role {
+  id
+  name
+  permissions
+  isSystem
+  createdAt
+  updatedAt
+}
+
+query Roles {
+  roles {
+    ...RoleBasic
+  }
+}
+
+query Role($id: ID!) {
+  role(id: $id) {
+    ...RoleBasic
+  }
+}
+
+mutation CreateRole($input: CreateRoleInput!) {
+  createRole(input: $input) {
+    ...RoleBasic
+  }
+}
+
+mutation UpdateRole($id: ID!, $input: UpdateRoleInput!) {
+  updateRole(id: $id, input: $input) {
+    ...RoleBasic
+  }
+}
+
+mutation DeleteRole($id: ID!) {
+  deleteRole(id: $id) {
+    success
+  }
+}

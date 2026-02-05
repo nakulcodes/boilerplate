@@ -1,0 +1,40 @@
+fragment AuditLogBasic on AuditLog {
+  id
+  action
+  method
+  path
+  statusCode
+  ip
+  userAgent
+  timestamp
+  createdAt
+}
+
+fragment AuditLogFull on AuditLog {
+  ...AuditLogBasic
+  requestBody
+  responseBody
+  actor {
+    id
+    email
+    firstName
+    lastName
+  }
+}
+
+query AuditLogs($input: ListAuditLogsInput) {
+  auditLogs(input: $input) {
+    data {
+      ...AuditLogFull
+    }
+    meta {
+      ...PaginationMeta
+    }
+  }
+}
+
+query AuditLog($id: ID!) {
+  auditLog(id: $id) {
+    ...AuditLogFull
+  }
+}
