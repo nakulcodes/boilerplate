@@ -1,8 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { fetchApi } from '@/utils/api-client';
-import { API_ROUTES } from '@/config/api-routes';
+import { useState, useCallback, useMemo } from 'react';
 import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useSession } from '@/contexts/session-context';
@@ -30,40 +28,31 @@ import {
   VisibilityState,
 } from '@tanstack/react-table';
 import { DataTable, DataTablePagination } from '@/components/common/data-table';
+import {
+  useUsersQuery,
+  useBlockUserMutation,
+  useUnblockUserMutation,
+  useResendInviteMutation,
+  User,
+  UserStatus,
+} from '@/generated/graphql';
 
-interface UserListItem {
-  id: string;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-  status: string;
-  isActive: boolean;
-  organizationId: string;
-  roleId: string | null;
-  role: { id: string; name: string } | null;
-  createdAt: string;
-  invitedBy: string | null;
-  inviter: {
-    id: string;
-    firstName: string | null;
-    lastName: string | null;
-    email: string;
-  } | null;
-}
+type UserListItem = Pick<
+  User,
+  'id' | 'email' | 'firstName' | 'lastName' | 'status' | 'isActive' | 'role'
+>;
 
 const statusVariant: Record<
   string,
   'default' | 'secondary' | 'destructive' | 'outline'
 > = {
-  active: 'default',
-  invited: 'secondary',
-  blocked: 'destructive',
-  inactive: 'outline',
+  ACTIVE: 'default',
+  INVITED: 'secondary',
+  BLOCKED: 'destructive',
+  INACTIVE: 'outline',
 };
 
 function UsersContent() {
-  const [users, setUsers] = useState<UserListItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<UserListItem | null>(null);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -71,65 +60,59 @@ function UsersContent() {
   const { user: currentUser } = useSession();
   const { startImpersonation } = useImpersonation();
 
-  const loadUsers = useCallback(async () => {
-    try {
-      const data = await fetchApi<{ data: UserListItem[] }>(
-        API_ROUTES.USERS.LIST,
-        { method: 'POST', body: JSON.stringify({ page: 1, limit: 50 }) },
-      );
-      setUsers(data?.data || []);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to load users');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const { data, loading, refetch } = useUsersQuery({
+    variables: { input: { page: 1, limit: 50 } },
+  });
 
-  useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
+  const [blockUser] = useBlockUserMutation();
+  const [unblockUser] = useUnblockUserMutation();
+  const [resendInvite] = useResendInviteMutation();
+
+  const users = data?.users?.data || [];
 
   const handleBlock = useCallback(
     async (userId: string) => {
       try {
-        await fetchApi(API_ROUTES.USERS.BLOCK(userId), {
-          method: 'POST',
-        });
+        await blockUser({ variables: { id: userId } });
         toast.success('User blocked');
-        loadUsers();
-      } catch (err: any) {
-        toast.error(err.message || 'Failed to block user');
+        refetch();
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : 'Failed to block user';
+        toast.error(message);
       }
     },
-    [loadUsers],
+    [blockUser, refetch],
   );
 
   const handleUnblock = useCallback(
     async (userId: string) => {
       try {
-        await fetchApi(API_ROUTES.USERS.UNBLOCK(userId), {
-          method: 'POST',
-        });
+        await unblockUser({ variables: { id: userId } });
         toast.success('User unblocked');
-        loadUsers();
-      } catch (err: any) {
-        toast.error(err.message || 'Failed to unblock user');
+        refetch();
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : 'Failed to unblock user';
+        toast.error(message);
       }
     },
-    [loadUsers],
+    [unblockUser, refetch],
   );
 
-  const handleResendInvite = useCallback(async (userId: string) => {
-    try {
-      await fetchApi(API_ROUTES.USERS.RESEND_INVITE, {
-        method: 'POST',
-        body: JSON.stringify({ userId }),
-      });
-      toast.success('Invite resent');
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to resend invite');
-    }
-  }, []);
+  const handleResendInvite = useCallback(
+    async (userId: string) => {
+      try {
+        await resendInvite({ variables: { userId } });
+        toast.success('Invite resent');
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : 'Failed to resend invite';
+        toast.error(message);
+      }
+    },
+    [resendInvite],
+  );
 
   const getDisplayName = (user: UserListItem) => {
     if (user.firstName || user.lastName) {
@@ -165,7 +148,7 @@ function UsersContent() {
         enableHiding: true,
         cell: ({ row }) => (
           <Badge variant={statusVariant[row.original.status] || 'outline'}>
-            {row.original.status}
+            {row.original.status.toLowerCase()}
           </Badge>
         ),
       },
@@ -207,7 +190,7 @@ function UsersContent() {
                     Edit
                   </DropdownMenuItem>
                 )}
-                {user.status === 'invited' &&
+                {user.status === UserStatus.Invited &&
                   hasPermission(PERMISSIONS_ENUM.USER_CREATE) && (
                     <DropdownMenuItem
                       onClick={() => handleResendInvite(user.id)}
@@ -215,7 +198,7 @@ function UsersContent() {
                       Resend Invite
                     </DropdownMenuItem>
                   )}
-                {user.status === 'active' &&
+                {user.status === UserStatus.Active &&
                   user.id !== currentUser?.userId &&
                   hasPermission(PERMISSIONS_ENUM.USER_IMPERSONATE) && (
                     <DropdownMenuItem
@@ -224,7 +207,7 @@ function UsersContent() {
                       Impersonate
                     </DropdownMenuItem>
                   )}
-                {user.status === 'active' &&
+                {user.status === UserStatus.Active &&
                   hasPermission(PERMISSIONS_ENUM.USER_UPDATE_STATUS) && (
                     <DropdownMenuItem
                       onClick={() => handleBlock(user.id)}
@@ -233,7 +216,7 @@ function UsersContent() {
                       Block
                     </DropdownMenuItem>
                   )}
-                {user.status === 'blocked' &&
+                {user.status === UserStatus.Blocked &&
                   hasPermission(PERMISSIONS_ENUM.USER_UPDATE_STATUS) && (
                     <DropdownMenuItem onClick={() => handleUnblock(user.id)}>
                       Unblock
@@ -256,7 +239,7 @@ function UsersContent() {
   );
 
   const table = useReactTable({
-    data: users,
+    data: users as UserListItem[],
     columns,
     state: {
       columnVisibility,
@@ -271,7 +254,7 @@ function UsersContent() {
     },
   });
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="space-y-4">
         {Array.from({ length: 5 }).map((_, i) => (
@@ -297,7 +280,7 @@ function UsersContent() {
 
       <DataTable
         table={table}
-        isLoading={isLoading}
+        isLoading={loading}
         emptyMessage="No users found"
       />
 
@@ -306,14 +289,24 @@ function UsersContent() {
       <CreateUserDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
-        onSuccess={loadUsers}
+        onSuccess={() => refetch()}
       />
 
       <EditUserDialog
         open={!!editTarget}
         onOpenChange={(open) => !open && setEditTarget(null)}
-        onSuccess={loadUsers}
-        user={editTarget}
+        onSuccess={() => refetch()}
+        user={
+          editTarget
+            ? {
+                id: editTarget.id,
+                email: editTarget.email,
+                firstName: editTarget.firstName,
+                lastName: editTarget.lastName,
+                roleId: editTarget.role?.id || null,
+              }
+            : null
+        }
       />
     </div>
   );

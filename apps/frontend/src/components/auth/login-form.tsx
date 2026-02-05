@@ -12,10 +12,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from '@/contexts/session-context';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { toast } from '@/lib/toast';
-import { buildApiUrl, API_ROUTES } from '@/config/api-routes';
 import { getUserFromToken } from '@/utils/auth';
 import { setToken, setRefreshToken } from '@/utils/cookies';
-import { LoginResponse } from '@/types/user.type';
+import { useLoginMutation } from '@/generated/graphql';
 
 export default function LoginForm() {
   const searchParams = useSearchParams();
@@ -25,6 +24,8 @@ export default function LoginForm() {
   const [serverError, setServerError] = useState(
     searchParams.get('error') || '',
   );
+
+  const [login] = useLoginMutation();
 
   const {
     register,
@@ -39,25 +40,21 @@ export default function LoginForm() {
     setServerError('');
 
     try {
-      const response = await fetch(buildApiUrl(API_ROUTES.AUTH.LOGIN), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+      const { data } = await login({
+        variables: { input: formData },
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        toast.error('Failed to login', data.message || 'Authentication failed');
+      if (!data?.login) {
+        toast.error('Failed to login', 'Authentication failed');
         return;
       }
 
-      const loginData: LoginResponse = data.data;
+      const { accessToken, refreshToken } = data.login;
 
-      setToken(loginData.accessToken);
-      setRefreshToken(loginData.refreshToken);
+      setToken(accessToken);
+      setRefreshToken(refreshToken);
 
-      const jwtUser = getUserFromToken(loginData.accessToken);
+      const jwtUser = getUserFromToken(accessToken);
       if (jwtUser) {
         setUser(jwtUser);
       }
