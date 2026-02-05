@@ -1,0 +1,103 @@
+fragment UserBasic on User {
+  id
+  email
+  firstName
+  lastName
+  status
+  isActive
+  onboarded
+  avatarUrl
+  createdAt
+  updatedAt
+}
+
+fragment UserWithRole on User {
+  ...UserBasic
+  role {
+    id
+    name
+    permissions
+  }
+}
+
+fragment UserFull on User {
+  ...UserWithRole
+  organization {
+    id
+    name
+    status
+  }
+}
+
+fragment PaginationMeta on PaginationMeta {
+  page
+  limit
+  total
+  totalPages
+  hasNextPage
+  hasPreviousPage
+}
+
+query Me {
+  me {
+    ...UserFull
+  }
+}
+
+query Users($input: ListUsersInput) {
+  users(input: $input) {
+    data {
+      ...UserWithRole
+    }
+    meta {
+      ...PaginationMeta
+    }
+  }
+}
+
+mutation InviteUser($input: InviteUserInput!) {
+  inviteUser(input: $input) {
+    success
+    userId
+    inviteLink
+    emailSent
+  }
+}
+
+mutation AcceptInvite($input: AcceptInviteInput!) {
+  acceptInvite(input: $input) {
+    ...AuthResponse
+  }
+}
+
+mutation ResendInvite($userId: ID!) {
+  resendInvite(userId: $userId) {
+    success
+    inviteLink
+    emailSent
+  }
+}
+
+mutation UpdateUser($id: ID!, $input: UpdateUserInput!) {
+  updateUser(id: $id, input: $input) {
+    ...UserWithRole
+  }
+}
+
+mutation UpdateProfile($input: UpdateProfileInput!) {
+  updateProfile(input: $input) {
+    ...UserFull
+  }
+}
+
+mutation BlockUser($id: ID!) {
+  blockUser(id: $id) {
+    success
+  }
+}
+
+mutation UnblockUser($id: ID!) {
+  unblockUser(id: $id) {
+    success
+  }
+}

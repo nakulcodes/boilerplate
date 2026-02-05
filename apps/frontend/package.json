@@ -10,9 +10,12 @@
     "lint:fix": "next lint --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "type-check": "tsc --noEmit",
+    "codegen": "graphql-codegen --config codegen.ts",
+    "codegen:watch": "graphql-codegen --config codegen.ts --watch",
     "test": "echo 'No tests yet' && exit 0"
   },
   "dependencies": {
+    "@apollo/client": "^4.1.3",
     "@boilerplate/shared": "workspace:^",
     "@heroicons/react": "^2.1.5",
     "@hookform/resolvers": "^5.2.2",
@@ -37,6 +40,7 @@
     "clsx": "^2.0.0",
     "cmdk": "1.0.0",
     "date-fns": "^4.1.0",
+    "graphql": "^16.12.0",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.460.0",
     "next": "15.0.7",
@@ -50,6 +54,10 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "^6.1.1",
+    "@graphql-codegen/typescript": "^5.0.7",
+    "@graphql-codegen/typescript-operations": "^5.0.7",
+    "@graphql-codegen/typescript-react-apollo": "^4.4.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

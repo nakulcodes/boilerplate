@@ -8,5 +8,6 @@ const USE_CASES = [ListAuditLogs, GetAuditLog];
 @Module({
   controllers: [AuditController],
   providers: [...USE_CASES],
+  exports: [...USE_CASES],
 })
 export class AuditModule {}

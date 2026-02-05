@@ -19,5 +19,6 @@ const USE_CASES = [
 @Module({
   controllers: [RoleController],
   providers: [...USE_CASES],
+  exports: [...USE_CASES],
 })
 export class RoleModule {}

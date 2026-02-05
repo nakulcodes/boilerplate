@@ -30,6 +30,6 @@ const USE_CASES = [
   imports: [MailModule, AuthModule],
   controllers: [UserController],
   providers: [...USE_CASES],
-  exports: [],
+  exports: [...USE_CASES],
 })
 export class UserModule {}

@@ -1,0 +1,76 @@
+fragment AuthTokens on TokenResponse {
+  accessToken
+  refreshToken
+}
+
+fragment AuthUser on User {
+  id
+  email
+  firstName
+  lastName
+  status
+  isActive
+  onboarded
+  avatarUrl
+  role {
+    id
+    name
+    permissions
+  }
+  organization {
+    id
+    name
+    status
+  }
+}
+
+fragment AuthResponse on AuthResponse {
+  ...AuthTokens
+  user {
+    ...AuthUser
+  }
+}
+
+mutation Login($input: LoginInput!) {
+  login(input: $input) {
+    ...AuthResponse
+  }
+}
+
+mutation Register($input: RegisterInput!) {
+  register(input: $input) {
+    ...AuthResponse
+  }
+}
+
+mutation RefreshToken {
+  refreshToken {
+    accessToken
+    refreshToken
+  }
+}
+
+mutation Logout {
+  logout {
+    success
+  }
+}
+
+mutation UpdatePassword($input: UpdatePasswordInput!) {
+  updatePassword(input: $input) {
+    success
+  }
+}
+
+mutation RequestPasswordReset($input: PasswordResetRequestInput!) {
+  requestPasswordReset(input: $input) {
+    success
+    message
+  }
+}
+
+mutation ResetPassword($input: PasswordResetInput!) {
+  resetPassword(input: $input) {
+    success
+  }
+}

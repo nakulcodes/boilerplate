@@ -45,6 +45,6 @@ const USE_CASES = [
     RefreshJwtGuard,
     ...USE_CASES,
   ],
-  exports: [AuthService, JwtAuthGuard],
+  exports: [AuthService, JwtAuthGuard, ...USE_CASES],
 })
 export class AuthModule {}
