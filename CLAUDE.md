@@ -1,3 +1,97 @@
+# ATS (Applicant Tracking System)
+
+A full-stack multi-tenant Applicant Tracking System for managing job postings, candidates, and applications through a hiring pipeline.
+
+## Core Domain
+
+### Jobs
+Job postings with customizable fields, salary ranges, and department/location tracking.
+
+**Statuses**: `DRAFT` → `PUBLISHED` → `CLOSED` → `ARCHIVED`
+**Types**: `FULL_TIME`, `PART_TIME`, `CONTRACT`, `INTERNSHIP`
+**Location Types**: `ONSITE`, `REMOTE`, `HYBRID`
+
+### Candidates
+Candidate profiles with contact info, source tracking, and custom fields.
+
+**Sources**: `DIRECT_APPLY`, `REFERRAL`, `LINKEDIN`, `AGENCY`, `OTHER`
+
+### Applications
+Links candidates to jobs with pipeline stage tracking.
+
+**Statuses**: `APPLIED` → `SCREENING` → `INTERVIEW` → `OFFER` → `HIRED` | `REJECTED` | `WITHDRAWN`
+
+### Supporting Features
+- **Comments** — threaded comments on jobs/candidates/applications (internal-only option)
+- **Timeline** — activity feed for tracking changes and events
+- **Attachments** — file uploads via presigned URLs (resumes, documents)
+- **Integrations** — OAuth-based third-party connections
+- **Audit Logs** — automatic logging of all mutations with PII redaction
+
+---
+
+## Data Model
+
+```
+Organization
+  ├─ Users (with Roles)
+  ├─ Jobs
+  ├─ Candidates
+  ├─ Applications (Job + Candidate)
+  ├─ Comments
+  ├─ Timeline
+  ├─ Attachments
+  └─ Integrations
+```
+
+All entities are organization-scoped (multi-tenant). Unique constraints include `(email, organizationId)` for users and `(slug, organizationId)` for jobs.
+
+---
+
+## ATS Permissions
+
+**Jobs**: `jobs:create`, `jobs:read`, `jobs:update`, `jobs:delete`, `jobs:publish`
+**Candidates**: `candidates:create`, `candidates:read`, `candidates:update`
+**Applications**: `applications:read`, `applications:update-status`, `applications:assign`
+**Comments**: `comments:create`, `comments:read`, `comments:delete`
+**Attachments**: `attachments:create`, `attachments:read`, `attachments:delete`
+**Timeline**: `timeline:read`
+
+---
+
+## ATS API Endpoints
+
+### Jobs
+- `POST /jobs` — create job (draft)
+- `POST /jobs/list` — list jobs (paginated, filter by status/department)
+- `GET /jobs/:id` — get job details
+- `PUT /jobs/:id` — update job
+- `POST /jobs/:id/publish` — publish job
+- `POST /jobs/:id/close` — close job
+
+### Candidates
+- `POST /candidates` — create candidate
+- `POST /candidates/list` — list candidates (paginated, filter by source)
+- `GET /candidates/:id` — get candidate details
+- `PUT /candidates/:id` — update candidate
+
+### Applications
+- `POST /applications` — create application (link candidate to job)
+- `POST /applications/list` — list applications (filter by job/candidate/status/assignee)
+- `GET /applications/:id` — get application details
+- `PUT /applications/:id/status` — update status (with optional rejection reason)
+- `PUT /applications/:id/assign` — assign to team member
+
+### Comments
+- `POST /comments` — add comment to entity
+- `GET /comments/:entityType/:entityId` — get comments for entity
+
+### Attachments
+- `POST /attachments` — create attachment record
+- `GET /attachments/:entityType/:entityId` — get attachments for entity
+
+---
+
 # Project Rules
 
 ## App-Specific Guidelines
@@ -125,10 +219,20 @@ Commands extend `OrganizationCommand` (or `AuthenticatedCommand`). Validate with
 
 ### Endpoints & Pagination
 
-- `POST /users/list` — **paginated**: body `{ page, limit, status?, search? }`, response includes `{ data[], page, limit, total, totalPages, hasNextPage, hasPreviousPage }`
-- `GET /roles` — **not paginated**: returns all roles as array
-- Auth endpoints (`/auth/*`) are public except `/logout` and `/update-password`
-- All other user/role endpoints require specific permissions (see `apps/backend/CLAUDE.md` for full list)
+**Paginated endpoints** (POST with `{ page, limit, ...filters }`):
+- `POST /users/list` — filter by `status`, `search`
+- `POST /jobs/list` — filter by `status`, `department`, `search`
+- `POST /candidates/list` — filter by `source`, `search`
+- `POST /applications/list` — filter by `jobId`, `candidateId`, `status`, `assignedTo`
+- `POST /audit/list` — filter by `action`, `actorId`, date range
+
+**Non-paginated endpoints** (GET, returns array):
+- `GET /roles` — all roles for organization
+- `GET /users/dropdown` — user list for dropdowns (configurable fields)
+
+**Public endpoints**: Auth endpoints (`/auth/*`) except `/logout` and `/update-password`
+
+Paginated response format: `{ data[], page, limit, total, totalPages, hasNextPage, hasPreviousPage }`
 
 When adding a paginated endpoint: use `BasePaginatedCommand` + `ListPaginationDto` on backend, send `{ page, limit }` in POST body from frontend.
 When adding a simple list: use `OrganizationCommand` on backend, GET endpoint, frontend receives array directly.
