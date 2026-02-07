@@ -270,6 +270,32 @@ All in `src/components/ui/`:
 
 Tables use the composable shadcn `Table` component (`src/components/ui/table.tsx`), NOT a third-party data table library.
 
+### Column Rules
+
+- **One data point per column** — NEVER combine multiple fields in a single column cell
+- Each entity field (title, department, location, status, etc.) gets its own dedicated column
+- Status columns use interactive pills/badges that can update status directly
+- Keep column headers simple and match the field name
+
+**Bad** (combining data):
+```typescript
+cell: ({ row }) => (
+  <div>
+    <div>{row.original.title}</div>
+    <div className="text-muted">{row.original.department}</div>  // NO!
+  </div>
+)
+```
+
+**Good** (separate columns):
+```typescript
+// Title column
+cell: ({ row }) => <span className="font-medium">{row.original.title}</span>
+
+// Department column (separate)
+cell: ({ row }) => <span>{row.original.department || '-'}</span>
+```
+
 ### Table Components
 
 ```typescript

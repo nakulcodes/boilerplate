@@ -199,6 +199,29 @@ Husky runs on every commit:
 
 If the hook fails, fix the issues before committing. Do not bypass with `--no-verify` unless bootstrapping tooling changes.
 
+## Agents
+
+### Product Manager Agent
+
+Use the `product-manager` agent when making product decisions or designing features. This agent provides user-centric guidance and helps avoid over-engineering.
+
+**When to use:**
+- Designing new features with multiple UX options
+- Evaluating whether a proposed solution truly serves user needs
+- Deciding between implementation approaches that affect user experience
+- Feature prioritization and scoping
+- Reviewing user flows for simplicity and intuitiveness
+- When adding complexity that might overwhelm users (e.g. settings pages with many options)
+
+**Examples:**
+- "I'm adding a settings page with 15 configuration options" → Get UX simplification recommendations
+- "Should we require email verification before or after onboarding?" → Analyze user experience implications
+- "We have 5 feature requests - which should we prioritize?" → Get structured prioritization based on user impact
+
+The agent will challenge assumptions, suggest simplifications, and ensure features remain user-friendly.
+
+---
+
 ## Running Locally
 
 ```

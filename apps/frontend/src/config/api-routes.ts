@@ -88,6 +88,14 @@ export const API_ROUTES = {
     GET: '/organization',
     UPDATE: '/organization',
   },
+  JOBS: {
+    LIST: '/jobs/list',
+    CREATE: '/jobs',
+    GET: (id: string) => `/jobs/${id}` as const,
+    UPDATE: (id: string) => `/jobs/${id}` as const,
+    PUBLISH: (id: string) => `/jobs/${id}/publish` as const,
+    CLOSE: (id: string) => `/jobs/${id}/close` as const,
+  },
 } as const;
 
 export function buildApiUrl(route: string): string {
