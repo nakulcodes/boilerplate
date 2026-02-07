@@ -1,165 +1,331 @@
 'use client';
 
-/**
- * CANDIDATES PAGE - Searchable Candidate Database
- *
- * Route: /dashboard/candidates
- * Permission: CANDIDATE_READ
- *
- * ============================================================================
- * PAGE DESIGN
- * ============================================================================
- *
- * Layout: Table-based list for searchability
- *
- * +------------------------------------------------------------------+
- * |  Candidates                                                       |
- * +------------------------------------------------------------------+
- * |  [Search by name or email...]                                     |
- * |  [Source: All v]  [Has Active Application: Any v]                |
- * +------------------------------------------------------------------+
- * |                                                                    |
- * |  Name              Email                 Applications    Source   |
- * |  +--------------------------------------------------------------+|
- * |  | Jane Doe        jane@email.com        2 (1 active)   LinkedIn ||
- * |  | Mike Smith      mike@email.com        1 (rejected)   Referral ||
- * |  | Sarah Lee       sarah@email.com       3 (1 active)   Direct   ||
- * |  +--------------------------------------------------------------+|
- * |                                                                    |
- * |  [Previous]  Page 1 of 24  [Next]                                |
- * +------------------------------------------------------------------+
- *
- * ============================================================================
- * FEATURES TO IMPLEMENT
- * ============================================================================
- *
- * 1. Table Columns:
- *    - Name (first + last, with avatar initials)
- *    - Email
- *    - Applications count (with active count in parentheses)
- *    - Source (LinkedIn, Referral, Direct, Indeed, Other)
- *
- * 2. Filters:
- *    - Search: Text search on name and email
- *    - Source: Dropdown filter by candidate source
- *    - Has Active Application: Yes/No/Any filter
- *
- * 3. Interactions:
- *    - Click row -> Opens candidate slide-out panel
- *    - Slide-out shows full candidate history with all applications
- *    - Links to Pipeline view for each application
- *
- * 4. Pagination:
- *    - Use TanStack React Table with pagination
- *    - POST /candidates/list with { page, limit, search?, source? }
- *
- * ============================================================================
- * CANDIDATE SLIDE-OUT PANEL
- * ============================================================================
- *
- * +------------------------------------------+
- * | Jane Doe                              X  |
- * +------------------------------------------+
- * | jane@email.com                           |
- * | +1 (555) 123-4567                        |
- * | LinkedIn: linkedin.com/in/janedoe        |
- * +------------------------------------------+
- * | Current: Product Manager at TechCorp     |
- * | Source: LinkedIn                         |
- * | Added: Jan 15, 2025 by Sarah Smith       |
- * +------------------------------------------+
- * | APPLICATIONS                             |
- * | +--------------------------------------+ |
- * | | Sr. Engineer - Interview    Active  | |
- * | | [View Pipeline ->]                   | |
- * | +--------------------------------------+ |
- * | | Product Manager - Rejected           | |
- * | | Dec 2024                             | |
- * | +--------------------------------------+ |
- * +------------------------------------------+
- * | NOTES                                    |
- * | Strong technical background...           |
- * | [+ Add note]                             |
- * +------------------------------------------+
- *
- * ============================================================================
- * API ROUTES NEEDED
- * ============================================================================
- *
- * - API_ROUTES.CANDIDATES.LIST - POST /candidates/list (paginated)
- * - API_ROUTES.CANDIDATES.GET(id) - GET /candidates/:id
- *
- * ============================================================================
- * COMPONENTS TO CREATE
- * ============================================================================
- *
- * - CandidateSlideOut - Slide-out panel with candidate details
- * - CandidateSourceBadge - Badge showing source with color coding
- *
- * ============================================================================
- * TYPES NEEDED (types/candidate.type.ts)
- * ============================================================================
- *
- * interface Candidate {
- *   id: string;
- *   email: string;
- *   firstName: string;
- *   lastName: string;
- *   phone?: string;
- *   linkedinUrl?: string;
- *   portfolioUrl?: string;
- *   currentCompany?: string;
- *   currentTitle?: string;
- *   source: CandidateSource;
- *   notes?: string;
- *   addedBy?: { id: string; firstName?: string; lastName?: string; email: string };
- *   applications?: ApplicationSummary[];
- *   createdAt: string;
- * }
- *
- * enum CandidateSource {
- *   DIRECT_APPLY = 'direct_apply',
- *   REFERRAL = 'referral',
- *   LINKEDIN = 'linkedin',
- *   AGENCY = 'agency',
- *   OTHER = 'other',
- * }
- */
-
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { fetchApi } from '@/utils/api-client';
+import { API_ROUTES } from '@/config/api-routes';
 import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
+import { usePermissions } from '@/hooks/use-permissions';
 import { PermissionGuard } from '@/components/auth/permission-guard';
-import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/lib/toast';
+import { formatDate } from '@/lib/utils';
+import { EllipsisVerticalIcon } from '@heroicons/react/24/solid';
+import {
+  useReactTable,
+  getCoreRowModel,
+  getPaginationRowModel,
+  ColumnDef,
+  VisibilityState,
+} from '@tanstack/react-table';
+import {
+  DataTable,
+  DataTablePagination,
+  DataTableToolbar,
+} from '@/components/common/data-table';
+import { InitialsAvatar } from '@/components/ui/initials-avatar';
+import { Candidate, CandidateSource } from '@/types/candidate.type';
+import {
+  CandidateSourceBadge,
+  CreateCandidateDialog,
+  EditCandidateDialog,
+  CandidateSlideOut,
+} from '@/components/candidates';
+
+const sourceOptions = [
+  { value: 'all', label: 'All Sources' },
+  { value: CandidateSource.DIRECT_APPLY, label: 'Direct Apply' },
+  { value: CandidateSource.REFERRAL, label: 'Referral' },
+  { value: CandidateSource.LINKEDIN, label: 'LinkedIn' },
+  { value: CandidateSource.AGENCY, label: 'Agency' },
+  { value: CandidateSource.OTHER, label: 'Other' },
+];
 
 function CandidatesContent() {
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [searchValue, setSearchValue] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [sourceFilter, setSourceFilter] = useState<string>('all');
+
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(
+    null,
+  );
+
+  const { hasPermission } = usePermissions();
+  const canCreate = hasPermission(PERMISSIONS_ENUM.CANDIDATE_CREATE);
+  const canUpdate = hasPermission(PERMISSIONS_ENUM.CANDIDATE_UPDATE);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchValue);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchValue]);
+
+  const loadCandidates = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const body: Record<string, unknown> = { page: 1, limit: 50 };
+      if (debouncedSearch) {
+        body.search = debouncedSearch;
+      }
+      if (sourceFilter && sourceFilter !== 'all') {
+        body.source = sourceFilter;
+      }
+
+      const data = await fetchApi<{ data: Candidate[] }>(
+        API_ROUTES.CANDIDATES.LIST,
+        {
+          method: 'POST',
+          body: JSON.stringify(body),
+        },
+      );
+      setCandidates(data?.data || []);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to load candidates';
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [debouncedSearch, sourceFilter]);
+
+  useEffect(() => {
+    loadCandidates();
+  }, [loadCandidates]);
+
+  const handleRowClick = (candidate: Candidate) => {
+    setSelectedCandidate(candidate);
+    setDetailDialogOpen(true);
+  };
+
+  const handleEdit = (candidate: Candidate) => {
+    setSelectedCandidate(candidate);
+    setEditDialogOpen(true);
+  };
+
+  const handleEditFromDetail = () => {
+    setDetailDialogOpen(false);
+    setEditDialogOpen(true);
+  };
+
+  const columns = useMemo<ColumnDef<Candidate>[]>(
+    () => [
+      {
+        accessorKey: 'name',
+        header: 'Name',
+        enableHiding: false,
+        cell: ({ row }) => {
+          const candidate = row.original;
+          const fullName = `${candidate.firstName} ${candidate.lastName}`;
+          return (
+            <div className="flex items-center gap-3">
+              <InitialsAvatar name={fullName} className="h-8 w-8 text-sm" />
+              <span className="font-medium">{fullName}</span>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: 'email',
+        header: 'Email',
+        enableHiding: true,
+        cell: ({ row }) => (
+          <span className="text-sm">{row.original.email}</span>
+        ),
+      },
+      {
+        accessorKey: 'source',
+        header: 'Source',
+        enableHiding: true,
+        cell: ({ row }) => (
+          <CandidateSourceBadge source={row.original.source} />
+        ),
+      },
+      {
+        accessorKey: 'currentCompany',
+        header: 'Company',
+        enableHiding: true,
+        cell: ({ row }) => (
+          <span className="text-sm">{row.original.currentCompany || '-'}</span>
+        ),
+      },
+      {
+        accessorKey: 'currentTitle',
+        header: 'Title',
+        enableHiding: true,
+        cell: ({ row }) => (
+          <span className="text-sm">{row.original.currentTitle || '-'}</span>
+        ),
+      },
+      {
+        accessorKey: 'createdAt',
+        header: 'Added',
+        enableHiding: true,
+        cell: ({ row }) => (
+          <span className="text-sm text-muted-foreground">
+            {formatDate(row.original.createdAt)}
+          </span>
+        ),
+      },
+      {
+        id: 'actions',
+        header: '',
+        size: 48,
+        enableHiding: false,
+        cell: ({ row }) => {
+          const candidate = row.original;
+
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <EllipsisVerticalIcon className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRowClick(candidate);
+                  }}
+                >
+                  View
+                </DropdownMenuItem>
+                {canUpdate && (
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEdit(candidate);
+                    }}
+                  >
+                    Edit
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        },
+      },
+    ],
+    [canUpdate],
+  );
+
+  const table = useReactTable({
+    data: candidates,
+    columns,
+    state: {
+      columnVisibility,
+    },
+    onColumnVisibilityChange: setColumnVisibility,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: 10,
+      },
+    },
+  });
+
+  if (isLoading && candidates.length === 0) {
+    return (
+      <div className="space-y-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-16 w-full" />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-medium">Candidates</h2>
-        <p className="text-sm text-muted-foreground">
-          Searchable candidate database across all applications
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-medium">Candidates</h2>
+          <p className="text-sm text-muted-foreground">
+            Manage your candidate database
+          </p>
+        </div>
+        {canCreate && (
+          <Button onClick={() => setCreateDialogOpen(true)}>
+            Add Candidate
+          </Button>
+        )}
       </div>
 
-      <Card className="p-8">
-        <div className="text-center space-y-4">
-          <div className="text-4xl">👥</div>
-          <h3 className="text-lg font-medium">Candidates Database</h3>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            Search and manage your candidate database. View application history,
-            add notes, and track candidates across multiple job openings.
-          </p>
-          <div className="pt-4 text-sm text-muted-foreground">
-            <p className="font-medium">Features to implement:</p>
-            <ul className="mt-2 space-y-1">
-              <li>Table with search and filters</li>
-              <li>Candidate slide-out panel with full history</li>
-              <li>Source filtering (LinkedIn, Referral, Direct, etc.)</li>
-              <li>Active application indicator</li>
-              <li>Link to Pipeline view for each application</li>
-            </ul>
-          </div>
-        </div>
-      </Card>
+      <DataTableToolbar
+        table={table}
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
+        searchPlaceholder="Search by name or email..."
+        filters={
+          <Select value={sourceFilter} onValueChange={setSourceFilter}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Filter by source" />
+            </SelectTrigger>
+            <SelectContent>
+              {sourceOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        }
+      />
+
+      <DataTable
+        table={table}
+        isLoading={isLoading}
+        emptyMessage="No candidates found"
+        onRowClick={handleRowClick}
+      />
+
+      <DataTablePagination table={table} totalItems={candidates.length} />
+
+      <CreateCandidateDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSuccess={loadCandidates}
+      />
+
+      <EditCandidateDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSuccess={loadCandidates}
+        candidate={selectedCandidate}
+      />
+
+      <CandidateSlideOut
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        candidate={selectedCandidate}
+        onEdit={handleEditFromDetail}
+        canEdit={canUpdate}
+      />
     </div>
   );
 }
