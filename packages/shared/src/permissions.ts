@@ -28,6 +28,41 @@ export enum PERMISSIONS_ENUM {
   INTEGRATION_LIST_READ = 'integration:list:read',
   INTEGRATION_CONNECT = 'integration:connect',
   INTEGRATION_DISCONNECT = 'integration:disconnect',
+
+  // Timeline
+  TIMELINE_READ = 'timeline:read',
+
+  // Comments
+  COMMENT_CREATE = 'comment:create',
+  COMMENT_READ = 'comment:read',
+  COMMENT_DELETE = 'comment:delete',
+
+  // Attachments
+  ATTACHMENT_CREATE = 'attachment:create',
+  ATTACHMENT_READ = 'attachment:read',
+  ATTACHMENT_DELETE = 'attachment:delete',
+
+  // Jobs
+  JOB_CREATE = 'job:create',
+  JOB_READ = 'job:read',
+  JOB_UPDATE = 'job:update',
+  JOB_DELETE = 'job:delete',
+  JOB_PUBLISH = 'job:publish',
+
+  // Candidates
+  CANDIDATE_CREATE = 'candidate:create',
+  CANDIDATE_READ = 'candidate:read',
+  CANDIDATE_UPDATE = 'candidate:update',
+
+  // Applications
+  APPLICATION_READ = 'application:read',
+  APPLICATION_UPDATE_STATUS = 'application:update:status',
+  APPLICATION_ASSIGN = 'application:assign',
+
+  // Interviews
+  INTERVIEW_CREATE = 'interview:create',
+  INTERVIEW_READ = 'interview:read',
+  INTERVIEW_UPDATE = 'interview:update',
 }
 
 export const ALL_PERMISSIONS = Object.values(PERMISSIONS_ENUM);
@@ -105,6 +140,60 @@ export const PERMISSION_GROUPS: Record<
       PERMISSIONS_ENUM.INTEGRATION_LIST_READ,
       PERMISSIONS_ENUM.INTEGRATION_CONNECT,
       PERMISSIONS_ENUM.INTEGRATION_DISCONNECT,
+    ],
+  },
+  timeline: {
+    label: 'Timeline',
+    permissions: [PERMISSIONS_ENUM.TIMELINE_READ],
+  },
+  comments: {
+    label: 'Comments',
+    permissions: [
+      PERMISSIONS_ENUM.COMMENT_CREATE,
+      PERMISSIONS_ENUM.COMMENT_READ,
+      PERMISSIONS_ENUM.COMMENT_DELETE,
+    ],
+  },
+  attachments: {
+    label: 'Attachments',
+    permissions: [
+      PERMISSIONS_ENUM.ATTACHMENT_CREATE,
+      PERMISSIONS_ENUM.ATTACHMENT_READ,
+      PERMISSIONS_ENUM.ATTACHMENT_DELETE,
+    ],
+  },
+  jobs: {
+    label: 'Jobs',
+    permissions: [
+      PERMISSIONS_ENUM.JOB_CREATE,
+      PERMISSIONS_ENUM.JOB_READ,
+      PERMISSIONS_ENUM.JOB_UPDATE,
+      PERMISSIONS_ENUM.JOB_DELETE,
+      PERMISSIONS_ENUM.JOB_PUBLISH,
+    ],
+  },
+  candidates: {
+    label: 'Candidates',
+    permissions: [
+      PERMISSIONS_ENUM.CANDIDATE_CREATE,
+      PERMISSIONS_ENUM.CANDIDATE_READ,
+      PERMISSIONS_ENUM.CANDIDATE_UPDATE,
+    ],
+  },
+  applications: {
+    label: 'Applications',
+    permissions: [
+      PERMISSIONS_ENUM.APPLICATION_READ,
+      PERMISSIONS_ENUM.APPLICATION_UPDATE_STATUS,
+      PERMISSIONS_ENUM.APPLICATION_ASSIGN,
+    ],
+  },
+  interviews: {
+    label: 'Interviews',
+    permissions: [
+      PERMISSIONS_ENUM.INTERVIEW_CREATE,
+      PERMISSIONS_ENUM.INTERVIEW_READ,
+      PERMISSIONS_ENUM.INTERVIEW_UPDATE,
     ],
   },
 };

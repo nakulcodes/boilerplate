@@ -3,8 +3,9 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { mailService } from '@boilerplate/core';
 import { AppEventEmitter } from './services/event-emitter.service';
 import { UserEmailListener } from './listeners/user-email.listener';
+import { TimelineListener } from './listeners/timeline.listener';
 
-const LISTENERS = [UserEmailListener];
+const LISTENERS = [UserEmailListener, TimelineListener];
 
 @Global()
 @Module({

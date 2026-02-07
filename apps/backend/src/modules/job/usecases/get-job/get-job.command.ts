@@ -1,0 +1,8 @@
+import { IsNotEmpty, IsUUID } from 'class-validator';
+import { OrganizationCommand } from '@shared/commands/organization.command';
+
+export class GetJobCommand extends OrganizationCommand {
+  @IsUUID()
+  @IsNotEmpty()
+  readonly jobId: string;
+}

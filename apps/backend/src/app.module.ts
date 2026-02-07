@@ -12,6 +12,12 @@ import { AuditModule } from './modules/audit/audit.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { IntegrationModule } from './modules/integration/integration.module';
 import { OrganizationModule } from './modules/organization/organization.module';
+import { TimelineModule } from './modules/timeline/timeline.module';
+import { CommentModule } from './modules/comment/comment.module';
+import { AttachmentModule } from './modules/attachment/attachment.module';
+import { JobModule } from './modules/job/job.module';
+import { CandidateModule } from './modules/candidate/candidate.module';
+import { ApplicationModule } from './modules/application/application.module';
 
 @Module({
   imports: [
@@ -29,6 +35,12 @@ import { OrganizationModule } from './modules/organization/organization.module';
     StorageModule,
     IntegrationModule,
     OrganizationModule,
+    TimelineModule,
+    CommentModule,
+    AttachmentModule,
+    JobModule,
+    CandidateModule,
+    ApplicationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

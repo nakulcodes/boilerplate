@@ -8,6 +8,12 @@ import {
   AuditLogEntity,
   SupportedIntegrationEntity,
   OrganizationIntegrationEntity,
+  TimelineEntity,
+  CommentEntity,
+  AttachmentEntity,
+  JobEntity,
+  CandidateEntity,
+  ApplicationEntity,
 } from './entities';
 import {
   UserRepository,
@@ -16,6 +22,12 @@ import {
   AuditLogRepository,
   SupportedIntegrationRepository,
   OrganizationIntegrationRepository,
+  TimelineRepository,
+  CommentRepository,
+  AttachmentRepository,
+  JobRepository,
+  CandidateRepository,
+  ApplicationRepository,
 } from './repositories';
 
 const entities = [
@@ -25,6 +37,12 @@ const entities = [
   AuditLogEntity,
   SupportedIntegrationEntity,
   OrganizationIntegrationEntity,
+  TimelineEntity,
+  CommentEntity,
+  AttachmentEntity,
+  JobEntity,
+  CandidateEntity,
+  ApplicationEntity,
 ];
 const repositories = [
   UserRepository,
@@ -33,6 +51,12 @@ const repositories = [
   AuditLogRepository,
   SupportedIntegrationRepository,
   OrganizationIntegrationRepository,
+  TimelineRepository,
+  CommentRepository,
+  AttachmentRepository,
+  JobRepository,
+  CandidateRepository,
+  ApplicationRepository,
 ];
 
 @Global()

@@ -15,4 +15,7 @@ export enum EventName {
   ROLE_CREATED = 'role.created',
   ROLE_UPDATED = 'role.updated',
   ROLE_DELETED = 'role.deleted',
+  APPLICATION_CREATED = 'application.created',
+  APPLICATION_STATUS_CHANGED = 'application.status_changed',
+  APPLICATION_ASSIGNED = 'application.assigned',
 }

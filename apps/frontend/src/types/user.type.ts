@@ -1,10 +1,7 @@
 import { Permission } from './permissions.type';
+import { UserStatus } from '@boilerplate/shared';
 
-export enum UserStatus {
-  INVITED = 'invited',
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-}
+export { UserStatus };
 
 export interface User {
   id: string;

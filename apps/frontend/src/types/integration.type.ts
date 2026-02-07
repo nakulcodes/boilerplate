@@ -1,14 +1,11 @@
-export type IntegrationCategory =
-  | 'calendar'
-  | 'video_conferencing'
-  | 'messaging'
-  | 'productivity';
+import {
+  IntegrationCategory,
+  OrganizationIntegrationStatus,
+} from '@boilerplate/shared';
 
-export type IntegrationStatus =
-  | 'connected'
-  | 'disconnected'
-  | 'expired'
-  | 'error';
+export { IntegrationCategory, OrganizationIntegrationStatus };
+
+export type IntegrationStatus = OrganizationIntegrationStatus;
 
 export interface IntegrationListItem {
   id: string;
