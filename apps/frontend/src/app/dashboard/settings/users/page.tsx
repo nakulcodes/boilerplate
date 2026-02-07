@@ -3,6 +3,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { fetchApi } from '@/utils/api-client';
 import { API_ROUTES } from '@/config/api-routes';
+import {
+  getUsers,
+  blockUser,
+  unblockUser,
+  type UserListItem,
+} from '@/utils/supabase-queries';
 import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useSession } from '@/contexts/session-context';
@@ -25,31 +31,11 @@ import { EllipsisVerticalIcon } from '@heroicons/react/24/solid';
 import {
   useReactTable,
   getCoreRowModel,
-  getPaginationRowModel,
   ColumnDef,
   VisibilityState,
+  PaginationState,
 } from '@tanstack/react-table';
 import { DataTable, DataTablePagination } from '@/components/common/data-table';
-
-interface UserListItem {
-  id: string;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-  status: string;
-  isActive: boolean;
-  organizationId: string;
-  roleId: string | null;
-  role: { id: string; name: string } | null;
-  createdAt: string;
-  invitedBy: string | null;
-  inviter: {
-    id: string;
-    firstName: string | null;
-    lastName: string | null;
-    email: string;
-  } | null;
-}
 
 const statusVariant: Record<
   string,
@@ -67,23 +53,34 @@ function UsersContent() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<UserListItem | null>(null);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const { hasPermission } = usePermissions();
   const { user: currentUser } = useSession();
   const { startImpersonation } = useImpersonation();
 
   const loadUsers = useCallback(async () => {
+    setIsLoading(true);
     try {
-      const data = await fetchApi<{ data: UserListItem[] }>(
-        API_ROUTES.USERS.LIST,
-        { method: 'POST', body: JSON.stringify({ page: 1, limit: 50 }) },
-      );
-      setUsers(data?.data || []);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to load users');
+      const response = await getUsers({
+        page: pagination.pageIndex + 1,
+        limit: pagination.pageSize,
+      });
+      setUsers(response.data);
+      setTotal(response.total);
+      setTotalPages(response.totalPages);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to load users';
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [pagination.pageIndex, pagination.pageSize]);
 
   useEffect(() => {
     loadUsers();
@@ -92,13 +89,13 @@ function UsersContent() {
   const handleBlock = useCallback(
     async (userId: string) => {
       try {
-        await fetchApi(API_ROUTES.USERS.BLOCK(userId), {
-          method: 'POST',
-        });
+        await blockUser(userId);
         toast.success('User blocked');
         loadUsers();
-      } catch (err: any) {
-        toast.error(err.message || 'Failed to block user');
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : 'Failed to block user';
+        toast.error(message);
       }
     },
     [loadUsers],
@@ -107,13 +104,13 @@ function UsersContent() {
   const handleUnblock = useCallback(
     async (userId: string) => {
       try {
-        await fetchApi(API_ROUTES.USERS.UNBLOCK(userId), {
-          method: 'POST',
-        });
+        await unblockUser(userId);
         toast.success('User unblocked');
         loadUsers();
-      } catch (err: any) {
-        toast.error(err.message || 'Failed to unblock user');
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : 'Failed to unblock user';
+        toast.error(message);
       }
     },
     [loadUsers],
@@ -260,15 +257,13 @@ function UsersContent() {
     columns,
     state: {
       columnVisibility,
+      pagination,
     },
     onColumnVisibilityChange: setColumnVisibility,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    initialState: {
-      pagination: {
-        pageSize: 10,
-      },
-    },
+    manualPagination: true,
+    pageCount: totalPages,
   });
 
   if (isLoading) {
@@ -301,7 +296,7 @@ function UsersContent() {
         emptyMessage="No users found"
       />
 
-      <DataTablePagination table={table} totalItems={users.length} />
+      <DataTablePagination table={table} totalItems={total} />
 
       <CreateUserDialog
         open={createOpen}

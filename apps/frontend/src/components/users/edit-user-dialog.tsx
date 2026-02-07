@@ -4,8 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { editUserSchema, EditUserFormData } from '@/schemas/user.schema';
-import { fetchApi } from '@/utils/api-client';
-import { API_ROUTES } from '@/config/api-routes';
+import { getRolesDropdown, updateUser } from '@/utils/supabase-queries';
 import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,7 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import type { Role } from '@/types/role.type';
+import type { RoleDropdown } from '@/types/role.type';
 
 interface EditUserTarget {
   id: string;
@@ -48,7 +47,7 @@ export function EditUserDialog({
   onSuccess,
   user,
 }: EditUserDialogProps) {
-  const [roles, setRoles] = useState<Role[]>([]);
+  const [roles, setRoles] = useState<RoleDropdown[]>([]);
 
   const {
     register,
@@ -63,7 +62,7 @@ export function EditUserDialog({
 
   const loadRoles = useCallback(async () => {
     try {
-      const data = await fetchApi<Role[]>(API_ROUTES.ROLES.LIST);
+      const data = await getRolesDropdown();
       setRoles(data);
     } catch {
       // roles dropdown will be empty
@@ -89,15 +88,18 @@ export function EditUserDialog({
   const onSubmit = async (formData: EditUserFormData) => {
     if (!user) return;
     try {
-      await fetchApi(API_ROUTES.USERS.UPDATE(user.id), {
-        method: 'PUT',
-        body: JSON.stringify(formData),
+      await updateUser(user.id, {
+        firstName: formData.firstName || undefined,
+        lastName: formData.lastName || undefined,
+        roleId: formData.roleId || undefined,
       });
       toast.success('User updated');
       onOpenChange(false);
       onSuccess();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to update user');
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to update user';
+      toast.error(message);
     }
   };
 

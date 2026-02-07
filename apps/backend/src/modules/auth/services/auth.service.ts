@@ -1,14 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 
-import { UserEntity } from '../../../database/entities';
 import {
   generatePasswordResetToken,
   addHours,
   addDays,
 } from '@boilerplate/core';
+import { UserEntity } from '../../../database/entities';
+
+export interface JWTPayload {
+  userId: string;
+  email: string;
+  organizationId: string;
+  permissions?: string[];
+  firstName?: string;
+  lastName?: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -28,31 +37,45 @@ export class AuthService {
     return bcrypt.compare(password, hashedPassword);
   }
 
+  generatePasswordResetToken(): string {
+    return generatePasswordResetToken();
+  }
+
+  getPasswordResetExpiry(): Date {
+    return addHours(1);
+  }
+
+  getInviteTokenExpiry(): Date {
+    return addDays(1);
+  }
+
+  getRefreshTokenExpiry(): Date {
+    return addDays(30);
+  }
+
   generateAccessToken(
     user: UserEntity,
     permissions: string[] = [],
-    impersonatedBy?: string,
+    impersonatorId?: string,
   ): string {
-    const payload: Record<string, unknown> = {
+    const payload: JWTPayload & { impersonatorId?: string } = {
       userId: user.id,
       email: user.email,
       organizationId: user.organizationId,
       permissions,
-      firstName: user.firstName ?? '',
-      lastName: user.lastName ?? '',
-      roleId: user.roleId ?? null,
+      firstName: user.firstName ?? undefined,
+      lastName: user.lastName ?? undefined,
     };
 
-    if (impersonatedBy) {
-      payload.impersonatedBy = impersonatedBy;
+    if (impersonatorId) {
+      payload.impersonatorId = impersonatorId;
     }
 
-    const accessSecret = this.configService.get<string>('JWT_ACCESS_SECRET');
-    const expiresIn = this.configService.get('JWT_ACCESS_EXPIRES_IN') ?? '1h';
-
     return this.jwtService.sign(payload, {
-      secret: accessSecret,
-      expiresIn,
+      secret:
+        this.configService.get<string>('JWT_ACCESS_SECRET') ||
+        this.configService.get<string>('SUPABASE_JWT_SECRET'),
+      expiresIn: '1h',
     });
   }
 
@@ -63,33 +86,15 @@ export class AuthService {
       organizationId: user.organizationId,
     };
 
-    const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
-    const expiresIn = this.configService.get('JWT_REFRESH_EXPIRES_IN') ?? '30d';
-
     return this.jwtService.sign(payload, {
-      secret: refreshSecret,
-      expiresIn,
+      secret:
+        this.configService.get<string>('JWT_REFRESH_SECRET') ||
+        this.configService.get<string>('SUPABASE_JWT_SECRET'),
+      expiresIn: '30d',
     });
   }
 
-  async verifyRefreshToken(token: string): Promise<any> {
-    const refreshSecret = this.configService.get<string>('JWT_REFRESH_SECRET');
-    return this.jwtService.verify(token, { secret: refreshSecret });
-  }
-
-  getRefreshTokenExpiry(): Date {
-    return addDays(30);
-  }
-
   generateJwtToken(user: UserEntity): string {
-    return this.generateAccessToken(user);
-  }
-
-  generatePasswordResetToken(): string {
-    return generatePasswordResetToken();
-  }
-
-  getPasswordResetExpiry(): Date {
-    return addHours(1);
+    return this.generateAccessToken(user, []);
   }
 }

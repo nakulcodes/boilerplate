@@ -25,6 +25,7 @@ export default function RootLayout({
       </head>
       <body
         className={`${dmSans.variable} dark:text-dark-text antialiased font-dmSans`}
+        suppressHydrationWarning
       >
         <ThemeProvider>
           <SessionProvider>{children}</SessionProvider>

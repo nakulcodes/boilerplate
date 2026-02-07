@@ -1,0 +1,275 @@
+# Minimal Supabase Local Development Setup
+#
+# Usage:
+#   docker compose -f docker-compose.supabase.yml up
+#
+# URLs:
+#   Frontend:        http://localhost:3000
+#   Backend API:     http://localhost:4000
+#   Supabase API:    http://localhost:8000
+#   Supabase Studio: http://localhost:3001
+#   Email Inbox:     http://localhost:9000
+
+services:
+  # PostgreSQL with Supabase extensions
+  supabase-db:
+    image: supabase/postgres:15.1.0.147
+    container_name: supabase-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      JWT_EXP: 3600
+    volumes:
+      - supabase-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - supabase-network
+
+  # GoTrue - Authentication service
+  supabase-auth:
+    image: supabase/gotrue:v2.143.0
+    container_name: supabase-auth
+    depends_on:
+      supabase-migrations:
+        condition: service_completed_successfully
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: http://localhost:8000
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://postgres:postgres@supabase-db:5432/postgres
+      GOTRUE_SITE_URL: http://localhost:3000
+      GOTRUE_URI_ALLOW_LIST: http://localhost:3000
+      GOTRUE_DISABLE_SIGNUP: "false"
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+      GOTRUE_SMTP_ADMIN_EMAIL: admin@localhost
+      GOTRUE_SMTP_HOST: supabase-inbucket
+      GOTRUE_SMTP_PORT: 2500
+      GOTRUE_SMTP_SENDER_NAME: Boilerplate
+      GOTRUE_MAILER_URLPATHS_INVITE: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: /auth/v1/verify
+      GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_ENABLED: "true"
+      GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_URI: "pg-functions://postgres/public/custom_access_token_hook"
+    restart: unless-stopped
+    networks:
+      - supabase-network
+
+  # Kong API Gateway - routes requests to Supabase services
+  supabase-kong:
+    image: kong:2.8.1
+    container_name: supabase-kong
+    depends_on:
+      - supabase-auth
+    ports:
+      - "8000:8000"
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+      SUPABASE_SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
+    volumes:
+      - ./supabase/kong.yml:/var/lib/kong/kong.yml:ro
+    networks:
+      - supabase-network
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: supabase-redis
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - supabase-network
+
+  # Email testing (view sent emails at http://localhost:9000)
+  supabase-inbucket:
+    image: inbucket/inbucket:3.0.3
+    container_name: supabase-inbucket
+    ports:
+      - "9000:9000"
+      - "2500:2500"
+    networks:
+      - supabase-network
+
+  # Supabase Studio Dashboard (http://localhost:3001)
+  supabase-studio:
+    image: supabase/studio:20240422-5cf8f30
+    container_name: supabase-studio
+    ports:
+      - "3001:3000"
+    environment:
+      STUDIO_PG_META_URL: http://supabase-meta:8080
+      POSTGRES_PASSWORD: postgres
+      DEFAULT_ORGANIZATION_NAME: Boilerplate
+      DEFAULT_PROJECT_NAME: boilerplate
+      SUPABASE_URL: http://supabase-kong:8000
+      SUPABASE_PUBLIC_URL: http://localhost:8000
+      SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+      SUPABASE_SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
+    depends_on:
+      - supabase-meta
+    networks:
+      - supabase-network
+
+  # Postgres Meta API (required for Studio)
+  supabase-meta:
+    image: supabase/postgres-meta:v0.83.2
+    container_name: supabase-meta
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: supabase-db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: postgres
+      PG_META_DB_USER: postgres
+      PG_META_DB_PASSWORD: postgres
+    networks:
+      - supabase-network
+
+  # PostgREST - RESTful API for PostgreSQL
+  supabase-rest:
+    image: postgrest/postgrest:v12.0.1
+    container_name: supabase-rest
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://supabase_admin:postgres@supabase-db:5432/postgres
+      PGRST_DB_SCHEMAS: public,storage
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      PGRST_APP_SETTINGS_JWT_EXP: 3600
+    restart: unless-stopped
+    networks:
+      - supabase-network
+
+  # Migration runner - waits for auth schema, runs migrations
+  supabase-migrations:
+    image: supabase/postgres:15.1.0.147
+    container_name: supabase-migrations
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+    volumes:
+      - ./supabase/migrations:/migrations:ro
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        echo "Waiting for auth schema to be ready..."
+        until PGPASSWORD=postgres psql -h supabase-db -U postgres -c "SELECT 1 FROM pg_namespace WHERE nspname = 'auth'" | grep -q 1; do
+          echo "Auth schema not ready, waiting..."
+          sleep 2
+        done
+        echo "Auth schema ready. Running migrations..."
+        for f in /migrations/*.sql; do
+          echo "Running $$f..."
+          PGPASSWORD=postgres psql -h supabase-db -U postgres -f "$$f"
+        done
+        echo "Migrations complete!"
+    networks:
+      - supabase-network
+
+  # NestJS Backend
+  backend:
+    image: node:20-alpine
+    container_name: backend-dev
+    working_dir: /app
+    command: >
+      sh -c "
+        apk add --no-cache python3 make g++ &&
+        corepack enable &&
+        corepack prepare pnpm@9.15.0 --activate &&
+        pnpm install &&
+        pnpm build:packages &&
+        pnpm --filter backend start:dev
+      "
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - /app/apps/backend/node_modules
+      - /app/packages/core/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=4000
+      - DB_URL=postgresql://postgres:postgres@supabase-db:5432/postgres
+      - SUPABASE_URL=http://supabase-kong:8000
+      - SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
+      - SUPABASE_JWT_SECRET=super-secret-jwt-token-with-at-least-32-characters-long
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    networks:
+      - supabase-network
+    depends_on:
+      supabase-db:
+        condition: service_healthy
+      supabase-kong:
+        condition: service_started
+      redis:
+        condition: service_healthy
+
+  # Next.js Frontend
+  frontend:
+    image: node:20-alpine
+    container_name: frontend-dev
+    working_dir: /app
+    command: >
+      sh -c "
+        corepack enable &&
+        corepack prepare pnpm@9.15.0 --activate &&
+        pnpm install &&
+        pnpm --filter frontend dev
+      "
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - /app/apps/frontend/node_modules
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:4000
+      - NEXT_PUBLIC_SUPABASE_URL=http://localhost:8000
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+      - WATCHPACK_POLLING=true
+    networks:
+      - supabase-network
+    depends_on:
+      - supabase-kong
+      - backend
+
+volumes:
+  supabase-db-data:
+
+networks:
+  supabase-network:
+    driver: bridge

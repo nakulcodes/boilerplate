@@ -11,13 +11,13 @@ export class RoleEntity extends BaseEntity {
   @Column({ type: 'jsonb', default: [] })
   permissions!: string[];
 
-  @Column({ type: 'uuid', nullable: false })
+  @Column({ name: 'organization_id', type: 'uuid', nullable: false })
   organizationId!: string;
 
-  @Column({ type: 'boolean', default: false })
+  @Column({ name: 'is_default', type: 'boolean', default: false })
   isDefault!: boolean;
 
   @ManyToOne(() => OrganizationEntity, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'organizationId' })
+  @JoinColumn({ name: 'organization_id' })
   organization!: OrganizationEntity;
 }

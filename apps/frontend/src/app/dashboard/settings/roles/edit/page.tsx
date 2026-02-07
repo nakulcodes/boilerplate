@@ -5,8 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { roleSchema, RoleFormData } from '@/schemas/role.schema';
-import { fetchApi } from '@/utils/api-client';
-import { API_ROUTES } from '@/config/api-routes';
+import { getRole, updateRole } from '@/utils/supabase-queries';
 import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
 import { PermissionGuard } from '@/components/auth/permission-guard';
 import { PermissionPicker } from '@/components/roles/permission-picker';
@@ -18,7 +17,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/lib/toast';
 import { ArrowLeftIcon } from '@heroicons/react/24/solid';
 import Link from 'next/link';
-import type { Role } from '@/types/role.type';
 
 function EditRoleContent() {
   const router = useRouter();
@@ -45,7 +43,7 @@ function EditRoleContent() {
       return;
     }
     try {
-      const data = await fetchApi<Role>(API_ROUTES.ROLES.GET(roleId));
+      const data = await getRole(roleId);
       reset({ name: data.name, permissions: [...data.permissions] });
     } catch (err: unknown) {
       const message =
@@ -64,9 +62,9 @@ function EditRoleContent() {
   const onSubmit = async (formData: RoleFormData) => {
     if (!roleId) return;
     try {
-      await fetchApi(API_ROUTES.ROLES.UPDATE(roleId), {
-        method: 'PUT',
-        body: JSON.stringify(formData),
+      await updateRole(roleId, {
+        name: formData.name,
+        permissions: formData.permissions,
       });
       toast.success('Role updated');
       router.push('/dashboard/settings/roles');

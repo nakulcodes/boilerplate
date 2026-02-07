@@ -17,6 +17,9 @@ import { RequestIdMiddleware } from './middleware/request-id.middleware';
 import { GlobalExceptionFilter } from './filters/global-exception.filter';
 import { PermissionsGuard } from './decorators/require-permissions.decorator';
 
+// Services
+import { SupabaseAdminService } from './services/supabase-admin.service';
+
 const SHARED_PROVIDERS = [
   aiService,
   cacheManagerProvider,
@@ -26,6 +29,7 @@ const SHARED_PROVIDERS = [
   RequestIdMiddleware,
   GlobalExceptionFilter,
   PermissionsGuard,
+  SupabaseAdminService,
 ];
 
 @Global()
@@ -35,16 +39,16 @@ const SHARED_PROVIDERS = [
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService): JwtModuleOptions => {
-        const accessSecret = configService.get<string>('JWT_ACCESS_SECRET');
-        if (!accessSecret) {
+        const jwtSecret = configService.get<string>('SUPABASE_JWT_SECRET');
+        if (!jwtSecret) {
           throw new Error(
-            'JWT_ACCESS_SECRET is not defined in environment variables',
+            'SUPABASE_JWT_SECRET is not defined in environment variables',
           );
         }
         return {
-          secret: accessSecret,
+          secret: jwtSecret,
           signOptions: {
-            expiresIn: configService.get('JWT_ACCESS_EXPIRES_IN') ?? '1h',
+            expiresIn: '1h',
           },
         };
       },

@@ -34,7 +34,7 @@ const repositories = [
         url: config.get<string>('DB_URL') ?? '',
         autoLoadEntities: true,
         entities,
-        synchronize: true,
+        synchronize: false,
         // logging: config.get('NODE_ENV') === 'development',
       }),
     }),

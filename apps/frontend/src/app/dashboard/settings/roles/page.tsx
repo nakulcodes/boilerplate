@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { fetchApi } from '@/utils/api-client';
-import { API_ROUTES } from '@/config/api-routes';
+import { getRoles, deleteRole } from '@/utils/supabase-queries';
 import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
 import { usePermissions } from '@/hooks/use-permissions';
 import { PermissionGuard } from '@/components/auth/permission-guard';
@@ -47,12 +46,12 @@ function RolesContent() {
 
   const loadRoles = useCallback(async () => {
     try {
-      const data = await fetchApi<Role[]>(API_ROUTES.ROLES.LIST_FULL, {
-        method: 'POST',
-      });
+      const data = await getRoles();
       setRoles(data || []);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to load roles');
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to load roles';
+      toast.error(message);
       setRoles([]);
     } finally {
       setIsLoading(false);
@@ -66,13 +65,13 @@ function RolesContent() {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await fetchApi(API_ROUTES.ROLES.DELETE(deleteTarget.id), {
-        method: 'DELETE',
-      });
+      await deleteRole(deleteTarget.id);
       toast.success('Role deleted');
       loadRoles();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to delete role');
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to delete role';
+      toast.error(message);
     } finally {
       setDeleteTarget(null);
     }

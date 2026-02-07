@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -19,15 +19,13 @@ import {
 } from '@/schemas/auth.schema';
 import { toast } from '@/lib/toast';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import { fetchApi } from '@/utils/api-client';
-import { API_ROUTES } from '@/config/api-routes';
+import { createClient } from '@/lib/supabase';
 
 export default function ResetPasswordForm() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
   const router = useRouter();
+  const [isValidSession, setIsValidSession] = useState<boolean | null>(null);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -41,7 +39,28 @@ export default function ResetPasswordForm() {
     defaultValues: { password: '', confirmPassword: '' },
   });
 
-  if (!token) {
+  useEffect(() => {
+    const checkSession = async () => {
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setIsValidSession(!!session);
+    };
+    checkSession();
+  }, []);
+
+  if (isValidSession === null) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <div className="text-center text-muted-foreground">Loading...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!isValidSession) {
     return (
       <Card>
         <CardHeader className="space-y-1">
@@ -66,10 +85,12 @@ export default function ResetPasswordForm() {
 
   const onSubmit = async (formData: ResetPasswordFormData) => {
     try {
-      await fetchApi(API_ROUTES.AUTH.RESET_PASSWORD, {
-        method: 'POST',
-        body: JSON.stringify({ token, password: formData.password }),
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({
+        password: formData.password,
       });
+
+      if (error) throw error;
 
       toast.success('Success', 'Your password has been reset successfully');
       setTimeout(() => router.push('/'), 2000);

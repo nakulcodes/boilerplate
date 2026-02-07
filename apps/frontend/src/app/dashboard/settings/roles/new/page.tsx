@@ -4,8 +4,8 @@ import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { roleSchema, RoleFormData } from '@/schemas/role.schema';
-import { fetchApi } from '@/utils/api-client';
-import { API_ROUTES } from '@/config/api-routes';
+import { createRole } from '@/utils/supabase-queries';
+import { useSession } from '@/contexts/session-context';
 import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
 import { PermissionGuard } from '@/components/auth/permission-guard';
 import { PermissionPicker } from '@/components/roles/permission-picker';
@@ -19,6 +19,7 @@ import Link from 'next/link';
 
 function CreateRoleContent() {
   const router = useRouter();
+  const { user } = useSession();
 
   const {
     register,
@@ -31,15 +32,23 @@ function CreateRoleContent() {
   });
 
   const onSubmit = async (formData: RoleFormData) => {
+    if (!user?.organizationId) {
+      toast.error('Organization not found');
+      return;
+    }
     try {
-      await fetchApi(API_ROUTES.ROLES.CREATE, {
-        method: 'POST',
-        body: JSON.stringify(formData),
+      await createRole({
+        name: formData.name,
+        permissions: formData.permissions,
+        organizationId: user.organizationId,
+        isDefault: false,
       });
       toast.success('Role created');
       router.push('/dashboard/settings/roles');
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to create role');
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to create role';
+      toast.error(message);
     }
   };
 

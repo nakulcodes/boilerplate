@@ -19,8 +19,7 @@ import {
 } from '@/schemas/auth.schema';
 import { toast } from '@/lib/toast';
 import Link from 'next/link';
-import { fetchApi } from '@/utils/api-client';
-import { API_ROUTES } from '@/config/api-routes';
+import { createClient } from '@/lib/supabase';
 
 export default function ForgotPasswordForm() {
   const [isSuccess, setIsSuccess] = useState(false);
@@ -37,10 +36,15 @@ export default function ForgotPasswordForm() {
 
   const onSubmit = async (formData: ForgotPasswordFormData) => {
     try {
-      await fetchApi(API_ROUTES.AUTH.FORGOT_PASSWORD, {
-        method: 'POST',
-        body: JSON.stringify(formData),
-      });
+      const supabase = createClient();
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        formData.email,
+        {
+          redirectTo: `${window.location.origin}/reset-password`,
+        },
+      );
+
+      if (error) throw error;
 
       setIsSuccess(true);
       toast.success('Success', 'Password reset link sent to your email');

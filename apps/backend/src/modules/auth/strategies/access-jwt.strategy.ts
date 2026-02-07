@@ -7,12 +7,18 @@ import { UserRepository } from '../../../database/repositories';
 
 import { UserSessionData } from '../../shared/decorators/user-session.decorator';
 
-interface JwtPayload {
-  userId: string;
-  email: string;
-  organizationId: string;
-  permissions: string[];
-  roleId?: string;
+interface SupabaseJwtPayload {
+  sub: string;
+  email?: string;
+  organization_id?: string;
+  permissions?: string[];
+  role_id?: string;
+  first_name?: string;
+  last_name?: string;
+  aud: string;
+  role: string;
+  exp: number;
+  iat: number;
 }
 
 @Injectable()
@@ -24,23 +30,27 @@ export class AccessJwtStrategy extends PassportStrategy(
     private readonly configService: ConfigService,
     private readonly userRepository: UserRepository,
   ) {
-    const accessSecret = configService.get<string>('JWT_ACCESS_SECRET');
-    if (!accessSecret) {
+    const jwtSecret = configService.get<string>('SUPABASE_JWT_SECRET');
+    if (!jwtSecret) {
       throw new Error(
-        'JWT_ACCESS_SECRET is not defined in environment variables',
+        'SUPABASE_JWT_SECRET is not defined in environment variables',
       );
     }
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: accessSecret,
+      secretOrKey: jwtSecret,
     });
   }
 
-  async validate(payload: JwtPayload): Promise<UserSessionData> {
+  async validate(payload: SupabaseJwtPayload): Promise<UserSessionData> {
+    if (!payload.sub) {
+      throw new UnauthorizedException('Invalid token: missing user ID');
+    }
+
     const user = await this.userRepository.findOne({
-      where: { id: payload.userId },
+      where: { id: payload.sub },
     });
 
     if (!user || !user.isActive) {
@@ -48,11 +58,11 @@ export class AccessJwtStrategy extends PassportStrategy(
     }
 
     return {
-      userId: payload.userId,
-      email: payload.email,
-      organizationId: payload.organizationId,
-      permissions: payload.permissions,
-      roleId: payload.roleId,
+      userId: payload.sub,
+      email: payload.email || user.email,
+      organizationId: payload.organization_id || user.organizationId,
+      permissions: payload.permissions || [],
+      roleId: payload.role_id,
     };
   }
 }

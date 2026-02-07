@@ -7,6 +7,7 @@ import { RefreshCw } from 'lucide-react';
 import { createUserSchema, CreateUserFormData } from '@/schemas/user.schema';
 import { fetchApi } from '@/utils/api-client';
 import { API_ROUTES } from '@/config/api-routes';
+import { getRolesDropdown } from '@/utils/supabase-queries';
 import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,7 +58,7 @@ export function CreateUserDialog({
 
   const loadRoles = useCallback(async () => {
     try {
-      const data = await fetchApi<RoleDropdown[]>(API_ROUTES.ROLES.LIST);
+      const data = await getRolesDropdown();
       setRoles(data);
     } catch {
       // roles dropdown will be empty

@@ -13,13 +13,13 @@ export class UserEntity extends BaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   password!: string | null;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
+  @Column({ name: 'first_name', type: 'varchar', length: 100, nullable: true })
   firstName!: string | null;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
+  @Column({ name: 'last_name', type: 'varchar', length: 100, nullable: true })
   lastName!: string | null;
 
-  @Column({ type: 'uuid', nullable: false })
+  @Column({ name: 'organization_id', type: 'uuid', nullable: false })
   organizationId!: string;
 
   @Column({
@@ -29,47 +29,67 @@ export class UserEntity extends BaseEntity {
   })
   status!: UserStatus;
 
-  @Column({ type: 'boolean', default: false })
+  @Column({ name: 'is_active', type: 'boolean', default: false })
   isActive!: boolean;
 
   @Column({ type: 'boolean', default: false })
   onboarded!: boolean;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({
+    name: 'password_reset_token',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
   passwordResetToken!: string | null;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ name: 'password_reset_expires', type: 'timestamp', nullable: true })
   passwordResetExpires!: Date | null;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({
+    name: 'invite_token',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
   inviteToken!: string | null;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ name: 'invite_expires', type: 'timestamp', nullable: true })
   inviteExpires!: Date | null;
 
-  @Column({ type: 'varchar', nullable: true, select: false })
+  @Column({
+    name: 'refresh_token',
+    type: 'varchar',
+    nullable: true,
+    select: false,
+  })
   refreshToken!: string | null;
 
-  @Column({ type: 'timestamp', nullable: true, select: false })
+  @Column({
+    name: 'refresh_token_expires',
+    type: 'timestamp',
+    nullable: true,
+    select: false,
+  })
   refreshTokenExpires!: Date | null;
 
-  @Column({ type: 'uuid', nullable: true })
+  @Column({ name: 'invited_by', type: 'uuid', nullable: true })
   invitedBy!: string | null;
 
   @ManyToOne(() => OrganizationEntity, (org) => org.users, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'organizationId' })
+  @JoinColumn({ name: 'organization_id' })
   organization!: OrganizationEntity;
 
-  @Column({ type: 'uuid', nullable: true })
+  @Column({ name: 'role_id', type: 'uuid', nullable: true })
   roleId!: string | null;
 
   @ManyToOne(() => RoleEntity, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'roleId' })
+  @JoinColumn({ name: 'role_id' })
   role!: RoleEntity | null;
 
   @ManyToOne(() => UserEntity, { nullable: true })
-  @JoinColumn({ name: 'invitedBy' })
+  @JoinColumn({ name: 'invited_by' })
   inviter!: UserEntity | null;
 }

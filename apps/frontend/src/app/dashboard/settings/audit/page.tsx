@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { fetchApi } from '@/utils/api-client';
-import { API_ROUTES } from '@/config/api-routes';
+import { getAuditLogs, type AuditLogWithActor } from '@/utils/supabase-queries';
 import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
 import { PermissionGuard } from '@/components/auth/permission-guard';
 import { Badge } from '@/components/ui/badge';
@@ -33,39 +32,6 @@ import { DataTable, DataTablePagination } from '@/components/common/data-table';
 import { X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
-interface AuditLogActor {
-  id: string;
-  firstName?: string;
-  lastName?: string;
-  email: string;
-}
-
-interface AuditLog {
-  id: string;
-  organizationId: string | null;
-  actorId: string | null;
-  actor?: AuditLogActor | null;
-  method: string;
-  path: string;
-  action: string;
-  statusCode: number;
-  metadata: Record<string, unknown> | null;
-  ipAddress: string | null;
-  userAgent: string | null;
-  duration: number | null;
-  createdAt: string;
-}
-
-interface PaginatedResponse {
-  data: AuditLog[];
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-}
-
 const methodColors: Record<string, string> = {
   POST: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
   PUT: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
@@ -80,6 +46,13 @@ const statusColors: Record<string, string> = {
   error: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
 };
 
+interface AuditLogActor {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+}
+
 function getActorName(actor?: AuditLogActor | null): string {
   if (!actor) return 'System';
   if (actor.firstName || actor.lastName) {
@@ -89,7 +62,7 @@ function getActorName(actor?: AuditLogActor | null): string {
 }
 
 function AuditLogsContent() {
-  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [logs, setLogs] = useState<AuditLogWithActor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
@@ -97,7 +70,9 @@ function AuditLogsContent() {
   });
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
+  const [selectedLog, setSelectedLog] = useState<AuditLogWithActor | null>(
+    null,
+  );
 
   const [actionFilter, setActionFilter] = useState<string>('');
   const [methodFilter, setMethodFilter] = useState<string>('all');
@@ -109,25 +84,17 @@ function AuditLogsContent() {
   const loadLogs = useCallback(async () => {
     setIsLoading(true);
     try {
-      const body: Record<string, unknown> = {
+      const response = await getAuditLogs({
         page: pagination.pageIndex + 1,
         limit: pagination.pageSize,
-      };
-      if (appliedFilters.action) body.action = appliedFilters.action;
-      if (appliedFilters.method && appliedFilters.method !== 'all')
-        body.method = appliedFilters.method;
+        action: appliedFilters.action || undefined,
+        method:
+          appliedFilters.method !== 'all' ? appliedFilters.method : undefined,
+      });
 
-      const response = await fetchApi<PaginatedResponse>(
-        API_ROUTES.AUDIT.LIST,
-        {
-          method: 'POST',
-          body: JSON.stringify(body),
-        },
-      );
-
-      setLogs(response?.data || []);
-      setTotal(response?.total || 0);
-      setTotalPages(response?.totalPages || 0);
+      setLogs(response.data);
+      setTotal(response.total);
+      setTotalPages(response.totalPages);
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Failed to load audit logs';
@@ -153,7 +120,7 @@ function AuditLogsContent() {
     setPagination((p) => ({ ...p, pageIndex: 0 }));
   };
 
-  const columns = useMemo<ColumnDef<AuditLog>[]>(
+  const columns = useMemo<ColumnDef<AuditLogWithActor>[]>(
     () => [
       {
         accessorKey: 'action',

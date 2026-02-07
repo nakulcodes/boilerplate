@@ -9,18 +9,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, LoginFormData } from '@/schemas/auth.schema';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useSession } from '@/contexts/session-context';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { toast } from '@/lib/toast';
-import { buildApiUrl, API_ROUTES } from '@/config/api-routes';
-import { getUserFromToken } from '@/utils/auth';
-import { setToken, setRefreshToken } from '@/utils/cookies';
-import { LoginResponse } from '@/types/user.type';
+import { createClient } from '@/lib/supabase';
 
 export default function LoginForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { setUser } = useSession();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState(
     searchParams.get('error') || '',
@@ -39,27 +34,16 @@ export default function LoginForm() {
     setServerError('');
 
     try {
-      const response = await fetch(buildApiUrl(API_ROUTES.AUTH.LOGIN), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        toast.error('Failed to login', data.message || 'Authentication failed');
+      if (error) {
+        toast.error('Failed to login', error.message);
+        setServerError(error.message);
         return;
-      }
-
-      const loginData: LoginResponse = data.data;
-
-      setToken(loginData.accessToken);
-      setRefreshToken(loginData.refreshToken);
-
-      const jwtUser = getUserFromToken(loginData.accessToken);
-      if (jwtUser) {
-        setUser(jwtUser);
       }
 
       toast.success('Success', 'Logged in successfully');
