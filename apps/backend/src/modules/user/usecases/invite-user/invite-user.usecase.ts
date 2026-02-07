@@ -1,14 +1,11 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import {
-  UserRepository,
-  RoleRepository,
-} from '../../../../database/repositories';
-import { UserStatus } from '../../../../database/enums';
+import { UserRepository, RoleRepository } from '@db/repositories';
+import { UserStatus } from '@db/enums';
 import { buildUrl, generateInviteToken, addHours } from '@boilerplate/core';
 import { EventName, UserInvitedEvent } from '@boilerplate/core';
-import { AppEventEmitter } from '../../../events/services/event-emitter.service';
+import { AppEventEmitter } from '@modules/events/services/event-emitter.service';
 
 import { InviteUserCommand } from './invite-user.command';
 

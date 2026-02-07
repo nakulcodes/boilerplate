@@ -4,7 +4,7 @@ import {
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
-import { UserRepository } from '../../../../database/repositories';
+import { UserRepository } from '@db/repositories';
 import { AuthService } from '../../services/auth.service';
 import { ImpersonateCommand } from './impersonate.command';
 import { LoginResponseDto } from '../../dtos/auth-response.dto';

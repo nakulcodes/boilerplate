@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
-import { UserEntity } from '../../../database/entities';
+import { UserEntity } from '@db/entities';
 import {
   generatePasswordResetToken,
   addHours,

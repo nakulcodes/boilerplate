@@ -3,10 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import {
-  RoleRepository,
-  UserRepository,
-} from '../../../../database/repositories';
+import { RoleRepository, UserRepository } from '@db/repositories';
 import { DeleteRoleCommand } from './delete-role.command';
 
 @Injectable()

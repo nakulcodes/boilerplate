@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { UserRepository } from '../../../../database/repositories';
+import { UserRepository } from '@db/repositories';
 import { UpdateProfileCommand } from './update-profile.command';
 import { UserResponseDto } from '../../dtos/user-response.dto';
 

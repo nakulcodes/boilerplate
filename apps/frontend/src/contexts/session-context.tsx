@@ -5,12 +5,11 @@ import { getUserFromToken } from '@/utils/auth';
 import {
   getToken,
   getRefreshToken,
-  setToken,
-  setRefreshToken,
   clearTokens,
   clearOriginalTokens,
 } from '@/utils/cookies';
 import { buildApiUrl, API_ROUTES } from '@/config/api-routes';
+import { performTokenRefresh } from '@/utils/token-refresh';
 import {
   createContext,
   useContext,
@@ -42,35 +41,9 @@ interface SessionProviderProps {
 }
 
 async function tryRefreshSession(): Promise<JWTPayload | null> {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) return null;
-
-  try {
-    const response = await fetch(buildApiUrl(API_ROUTES.AUTH.REFRESH), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${refreshToken}`,
-      },
-      body: JSON.stringify({ refreshToken }),
-    });
-
-    if (!response.ok) {
-      clearTokens();
-      return null;
-    }
-
-    const data = await response.json();
-    const { accessToken, refreshToken: newRefreshToken } = data.data;
-
-    setToken(accessToken);
-    setRefreshToken(newRefreshToken);
-
-    return getUserFromToken(accessToken);
-  } catch {
-    clearTokens();
-    return null;
-  }
+  const result = await performTokenRefresh();
+  if (!result) return null;
+  return getUserFromToken(result.accessToken);
 }
 
 export function SessionProvider({ children }: SessionProviderProps) {

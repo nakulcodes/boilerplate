@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import { UserRepository } from '../../../../database/repositories';
-import { UserStatus } from '../../../../database/enums';
+import { UserRepository } from '@db/repositories';
+import { UserStatus } from '@db/enums';
 import {
   buildUrl,
   calculateSkip,

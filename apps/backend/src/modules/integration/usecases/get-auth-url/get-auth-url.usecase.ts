@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { SupportedIntegrationRepository } from '../../../../database/repositories';
+import { SupportedIntegrationRepository } from '@db/repositories';
 import { GetAuthUrlCommand } from './get-auth-url.command';
 
 @Injectable()

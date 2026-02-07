@@ -3,12 +3,12 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { UserRepository } from '../../../../database/repositories';
-import { UserStatus } from '../../../../database/enums';
+import { UserRepository } from '@db/repositories';
+import { UserStatus } from '@db/enums';
 import { EventName, UserInviteAcceptedEvent } from '@boilerplate/core';
-import { AppEventEmitter } from '../../../events/services/event-emitter.service';
+import { AppEventEmitter } from '@modules/events/services/event-emitter.service';
 import { AcceptInviteCommand } from './accept-invite.command';
-import { AuthService } from '../../../auth/services/auth.service';
+import { AuthService } from '@modules/auth/services/auth.service';
 
 @Injectable()
 export class AcceptInvite {

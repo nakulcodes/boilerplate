@@ -59,11 +59,27 @@ All routes are defined in `src/config/api-routes.ts`. Here's what exists:
 - `USERS.ME` — `GET /users/me`
 - `USERS.PROFILE` — `PUT /users/profile`
 - `USERS.LIST` — `POST /users/list` — **paginated**, body: `{ page, limit, status?, search? }`
+- `USERS.DROPDOWN(options?)` — `GET /users` — **flexible dropdown endpoint**
+  - Options: `{ fields?, paginate?, page?, limit?, search? }`
+  - Default fields: `id,firstName,lastName,email`
+  - Allowed fields: `id`, `firstName`, `lastName`, `email`, `role`
+  - Set `paginate: true` for paginated response, omit for all items
 - `USERS.INVITE` — `POST /users/invite`
 - `USERS.RESEND_INVITE` — `POST /users/resend-invite`
 - `USERS.UPDATE(id)` — `PUT /users/:id`
 - `USERS.BLOCK(id)` — `POST /users/:id/block`
 - `USERS.UNBLOCK(id)` — `POST /users/:id/unblock`
+- `USERS.EXPORT(options?)` — `GET /users/export` — download users as CSV or Excel
+  - Options: `{ format: 'csv' | 'xlsx', status?, search? }`
+  - Use `downloadExport()` utility from `src/utils/download.ts`
+- `USERS.IMPORT` — `POST /users/import` — import users from a previously uploaded CSV or Excel file
+  - Requires file to be uploaded first via presigned URL (see Storage section below)
+  - Use `uploadImport()` utility from `src/utils/download.ts` which handles the full flow
+
+**Storage** (authenticated — use `fetchApi(...)`)
+- `STORAGE.UPLOAD_URL(options)` — `GET /storage/upload-url` — get a presigned URL for direct file upload
+  - Options: `{ extension: string, type: 'document' | 'image' | 'file' }`
+  - Returns `{ signedUrl, path }` where signedUrl is for direct upload and path is for subsequent API calls
 
 **Roles** (authenticated — use `fetchApi(...)`)
 - `ROLES.LIST` — `GET /roles` — **not paginated**, returns all roles
@@ -90,6 +106,23 @@ Response shape from backend: `{ data: T[], page, limit, total, totalPages, hasNe
 ```typescript
 const roles = await fetchApi<Role[]>(API_ROUTES.ROLES.LIST);
 // roles = array of all roles
+```
+
+**Flexible dropdown** (user dropdown): GET with optional pagination:
+```typescript
+// All users with default fields
+const users = await fetchApi<UserDropdownItem[]>(API_ROUTES.USERS.DROPDOWN());
+
+// Custom fields
+const users = await fetchApi<UserDropdownItem[]>(
+  API_ROUTES.USERS.DROPDOWN({ fields: ['id', 'firstName', 'role'] })
+);
+
+// Paginated with search
+const result = await fetchApi<UserDropdownPaginatedResponse>(
+  API_ROUTES.USERS.DROPDOWN({ paginate: true, page: 1, limit: 20, search: 'john' })
+);
+// result.data = users, result.total, result.hasNextPage, etc.
 ```
 
 When the backend wraps in `{ data: T }`, `fetchApi` unwraps it automatically. But for paginated responses that return `{ data: T[], page, total, ... }`, the outer `{ data: ... }` is unwrapped by fetchApi, so you receive `{ data: T[], page, total, ... }` — the inner `data` field is the actual array.
@@ -383,6 +416,21 @@ import { Controller } from 'react-hook-form';
 - `Role` — `{ id, name, permissions[], organizationId, isDefault, createdAt, updatedAt }`
 - `PaginatedResponse<T>` — `{ data: T[], pagination: { total, page, lastPage } }`
 - `Permission` — union type of all `PERMISSIONS_ENUM` values
+
+## File Uploads
+
+File uploads use presigned URLs for direct upload to cloud storage. This keeps large files off the backend server and improves performance.
+
+**How the presigned URL flow works:**
+
+1. Frontend requests a presigned URL from the backend by calling the storage upload-url endpoint with the file extension and type
+2. Backend returns a signed URL for direct upload and a storage path
+3. Frontend uploads the file directly to cloud storage using the signed URL with a PUT request
+4. Frontend then calls the relevant API endpoint with the storage path to process the uploaded file
+
+**For user imports**, the `uploadImport()` utility in `src/utils/download.ts` handles this entire flow automatically. Just pass the file and it will get the presigned URL, upload directly to storage, and then call the import endpoint.
+
+**When adding new file upload features**, follow the same pattern: get presigned URL, upload directly, then call API with path. Do not send file buffers directly to the backend.
 
 ## Environment Variables
 

@@ -1,7 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { User, Users, ShieldCheck, ClipboardList, Plug2 } from 'lucide-react';
+import {
+  User,
+  Users,
+  ShieldCheck,
+  ClipboardList,
+  Plug2,
+  Building2,
+} from 'lucide-react';
 import { usePermissions } from '@/hooks/use-permissions';
 import { PERMISSIONS_ENUM } from '@/constants/permissions.constants';
 import {
@@ -25,6 +32,13 @@ const settingsCards: SettingsCard[] = [
     title: 'General',
     description: 'Account information and profile settings',
     icon: User,
+  },
+  {
+    href: '/dashboard/settings/organization',
+    title: 'Organization',
+    description: 'Manage organization profile and branding',
+    icon: Building2,
+    permission: PERMISSIONS_ENUM.ORGANIZATION_UPDATE,
   },
   {
     href: '/dashboard/settings/users',

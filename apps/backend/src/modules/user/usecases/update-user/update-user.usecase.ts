@@ -4,10 +4,7 @@ import {
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
-import {
-  UserRepository,
-  RoleRepository,
-} from '../../../../database/repositories';
+import { UserRepository, RoleRepository } from '@db/repositories';
 import { getPermissionScope } from '@boilerplate/core';
 import { UpdateUserCommand } from './update-user.command';
 

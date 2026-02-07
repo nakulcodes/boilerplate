@@ -1,14 +1,11 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 
-import {
-  UserRepository,
-  RoleRepository,
-} from '../../../../database/repositories';
-import { UserStatus } from '../../../../database/enums';
+import { UserRepository, RoleRepository } from '@db/repositories';
+import { UserStatus } from '@db/enums';
 import { EventName, UserCreatedEvent } from '@boilerplate/core';
-import { AuthService } from '../../../auth/services/auth.service';
-import { AppEventEmitter } from '../../../events/services/event-emitter.service';
+import { AuthService } from '@modules/auth/services/auth.service';
+import { AppEventEmitter } from '@modules/events/services/event-emitter.service';
 
 import { CreateUserCommand } from './create-user.command';
 

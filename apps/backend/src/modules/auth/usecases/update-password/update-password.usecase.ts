@@ -3,7 +3,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UserRepository } from '../../../../database/repositories';
+import { UserRepository } from '@db/repositories';
 import { AuthService } from '../../services/auth.service';
 import { UpdatePasswordCommand } from './update-password.command';
 

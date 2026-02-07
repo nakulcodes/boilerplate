@@ -5,8 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ALL_PERMISSIONS } from '@boilerplate/core';
-import { RoleRepository } from '../../../../database/repositories';
-import { RoleEntity } from '../../../../database/entities';
+import { RoleRepository } from '@db/repositories';
+import { RoleEntity } from '@db/entities';
 import { UpdateRoleCommand } from './update-role.command';
 
 @Injectable()

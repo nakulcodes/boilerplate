@@ -8,7 +8,7 @@ import {
 import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { Request, Response } from 'express';
-import { AuditLogRepository } from '../../../database/repositories';
+import { AuditLogRepository } from '@db/repositories';
 
 interface RequestUser {
   userId?: string;

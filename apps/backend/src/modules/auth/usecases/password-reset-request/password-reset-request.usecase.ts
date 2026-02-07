@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { buildUrl } from '@boilerplate/core';
 import { EventName, UserPasswordResetRequestedEvent } from '@boilerplate/core';
-import { UserRepository } from '../../../../database/repositories';
+import { UserRepository } from '@db/repositories';
 import { AuthService } from '../../services/auth.service';
-import { AppEventEmitter } from '../../../events/services/event-emitter.service';
+import { AppEventEmitter } from '@modules/events/services/event-emitter.service';
 import { PasswordResetRequestCommand } from './password-reset-request.command';
 
 @Injectable()

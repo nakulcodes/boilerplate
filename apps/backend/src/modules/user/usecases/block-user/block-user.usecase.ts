@@ -3,10 +3,10 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { UserRepository } from '../../../../database/repositories';
-import { UserStatus } from '../../../../database/enums';
+import { UserRepository } from '@db/repositories';
+import { UserStatus } from '@db/enums';
 import { EventName, UserBlockedEvent } from '@boilerplate/core';
-import { AppEventEmitter } from '../../../events/services/event-emitter.service';
+import { AppEventEmitter } from '@modules/events/services/event-emitter.service';
 import { BlockUserCommand } from './block-user.command';
 
 @Injectable()

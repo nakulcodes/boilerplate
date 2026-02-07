@@ -4,8 +4,8 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { ALL_PERMISSIONS } from '@boilerplate/core';
-import { RoleRepository } from '../../../../database/repositories';
-import { RoleEntity } from '../../../../database/entities';
+import { RoleRepository } from '@db/repositories';
+import { RoleEntity } from '@db/entities';
 import { CreateRoleCommand } from './create-role.command';
 
 @Injectable()

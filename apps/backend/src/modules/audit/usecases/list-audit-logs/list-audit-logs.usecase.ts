@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { calculateSkip, createPaginationMetadata } from '@boilerplate/core';
-import { AuditLogRepository } from '../../../../database/repositories';
+import { AuditLogRepository } from '@db/repositories';
 import { ListAuditLogsCommand } from './list-audit-logs.command';
 
 @Injectable()

@@ -17,6 +17,12 @@ export interface User {
 export interface Organization {
   id: string;
   name: string;
+  slug: string;
+  domain: string;
+  logoUrl?: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface JWTPayload {
@@ -43,3 +49,37 @@ export const getFullName = (
 ): string => {
   return `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}`;
 };
+
+export interface UserDropdownItem {
+  id: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string;
+  role?: { id: string; name: string } | null;
+}
+
+export interface UserDropdownPaginatedResponse {
+  data: UserDropdownItem[];
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface UserImportError {
+  row: number;
+  column: string;
+  value: unknown;
+  message: string;
+}
+
+export interface UserImportResult {
+  totalRows: number;
+  validRows: number;
+  invalidRows: number;
+  createdCount: number;
+  skippedCount: number;
+  errors: UserImportError[];
+}

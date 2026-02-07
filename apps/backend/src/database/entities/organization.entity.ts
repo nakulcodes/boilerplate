@@ -38,6 +38,13 @@ export class OrganizationEntity extends BaseEntity {
   })
   status!: OrganizationStatus;
 
+  @Column({
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
+  logoUrl?: string | null;
+
   @OneToMany(() => UserEntity, (user) => user.organization, {
     cascade: false,
   })

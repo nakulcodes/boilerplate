@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { OrganizationIntegrationRepository } from '../../../../database/repositories';
-import { OrganizationIntegrationStatus } from '../../../../database/enums';
+import { OrganizationIntegrationRepository } from '@db/repositories';
+import { OrganizationIntegrationStatus } from '@db/enums';
 import { DisconnectIntegrationCommand } from './disconnect-integration.command';
 
 @Injectable()

@@ -1,7 +1,7 @@
 import { IsArray, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 
 import { BasePaginatedCommand } from '@boilerplate/core';
-import { UserStatus } from '../../../../database/enums';
+import { UserStatus } from '@db/enums';
 
 export class ListUsersCommand extends BasePaginatedCommand {
   @IsEnum(UserStatus)

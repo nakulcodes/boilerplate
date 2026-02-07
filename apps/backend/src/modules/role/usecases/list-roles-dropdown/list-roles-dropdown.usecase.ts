@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { RoleRepository } from '../../../../database/repositories';
+import { RoleRepository } from '@db/repositories';
 import { ListRolesDropdownCommand } from './list-roles-dropdown.command';
 
 @Injectable()

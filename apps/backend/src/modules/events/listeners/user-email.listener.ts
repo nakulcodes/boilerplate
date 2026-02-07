@@ -9,7 +9,7 @@ import {
   EventName,
 } from '@boilerplate/core';
 import * as Events from '@boilerplate/core';
-import { UserRepository } from '../../../database/repositories';
+import { UserRepository } from '@db/repositories';
 
 @Injectable()
 export class UserEmailListener {

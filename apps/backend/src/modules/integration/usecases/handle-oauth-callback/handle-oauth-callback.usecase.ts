@@ -3,8 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import {
   SupportedIntegrationRepository,
   OrganizationIntegrationRepository,
-} from '../../../../database/repositories';
-import { OrganizationIntegrationStatus } from '../../../../database/enums';
+} from '@db/repositories';
+import { OrganizationIntegrationStatus } from '@db/enums';
 import { HandleOAuthCallbackCommand } from './handle-oauth-callback.command';
 
 interface OAuthState {

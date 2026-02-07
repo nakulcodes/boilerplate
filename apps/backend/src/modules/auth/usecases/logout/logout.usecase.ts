@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EventName, UserLoggedOutEvent } from '@boilerplate/core';
-import { UserRepository } from '../../../../database/repositories';
-import { AppEventEmitter } from '../../../events/services/event-emitter.service';
+import { UserRepository } from '@db/repositories';
+import { AppEventEmitter } from '@modules/events/services/event-emitter.service';
 import { LogoutCommand } from './logout.command';
 import { LogoutResponseDto } from '../../dtos/logout.dto';
 

@@ -11,6 +11,7 @@ import { RoleModule } from './modules/role/role.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { IntegrationModule } from './modules/integration/integration.module';
+import { OrganizationModule } from './modules/organization/organization.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { IntegrationModule } from './modules/integration/integration.module';
     AuditModule,
     StorageModule,
     IntegrationModule,
+    OrganizationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

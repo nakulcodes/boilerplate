@@ -1,5 +1,15 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  Res,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import type { Response } from 'express';
 
 import { PERMISSIONS_ENUM } from '@boilerplate/core';
 import { RequireAuthentication } from '../shared/decorators/require-authentication.decorator';
@@ -39,6 +49,19 @@ import { UpdateProfileDto } from './dtos/update-profile.dto';
 import { CreateUser } from './usecases/create-user/create-user.usecase';
 import { CreateUserCommand } from './usecases/create-user/create-user.command';
 import { CreateUserDto } from './dtos/create-user.dto';
+import {
+  UserDropdownQueryDto,
+  UserDropdownResponseDto,
+} from './dtos/user-dropdown.dto';
+import { ListUsersDropdown } from './usecases/list-users-dropdown/list-users-dropdown.usecase';
+import { ListUsersDropdownCommand } from './usecases/list-users-dropdown/list-users-dropdown.command';
+import { ExportUsersQueryDto } from './dtos/export-users.dto';
+import { ExportUsers } from './usecases/export-users/export-users.usecase';
+import { ExportUsersCommand } from './usecases/export-users/export-users.command';
+import { ImportUsersResponseDto } from './dtos/import-users.dto';
+import { ImportUsersRequestDto } from './dtos/import-users-request.dto';
+import { ImportUsers } from './usecases/import-users/import-users.usecase';
+import { ImportUsersCommand } from './usecases/import-users/import-users.command';
 
 @ApiTags('Users')
 @Controller('users')
@@ -54,7 +77,107 @@ export class UserController {
     private readonly listUsers: ListUsers,
     private readonly updateProfile: UpdateProfile,
     private readonly createUser: CreateUser,
+    private readonly listUsersDropdown: ListUsersDropdown,
+    private readonly exportUsers: ExportUsers,
+    private readonly importUsers: ImportUsers,
   ) {}
+
+  @Get()
+  @RequirePermissions('user:list:read')
+  @ApiOperation({
+    summary: 'Get users for dropdown with configurable fields',
+    description:
+      'Returns minimal user data for dropdowns. Use ?fields=id,firstName,lastName,email,role to select fields. Add ?paginate=true for paginated response.',
+  })
+  @ApiResponse({ status: 200, type: [UserDropdownResponseDto] })
+  async getDropdown(
+    @UserSession() user: UserSessionData,
+    @Query() query: UserDropdownQueryDto,
+  ): Promise<
+    UserDropdownResponseDto[] | PaginatedResponseDto<UserDropdownResponseDto>
+  > {
+    const fields = query.fields
+      ? query.fields.split(',').map((f) => f.trim())
+      : ListUsersDropdownCommand.DEFAULT_FIELDS;
+
+    return this.listUsersDropdown.execute(
+      ListUsersDropdownCommand.create({
+        userId: user.userId,
+        organizationId: user.organizationId,
+        fields,
+        paginate: query.paginate,
+        page: query.page,
+        limit: query.limit,
+        search: query.search,
+      }),
+    );
+  }
+
+  @Get('export')
+  @RequirePermissions('user:list:read')
+  @ApiOperation({
+    summary: 'Export users to CSV or Excel',
+    description:
+      'Export all users matching the filters to CSV or Excel format.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'File download',
+    content: {
+      'text/csv': {},
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {},
+    },
+  })
+  async exportToFile(
+    @UserSession() user: UserSessionData,
+    @Query() query: ExportUsersQueryDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    const buffer = await this.exportUsers.execute(
+      ExportUsersCommand.create({
+        userId: user.userId,
+        organizationId: user.organizationId,
+        format: query.format,
+        status: query.status,
+        search: query.search,
+      }),
+    );
+
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `users-export-${timestamp}.${query.format}`;
+    const contentType =
+      query.format === 'csv'
+        ? 'text/csv'
+        : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+    res.set({
+      'Content-Type': contentType,
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Content-Length': buffer.length,
+    });
+    res.send(buffer);
+  }
+
+  @Post('import')
+  @RequirePermissions(PERMISSIONS_ENUM.USER_CREATE)
+  @ApiOperation({
+    summary: 'Import users from uploaded CSV or Excel file',
+    description:
+      'First upload the file using presigned URL from /storage/upload-url, then call this endpoint with the returned path. File columns: Email (required), First Name (required), Last Name, Role, Password.',
+  })
+  @ApiResponse({ status: 200, type: ImportUsersResponseDto })
+  async importFromFile(
+    @UserSession() user: UserSessionData,
+    @Body() dto: ImportUsersRequestDto,
+  ): Promise<ImportUsersResponseDto> {
+    return this.importUsers.execute(
+      ImportUsersCommand.create({
+        userId: user.userId,
+        organizationId: user.organizationId,
+        path: dto.path,
+      }),
+    );
+  }
 
   @Post('invite')
   @RequirePermissions(PERMISSIONS_ENUM.USER_CREATE)

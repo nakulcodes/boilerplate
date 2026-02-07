@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { AuditLogRepository } from '../../../../database/repositories';
-import { AuditLogEntity } from '../../../../database/entities';
+import { AuditLogRepository } from '@db/repositories';
+import { AuditLogEntity } from '@db/entities';
 
 @Injectable()
 export class GetAuditLog {

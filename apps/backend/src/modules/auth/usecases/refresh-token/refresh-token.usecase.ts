@@ -1,9 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 
-import {
-  UserRepository,
-  RoleRepository,
-} from '../../../../database/repositories';
+import { UserRepository, RoleRepository } from '@db/repositories';
 
 import { AuthService } from '../../services/auth.service';
 import { RefreshTokenCommand } from './refresh-token.command';

@@ -4,11 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { UserRepository } from '../../../../database/repositories';
-import { UserStatus } from '../../../../database/enums';
+import { UserRepository } from '@db/repositories';
+import { UserStatus } from '@db/enums';
 import { buildUrl } from '@boilerplate/core';
 import { EventName, UserInviteResentEvent } from '@boilerplate/core';
-import { AppEventEmitter } from '../../../events/services/event-emitter.service';
+import { AppEventEmitter } from '@modules/events/services/event-emitter.service';
 import { ResendInviteCommand } from './resend-invite.command';
 
 export interface ResendInviteResult {

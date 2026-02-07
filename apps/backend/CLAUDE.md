@@ -15,6 +15,34 @@
 - NEVER hardcode secrets — use `ConfigService` and `.env` files
 - NEVER skip validation — commands MUST use class-validator decorators
 - Every protected endpoint MUST use `@RequireAuthentication()` or `@RequirePermissions()`
+- ALWAYS use path aliases for imports — NEVER use deep relative paths like `../../../../`
+
+## Path Aliases
+
+The backend uses TypeScript path aliases to keep imports clean and readable. Always use these aliases instead of relative paths with multiple parent directory references.
+
+**Available aliases:**
+
+- `@db` maps to `src/database` — use for importing entities, repositories, and enums from the database layer
+- `@modules` maps to `src/modules` — use for cross-module imports when one feature module needs something from another
+- `@shared` maps to `src/modules/shared` — use for shared utilities, decorators, commands, DTOs, and framework code
+
+**When to use each alias:**
+
+- Use `@db/repositories` when importing repository classes like UserRepository or RoleRepository
+- Use `@db/entities` when importing entity classes like UserEntity or OrganizationEntity
+- Use `@db/enums` when importing database enums like UserStatus or OrganizationStatus
+- Use `@modules/auth/services/auth.service` when importing the AuthService from another module
+- Use `@shared/commands/organization.command` when importing the OrganizationCommand base class
+- Use `@shared/decorators/user-session.decorator` when importing shared decorators
+
+**Never do this:**
+
+- Do not use `../../../../database/repositories` — use `@db/repositories` instead
+- Do not use `../../../shared/commands` — use `@shared/commands` instead
+- Do not use `../../../auth/services` — use `@modules/auth/services` instead
+
+The path aliases are configured in tsconfig.json and work with both TypeScript compilation and runtime.
 
 ## Command/Usecase Pattern
 
@@ -183,6 +211,14 @@ export class RoleController {
 
 ### Users (`/api/v1/users`)
 
+- `GET /` — **dropdown endpoint**, permission: `user:list:read`
+  - Query params: `?fields=id,firstName,lastName,email,role&paginate=true&page=1&limit=10&search=john`
+  - `fields` — comma-separated list of fields (allowed: `id`, `firstName`, `lastName`, `email`, `role`)
+  - `paginate` — set to `true` for paginated response, omit for all items
+  - `page`, `limit` — pagination params (only used when `paginate=true`)
+  - `search` — search by name or email
+  - Response (non-paginated): `[{ id, firstName?, lastName?, email?, role?: { id, name } }]`
+  - Response (paginated): `{ data: [...], page, limit, total, totalPages, hasNextPage, hasPreviousPage }`
 - `POST /list` — **paginated**, permission: `USER_LIST_READ`
   - Body: `{ page, limit, status?, search?, invitedBy? }`
   - Page is 1-indexed (first page = 1), limit default 10 (max 100)
@@ -195,6 +231,15 @@ export class RoleController {
 - `PUT /:id` — permission: `USER_UPDATE`, body: `{ firstName, lastName }`
 - `POST /:id/block` — permission: `USER_UPDATE_STATUS`
 - `POST /:id/unblock` — permission: `USER_UPDATE_STATUS`
+- `GET /export` — permission: `user:list:read`, exports users to CSV or Excel
+  - Query params: `?format=csv|xlsx&status=active&search=john`
+  - Response: File download (CSV or Excel)
+- `POST /import` — permission: `USER_CREATE`, imports users from a previously uploaded CSV or Excel file
+  - Body: JSON with `path` field containing the storage path from presigned URL upload
+  - The file must first be uploaded to storage using a presigned URL from the storage endpoint
+  - File path must belong to the user's organization for security validation
+  - Accepts: CSV or Excel file with columns: Email (required), First Name (required), Last Name, Role, Password
+  - Response: `{ totalRows, validRows, invalidRows, createdCount, skippedCount, errors[] }`
 
 ### Roles (`/api/v1/roles`)
 

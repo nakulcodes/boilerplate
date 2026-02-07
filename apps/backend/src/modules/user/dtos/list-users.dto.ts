@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 
-import { UserStatus } from '../../../database/enums';
+import { UserStatus } from '@db/enums';
 
 import { ListPaginationDto } from '../../shared/dtos/list-pagination.dto';
 

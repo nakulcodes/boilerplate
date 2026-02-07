@@ -1,4 +1,10 @@
 import { Module } from '@nestjs/common';
+import {
+  exportService,
+  importService,
+  storageService,
+} from '@boilerplate/core';
+
 import { UserController } from './user.controller';
 import { MailModule } from '../mail/mail.module';
 import { AuthModule } from '../auth/auth.module';
@@ -12,6 +18,9 @@ import { GetCurrentUser } from './usecases/get-current-user/get-current-user.use
 import { ListUsers } from './usecases/list-users/list-users.usecase';
 import { UpdateProfile } from './usecases/update-profile/update-profile.usecase';
 import { CreateUser } from './usecases/create-user/create-user.usecase';
+import { ListUsersDropdown } from './usecases/list-users-dropdown/list-users-dropdown.usecase';
+import { ExportUsers } from './usecases/export-users/export-users.usecase';
+import { ImportUsers } from './usecases/import-users/import-users.usecase';
 
 const USE_CASES = [
   InviteUser,
@@ -24,12 +33,15 @@ const USE_CASES = [
   ListUsers,
   UpdateProfile,
   CreateUser,
+  ListUsersDropdown,
+  ExportUsers,
+  ImportUsers,
 ];
 
 @Module({
   imports: [MailModule, AuthModule],
   controllers: [UserController],
-  providers: [...USE_CASES],
+  providers: [...USE_CASES, exportService, importService, storageService],
   exports: [],
 })
 export class UserModule {}

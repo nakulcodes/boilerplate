@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { RoleRepository } from '../../../../database/repositories';
-import { RoleEntity } from '../../../../database/entities';
+import { RoleRepository } from '@db/repositories';
+import { RoleEntity } from '@db/entities';
 import { ListRolesCommand } from './list-roles.command';
 
 @Injectable()

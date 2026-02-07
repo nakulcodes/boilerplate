@@ -9,9 +9,9 @@ import {
   OrganizationRepository,
   UserRepository,
   RoleRepository,
-} from '../../../../database/repositories';
+} from '@db/repositories';
 import { AuthService } from '../../services/auth.service';
-import { AppEventEmitter } from '../../../events/services/event-emitter.service';
+import { AppEventEmitter } from '@modules/events/services/event-emitter.service';
 import { UserRegisterCommand } from './user-register.command';
 import { RegisterResponseDto } from '../../dtos/auth-response.dto';
 

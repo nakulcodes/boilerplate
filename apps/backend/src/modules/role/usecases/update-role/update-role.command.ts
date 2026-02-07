@@ -1,5 +1,5 @@
 import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { OrganizationCommand } from '../../../shared/commands/organization.command';
+import { OrganizationCommand } from '@shared/commands/organization.command';
 
 export class UpdateRoleCommand extends OrganizationCommand {
   @IsString()

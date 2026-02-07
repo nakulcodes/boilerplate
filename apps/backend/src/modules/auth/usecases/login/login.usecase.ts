@@ -1,8 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { EventName, UserLoggedInEvent } from '@boilerplate/core';
-import { UserRepository } from '../../../../database/repositories';
+import { UserRepository } from '@db/repositories';
 import { AuthService } from '../../services/auth.service';
-import { AppEventEmitter } from '../../../events/services/event-emitter.service';
+import { AppEventEmitter } from '@modules/events/services/event-emitter.service';
 import { LoginCommand } from './login.command';
 import { LoginResponseDto } from '../../dtos/auth-response.dto';
 
